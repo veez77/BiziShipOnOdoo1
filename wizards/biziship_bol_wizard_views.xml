@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- View for the Wizard -->
+    <record id="view_biziship_bol_import_wizard_form" model="ir.ui.view">
+        <field name="name">biziship.bol.import.wizard.form</field>
+        <field name="model">biziship.bol.import.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Import BOL">
+                <group>
+                    <field name="file_name" invisible="1"/>
+                    <field name="bol_file" filename="file_name" widget="binary"/>
+                </group>
+                <footer>
+                    <button name="action_process_bol" string="Process BOL" type="object" class="btn-primary" data-hotkey="q"/>
+                    <button string="Cancel" class="btn-secondary" special="cancel" data-hotkey="z"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <!-- Action for the Wizard -->
+    <record id="action_biziship_bol_import_wizard" model="ir.actions.act_window">
+        <field name="name">Process BOL (BiziShip)</field>
+        <field name="res_model">biziship.bol.import.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+</odoo>

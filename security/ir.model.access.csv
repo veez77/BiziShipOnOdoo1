@@ -1,2 +1,4 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
 access_biziship_bol_wizard,biziship.bol.import.wizard,model_biziship_bol_import_wizard,base.group_user,1,1,1,1
+access_biziship_quote,biziship.quote,model_biziship_quote,base.group_user,1,1,1,1
+access_biziship_quote_confirm_wizard,biziship.quote.confirm.wizard,model_biziship_quote_confirm_wizard,base.group_user,1,1,1,1

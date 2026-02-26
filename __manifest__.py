@@ -14,6 +14,7 @@
     'data': [
         'security/ir.model.access.csv',
         'wizards/biziship_bol_wizard_views.xml',
+        'wizards/biziship_quote_confirm_wizard_views.xml',
         'views/sale_order_views.xml',
     ],
     'installable': True,

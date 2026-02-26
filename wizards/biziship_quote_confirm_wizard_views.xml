@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_biziship_quote_confirm_wizard_form" model="ir.ui.view">
+        <field name="name">biziship.quote.confirm.wizard.form</field>
+        <field name="model">biziship.quote.confirm.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Confirm Quote Selection">
+                <div class="alert alert-info text-center" role="alert" style="font-size: 14px;">
+                    Are you sure you want to book this quote and send it to Email2Quote?
+                </div>
+                <group>
+                    <field name="carrier_name"/>
+                    <field name="total_charge" widget="monetary" options="{'currency_field': 'currency_id'}"/>
+                    <field name="currency" invisible="1"/>
+                    <field name="currency_id" invisible="1"/>
+                    <field name="quote_id_ref"/>
+                    <field name="quote_id" invisible="1"/>
+                </group>
+                <footer>
+                    <button name="action_confirm_and_send" string="Confirm &amp; Send to Email2Quote" type="object" class="btn-primary" data-hotkey="q"/>
+                    <button string="Cancel" class="btn-secondary" special="cancel" data-hotkey="z"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_biziship_quote_confirm_wizard" model="ir.actions.act_window">
+        <field name="name">Confirm Chosen Quote</field>
+        <field name="res_model">biziship.quote.confirm.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+</odoo>

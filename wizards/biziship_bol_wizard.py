@@ -138,6 +138,55 @@ Respond ONLY with a valid JSON object, without any markdown formatting, backtick
             )
             local_response_bol.raise_for_status()
 
+            # Process JSON response and create quotes
+            response_json = local_response_bol.json()
+            quotes = response_json.get('quotes', [])
+            
+            # Check context to see if we were launched from a sale order
+            active_id = self.env.context.get('active_id')
+            active_model = self.env.context.get('active_model')
+            
+            if active_id and active_model == 'sale.order':
+                # Save the JSON dict string directly to the sales order
+                extracted_details = response_json.get('extracted_details', parsed_json)
+                sale_order_record = self.env['sale.order'].browse(active_id)
+                sale_order_record.write({'biziship_extracted_json': json.dumps(extracted_details)})
+
+                for q in quotes:
+                    delivery_date_raw = q.get('delivery_date')
+                    if delivery_date_raw and 'T' in delivery_date_raw:
+                        delivery_date_raw = delivery_date_raw.replace('T', ' ')[:19]
+
+                    # Parse charges array into text
+                    charges = q.get('charges', [])
+                    details_lines = []
+                    for c in charges:
+                        c_code = c.get('code') or ''
+                        c_desc = c.get('description') or ''
+                        c_amount = c.get('amount')
+                        if c_amount is None:
+                            c_amount = 0.0
+                        
+                        # Format string to align description and amount
+                        # Example: Gross Freight Charge                $3,187.72
+                        format_str = f"{str(c_desc):<40} ${c_amount:,.2f}"
+                        details_lines.append(format_str)
+                    
+                    details_text = "\n".join(details_lines) if details_lines else "No detailed charges provided."
+
+                    self.env['biziship.quote'].sudo().create({
+                        'sale_order_id': active_id,
+                        'carrier_name': q.get('carrier_name'),
+                        'carrier_code': q.get('carrier_code'),
+                        'service_level': q.get('service_level'),
+                        'transit_days': q.get('transit_days'),
+                        'delivery_date': delivery_date_raw,
+                        'total_charge': q.get('total_charge'),
+                        'currency': q.get('currency', 'USD'),
+                        'quote_id_ref': q.get('quote_id'),
+                        'quote_details': details_text,
+                    })
+
         except requests.exceptions.RequestException as e:
             error_details = e.response.text if hasattr(e, 'response') and e.response is not None else str(e)
             raise UserError(
@@ -148,11 +197,5 @@ Respond ONLY with a valid JSON object, without any markdown formatting, backtick
 
         return {
             'type': 'ir.actions.client',
-            'tag': 'display_notification',
-            'params': {
-                'title': _('Success'),
-                'message': _('BOL processed successfully. Freight data and PDF sent to Email2Quote API.'),
-                'type': 'success',
-                'sticky': False,
-            }
+            'tag': 'reload',
         }

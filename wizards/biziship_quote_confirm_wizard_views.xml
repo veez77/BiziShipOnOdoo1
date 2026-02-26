@@ -5,10 +5,64 @@
         <field name="model">biziship.quote.confirm.wizard</field>
         <field name="arch" type="xml">
             <form string="Confirm Quote Selection">
-                <div class="alert alert-info text-center" role="alert" style="font-size: 14px;">
+                <style>
+                    /* Modern Progress Bar - Quote Booking */
+                    .biziship-quote-progress-container {
+                        display: none;
+                        width: 100%;
+                        margin-top: 20px;
+                        margin-bottom: 20px;
+                    }
+                    .biziship-quote-progress-text {
+                        text-align: center;
+                        color: #495057;
+                        font-weight: 500;
+                        font-size: 14px;
+                        margin-bottom: 8px;
+                    }
+                    .biziship-quote-progress-wrapper {
+                        width: 100%;
+                        background-color: #e9ecef;
+                        border-radius: 8px;
+                        overflow: hidden;
+                        height: 24px;
+                        box-shadow: inset 0 1px 2px rgba(0,0,0,.1);
+                    }
+                    .biziship-quote-progress-bar {
+                        width: 0%;
+                        height: 100%;
+                        background-color: #714B67; /* Odoo Primary Purple */
+                        background-image: linear-gradient(45deg,rgba(255,255,255,.15) 25%,transparent 25%,transparent 50%,rgba(255,255,255,.15) 50%,rgba(255,255,255,.15) 75%,transparent 75%,transparent);
+                        background-size: 1rem 1rem;
+                    }
+                    @keyframes biziship-quote-stripes {
+                        from { background-position: 1rem 0; }
+                        to { background-position: 0 0; }
+                    }
+                    @keyframes biziship-quote-fill {
+                        0% { width: 0%; }
+                        100% { width: 95%; }
+                    }
+
+                    /* Trigger: When Odoo disables the primary button during RPC call, show animation! */
+                    .modal:has(button[name="action_confirm_and_send"]:disabled) .biziship-quote-progress-container,
+                    .modal:has(button[name="action_confirm_and_send"].o_disabled) .biziship-quote-progress-container {
+                        display: block;
+                    }
+                    .modal:has(button[name="action_confirm_and_send"]:disabled) .biziship-quote-progress-bar,
+                    .modal:has(button[name="action_confirm_and_send"].o_disabled) .biziship-quote-progress-bar {
+                        /* 20 seconds for Quote Booking */
+                        animation: biziship-quote-fill 20s cubic-bezier(0.1, 0.7, 1.0, 0.1) forwards, biziship-quote-stripes 1s linear infinite;
+                    }
+                    .modal:has(button[name="action_confirm_and_send"]:disabled) .biziship-quote-help-group,
+                    .modal:has(button[name="action_confirm_and_send"].o_disabled) .biziship-quote-help-group {
+                        display: none;
+                    }
+                </style>
+                <div class="alert alert-info text-center biziship-quote-help-group" role="alert" style="font-size: 14px;">
                     Are you sure you want to book this quote and send it to Email2Quote?
                 </div>
-                <group>
+                <group class="biziship-quote-help-group">
                     <field name="carrier_name"/>
                     <field name="total_charge" widget="monetary" options="{'currency_field': 'currency_id'}"/>
                     <field name="currency" invisible="1"/>
@@ -16,6 +70,13 @@
                     <field name="quote_id_ref"/>
                     <field name="quote_id" invisible="1"/>
                 </group>
+
+                <div class="biziship-quote-progress-container">
+                    <div class="biziship-quote-progress-text">Booking Quote... (~20s)</div>
+                    <div class="biziship-quote-progress-wrapper">
+                        <div class="biziship-quote-progress-bar"></div>
+                    </div>
+                </div>
                 <footer>
                     <button name="action_confirm_and_send" string="Confirm &amp; Send to Email2Quote" type="object" class="btn-primary" data-hotkey="q"/>
                     <button string="Cancel" class="btn-secondary" special="cancel" data-hotkey="z"/>

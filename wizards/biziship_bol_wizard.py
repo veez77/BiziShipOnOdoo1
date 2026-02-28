@@ -6,6 +6,13 @@ import os
 from odoo import models, fields, api, _
 from odoo.exceptions import UserError
 
+def get_secrets():
+    secrets_path = os.path.join(os.path.dirname(__file__), '..', 'secrets.json')
+    if os.path.exists(secrets_path):
+        with open(secrets_path, 'r') as f:
+            return json.load(f)
+    return {}
+
 try:
     from PyPDF2 import PdfReader
 except ImportError:
@@ -119,7 +126,9 @@ Respond ONLY with a valid JSON object, without any markdown formatting, backtick
             )
 
         # 3. Send to Local API (Email2Quote)
-        local_api_bol_url = "http://localhost:8000/quote/bol"
+        secrets = get_secrets()
+        email2quote_api_url = secrets.get("EMAIL2QUOTE_API_URL", "http://localhost:8000")
+        local_api_bol_url = f"{email2quote_api_url.rstrip('/')}/quote/bol"
         email2quote_api_key = secrets.get("EMAIL2QUOTE_API_KEY", "")
         api_key_header = {"X-API-Key": email2quote_api_key}
 

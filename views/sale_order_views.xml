@@ -6,18 +6,30 @@
         <field name="inherit_id" ref="sale.view_order_form"/>
         <field name="arch" type="xml">
             <xpath expr="//header" position="inside">
-                <button name="%(BiziShipOnOdoo1.action_biziship_bol_import_wizard)d" string="BiziShip: Process BOL" type="action" class="oe_highlight" invisible="state not in ['draft', 'sent', 'sale']"/>
+                <button name="%(BiziShipOnOdoo1.action_biziship_freight_quote_wizard)d" string="Get Freight Quotes" type="action" class="oe_highlight" invisible="state not in ['draft', 'sent', 'sale']"/>
+                <button name="%(BiziShipOnOdoo1.action_biziship_bol_import_wizard)d" string="BiziShip: Process BOL" type="action" class="btn-secondary" invisible="state not in ['draft', 'sent', 'sale']"/>
+                <button name="action_demo_vinegar_order" string="Populate Demo Vinegar Order" type="object" class="btn-info" invisible="state != 'draft'"/>
             </xpath>
             <xpath expr="//notebook" position="inside">
                 <page string="LTL Freight Quotes" name="biziship_freight_quotes">
                     <group invisible="not biziship_shipment_id">
-                        <group string="BiziShip Booking Details">
+                        <group>
+                            <div colspan="2" class="d-flex align-items-center o_horizontal_separator mb-2 mt-0">
+                                <span class="text-uppercase fw-bold me-2">BiziShip Booking Details</span>
+                                <button name="action_delete_biziship_booking" type="object" icon="fa-trash" class="btn btn-link text-muted p-0" title="Delete Booking Details" confirm="Are you sure you want to delete these booking details?"/>
+                            </div>
                             <field name="biziship_bol_number" readonly="1"/>
                             <field name="biziship_shipment_id" readonly="1"/>
                             <field name="biziship_bol_url" widget="url" readonly="1" text="Printable BOL Document" invisible="not biziship_bol_url"/>
                         </group>
                     </group>
-                    <field name="biziship_quote_ids">
+                    <group invisible="not biziship_quote_ids">
+                        <div colspan="2" class="d-flex align-items-center o_horizontal_separator mb-2 mt-4">
+                            <span class="text-uppercase fw-bold me-2">Available Quotes</span>
+                            <button name="action_delete_biziship_quotes" type="object" icon="fa-trash" class="btn btn-link text-muted p-0" title="Delete All Quotes" confirm="Are you sure you want to delete all quotes?"/>
+                        </div>
+                    </group>
+                    <field name="biziship_quote_ids" nolabel="1">
                         <tree string="Quotes" create="false" edit="false">
                             <field name="is_selected" widget="boolean_toggle" readonly="1"/>
                             <field name="carrier_name" readonly="1"/>
@@ -60,7 +72,7 @@
                             </sheet>
                         </form>
                     </field>
-                    <div class="mt-4 text-center">
+                    <div class="mt-4 text-center" invisible="not biziship_quote_ids">
                         <field name="biziship_has_selected_quote" invisible="1"/>
                         <button name="action_open_biziship_quote_confirm" type="object" string="Confirm Chosen Quote" class="btn-primary" invisible="not biziship_has_selected_quote"/>
                         <button name="action_open_biziship_quote_confirm" type="object" string="Confirm Chosen Quote" class="btn-secondary" invisible="biziship_has_selected_quote" title="Please select a quote first to confirm it."/>

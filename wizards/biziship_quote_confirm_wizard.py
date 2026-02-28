@@ -11,6 +11,7 @@ def get_secrets():
             return json.load(f)
     return {}
 
+
 class BizishipQuoteConfirmWizard(models.TransientModel):
     _name = 'biziship.quote.confirm.wizard'
     _description = 'Confirm BiziShip Quote'
@@ -25,9 +26,10 @@ class BizishipQuoteConfirmWizard(models.TransientModel):
     def action_confirm_and_send(self):
         self.ensure_one()
         secrets = get_secrets()
+        email2quote_api_url = secrets.get("EMAIL2QUOTE_API_URL", "http://localhost:8000")
         email2quote_api_key = secrets.get("EMAIL2QUOTE_API_KEY", "")
         
-        local_api_book_url = "http://localhost:8000/book"
+        local_api_book_url = f"{email2quote_api_url.rstrip('/')}/book"
         headers = {
             "X-API-Key": email2quote_api_key,
             "Content-Type": "application/json"

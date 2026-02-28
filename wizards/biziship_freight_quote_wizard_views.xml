@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_biziship_freight_quote_wizard_form" model="ir.ui.view">
+        <field name="name">biziship.freight.quote.wizard.form</field>
+        <field name="model">biziship.freight.quote.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Get Freight Quotes">
+                <style>
+                    /* Modern Progress Bar - Direct Quoting */
+                    .biziship-quote-request-container {
+                        display: none;
+                        width: 100%;
+                        margin-top: 20px;
+                        margin-bottom: 20px;
+                    }
+                    .biziship-quote-request-text {
+                        text-align: center;
+                        color: #495057;
+                        font-weight: 500;
+                        font-size: 14px;
+                        margin-bottom: 8px;
+                    }
+                    .biziship-quote-request-wrapper {
+                        width: 100%;
+                        background-color: #e9ecef;
+                        border-radius: 8px;
+                        overflow: hidden;
+                        height: 24px;
+                        box-shadow: inset 0 1px 2px rgba(0,0,0,.1);
+                    }
+                    .biziship-quote-request-bar {
+                        width: 0%;
+                        height: 100%;
+                        background-color: #714B67; /* Odoo Primary Purple */
+                        background-image: linear-gradient(45deg,rgba(255,255,255,.15) 25%,transparent 25%,transparent 50%,rgba(255,255,255,.15) 50%,rgba(255,255,255,.15) 75%,transparent 75%,transparent);
+                        background-size: 1rem 1rem;
+                    }
+                    @keyframes biziship-quote-request-stripes {
+                        from { background-position: 1rem 0; }
+                        to { background-position: 0 0; }
+                    }
+                    @keyframes biziship-quote-request-fill {
+                        0% { width: 0%; }
+                        100% { width: 95%; }
+                    }
+
+                    /* Trigger logic */
+                    .modal:has(button[name="action_get_quotes"]:disabled) .biziship-quote-request-container,
+                    .modal:has(button[name="action_get_quotes"].o_disabled) .biziship-quote-request-container {
+                        display: block;
+                    }
+                    .modal:has(button[name="action_get_quotes"]:disabled) .biziship-quote-request-bar,
+                    .modal:has(button[name="action_get_quotes"].o_disabled) .biziship-quote-request-bar {
+                        /* ~15 seconds to await priority1 API */
+                        animation: biziship-quote-request-fill 15s cubic-bezier(0.1, 0.7, 1.0, 0.1) forwards, biziship-quote-request-stripes 1s linear infinite;
+                    }
+                    .modal:has(button[name="action_get_quotes"]:disabled) .biziship-freight-quote-form-content,
+                    .modal:has(button[name="action_get_quotes"].o_disabled) .biziship-freight-quote-form-content {
+                        display: none;
+                    }
+                </style>
+                
+                <div class="biziship-freight-quote-form-content">
+                    <div class="alert alert-info text-center" role="alert" style="font-size: 14px; margin-bottom: 20px;">
+                        Review the generated shipment details. Click "Fetch Live Quotes" to request precise LTL rates from Priority1.
+                    </div>
+                    
+                    <group>
+                        <!-- Left Column: Cargo Details -->
+                        <group string="Cargo Details">
+                            <field name="weight"/>
+                            <field name="freight_class"/>
+                            <field name="num_pieces"/>
+                            <field name="packaging_type"/>
+                            <label for="length" string="Dimensions (L x W x H)"/>
+                            <div class="o_row">
+                                <field name="length" nolabel="1" class="oe_inline"/> x
+                                <field name="width" nolabel="1" class="oe_inline"/> x
+                                <field name="height" nolabel="1" class="oe_inline"/> (in)
+                            </div>
+                            <field name="cargo_description"/>
+                        </group>
+                        
+                        <!-- Right Column: Shipment Logistics -->
+                        <group string="Logistics Details">
+                            <field name="pickup_date"/>
+                            <field name="special_requirements" placeholder="liftgate, residential_delivery"/>
+                            <field name="additional_notes" placeholder="Any order notes..."/>
+                        </group>
+                    </group>
+                    
+                    <group string="Routing (Origin to Destination)">
+                        <group string="Origin (Warehouse)">
+                            <field name="origin_company" />
+                            <field name="origin_city" />
+                            <field name="origin_state" />
+                            <field name="origin_zip" />
+                            <field name="origin_phone" />
+                        </group>
+                        <group string="Destination (Customer)">
+                            <field name="destination_company" />
+                            <field name="destination_city" />
+                            <field name="destination_state" />
+                            <field name="destination_zip" />
+                            <field name="destination_phone" />
+                        </group>
+                    </group>
+                </div>
+
+                <div class="biziship-quote-request-container">
+                    <div class="biziship-quote-request-text">Requesting Live Tariffs from Priority1... (~15s)</div>
+                    <div class="biziship-quote-request-wrapper">
+                        <div class="biziship-quote-request-bar"></div>
+                    </div>
+                </div>
+
+                <footer>
+                    <button name="action_get_quotes" string="Fetch Live Quotes" type="object" class="btn-primary" data-hotkey="q"/>
+                    <button string="Cancel" class="btn-secondary" special="cancel" data-hotkey="z"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <!-- Action for the Wizard -->
+    <record id="action_biziship_freight_quote_wizard" model="ir.actions.act_window">
+        <field name="name">Direct Freight Quotes (BiziShip)</field>
+        <field name="res_model">biziship.freight.quote.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+</odoo>

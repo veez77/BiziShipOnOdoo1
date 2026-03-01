@@ -199,9 +199,10 @@
                         </form>
                     </field>
                     <div class="mt-4 text-center" invisible="not biziship_quote_ids">
+
                         <field name="biziship_has_selected_quote" invisible="1"/>
-                        <button name="action_open_biziship_quote_confirm" type="object" string="Confirm Chosen Quote" class="btn-primary" invisible="not biziship_has_selected_quote"/>
-                        <button name="action_open_biziship_quote_confirm" type="object" string="Confirm Chosen Quote" class="btn-secondary" invisible="biziship_has_selected_quote" title="Please select a quote first to confirm it."/>
+                        <button name="action_open_biziship_quote_confirm" type="object" string="Submit the chosen quote" class="btn-primary" invisible="not biziship_has_selected_quote"/>
+                        <button name="action_open_biziship_quote_confirm" type="object" string="Submit the chosen quote" class="btn-secondary" invisible="biziship_has_selected_quote" title="Please select a quote first to submit it."/>
                     </div>
                 </page>
             </xpath>

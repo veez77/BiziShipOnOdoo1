@@ -60,15 +60,20 @@
                     }
                 </style>
                 <div class="alert alert-info text-center biziship-quote-help-group" role="alert" style="font-size: 14px;">
-                    Are you sure you want to book this quote and send it to Email2Quote?
+                    Are you sure you want to <b>submit the chosen quote</b> details?
                 </div>
                 <group class="biziship-quote-help-group">
-                    <field name="carrier_name"/>
-                    <field name="total_charge" widget="monetary" options="{'currency_field': 'currency_id'}"/>
-                    <field name="currency" invisible="1"/>
-                    <field name="currency_id" invisible="1"/>
-                    <field name="quote_id_ref"/>
-                    <field name="quote_id" invisible="1"/>
+                    <group>
+                        <field name="carrier_name"/>
+                        <field name="delivery_date"/>
+                    </group>
+                    <group>
+                        <field name="total_charge" widget="monetary" options="{'currency_field': 'currency_id'}"/>
+                        <field name="currency" invisible="1"/>
+                        <field name="currency_id" invisible="1"/>
+                        <field name="quote_id_ref" string="Quote ID"/>
+                        <field name="quote_id" invisible="1"/>
+                    </group>
                 </group>
 
                 <div class="biziship-quote-progress-container">
@@ -78,7 +83,7 @@
                     </div>
                 </div>
                 <footer>
-                    <button name="action_confirm_and_send" string="Confirm &amp; Send to Email2Quote" type="object" class="btn-primary" data-hotkey="q"/>
+                    <button name="action_confirm_and_send" string="Submit the chosen quote" type="object" class="btn-primary" data-hotkey="q"/>
                     <button string="Cancel" class="btn-secondary" special="cancel" data-hotkey="z"/>
                 </footer>
             </form>

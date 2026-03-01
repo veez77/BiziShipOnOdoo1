@@ -1,6 +1,6 @@
 {
     'name': 'BiziShipOnOdoo1',
-    'version': '1.0',
+    'version': '17.0.2.0.0',
     'category': 'Sales',
     'summary': 'Parse BOL PDFs and send to Email2Quote API',
     'description': """
@@ -9,7 +9,6 @@
         and sends the data to an external API.
     """,
     'author': 'BiziShip',
-    'website': 'https://www.biziship.ai',
     'depends': ['base', 'sale'],
     'data': [
         'security/ir.model.access.csv',

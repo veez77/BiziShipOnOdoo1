@@ -6,11 +6,137 @@
         <field name="inherit_id" ref="sale.view_order_form"/>
         <field name="arch" type="xml">
             <xpath expr="//header" position="inside">
-                <button name="%(BiziShipOnOdoo1.action_biziship_freight_quote_wizard)d" string="Get Freight Quotes" type="action" class="oe_highlight" invisible="state not in ['draft', 'sent', 'sale']"/>
                 <button name="%(BiziShipOnOdoo1.action_biziship_bol_import_wizard)d" string="BiziShip: Process BOL" type="action" class="btn-secondary" invisible="state not in ['draft', 'sent', 'sale']"/>
                 <button name="action_demo_vinegar_order" string="Populate Demo Vinegar Order" type="object" class="btn-info" invisible="state != 'draft'"/>
             </xpath>
             <xpath expr="//notebook" position="inside">
+                <page string="LTL Freight Details" name="biziship_freight_details">
+                    <group>
+                        <group string="Origin &amp; Pickup">
+                            <field name="biziship_pickup_date"/>
+                            <field name="biziship_origin_zip"/>
+                            <field name="biziship_origin_country_id"/>
+                            <field name="biziship_origin_residential"/>
+                            <field name="biziship_origin_liftgate"/>
+                            <field name="biziship_origin_limited_access"/>
+                        </group>
+                        <group string="Destination">
+                            <field name="biziship_dest_zip"/>
+                            <field name="biziship_dest_country_id"/>
+                            <field name="biziship_dest_appointment"/>
+                            <field name="biziship_dest_residential"/>
+                            <field name="biziship_dest_notify"/>
+                            <field name="biziship_dest_limited_access"/>
+                            <field name="biziship_dest_liftgate"/>
+                            <field name="biziship_dest_hazmat"/>
+                        </group>
+                    </group>
+                    <group string="Cargo Details">
+                        <group>
+                            <field name="biziship_packaging_type"/>
+                            <field name="biziship_pieces"/>
+                            <label for="biziship_weight"/>
+                            <div class="o_row">
+                                <field name="biziship_weight"/>
+                                <span>lbs</span>
+                                <button name="action_biziship_compute_weight" string="Compute from Order Lines" type="object" class="btn-link oe_inline"/>
+                            </div>
+                            <label for="biziship_length" string="Dimensions (L x W x H)"/>
+                            <div class="o_row">
+                                <field name="biziship_length"/> x
+                                <field name="biziship_width"/> x
+                                <field name="biziship_height"/> in
+                            </div>
+                        </group>
+                        <group>
+                            <label for="biziship_freight_class"/>
+                            <div class="o_row">
+                                <field name="biziship_freight_class"/>
+                                <field name="biziship_is_class_overridden" invisible="1"/>
+                                <field name="biziship_computed_freight_class" invisible="1"/>
+                                <field name="biziship_class_calculation_error" invisible="1"/>
+                                
+                                <span class="text-success" invisible="biziship_class_calculation_error or biziship_is_class_overridden" title="Auto-calculated from dimensions and weight">
+                                    <i class="fa fa-check-circle" role="img" aria-label="Auto"/> Auto
+                                </span>
+                                
+                                <span class="text-danger" invisible="not biziship_class_calculation_error" title="Missing information to auto-calculate class">
+                                    <i class="fa fa-exclamation-circle" role="img" aria-label="Error"/> <field name="biziship_class_calculation_error" nolabel="1" class="oe_inline text-danger"/>
+                                </span>
+
+                                <span class="text-warning" invisible="not biziship_is_class_overridden or biziship_class_calculation_error" title="Differs from auto-calculated LTL standard class">
+                                    <i class="fa fa-exclamation-triangle" role="img" aria-label="Warning"/> Modified
+                                </span>
+                            </div>
+                            <field name="biziship_nmfc"/>
+                            <field name="biziship_cargo_desc"/>
+                        </group>
+                    </group>
+                    <div class="mt-4 text-center">
+                        <style>
+                            /* Modern Progress Bar for Fetch Quotes */
+                            .biziship-fetch-progress-container {
+                                display: none;
+                                width: 100%;
+                                max-width: 400px;
+                                margin: 20px auto;
+                            }
+                            .biziship-fetch-progress-text {
+                                text-align: center;
+                                color: #495057;
+                                font-weight: 500;
+                                font-size: 14px;
+                                margin-bottom: 8px;
+                            }
+                            .biziship-fetch-progress-wrapper {
+                                width: 100%;
+                                background-color: #e9ecef;
+                                border-radius: 8px;
+                                overflow: hidden;
+                                height: 24px;
+                                box-shadow: inset 0 1px 2px rgba(0,0,0,.1);
+                            }
+                            .biziship-fetch-progress-bar {
+                                width: 0%;
+                                height: 100%;
+                                background-color: #714B67;
+                                background-image: linear-gradient(45deg,rgba(255,255,255,.15) 25%,transparent 25%,transparent 50%,rgba(255,255,255,.15) 50%,rgba(255,255,255,.15) 75%,transparent 75%,transparent);
+                                background-size: 1rem 1rem;
+                            }
+                            
+                            /* We reuse the keyframes from the global/wizard css if present, or redefine them safely */
+                            @keyframes biziship-fetch-stripes {
+                                from { background-position: 1rem 0; }
+                                to { background-position: 0 0; }
+                            }
+                            @keyframes biziship-fetch-fill {
+                                0% { width: 0%; }
+                                10% { width: 30%; }
+                                50% { width: 60%; }
+                                100% { width: 95%; }
+                            }
+
+                            /* Trigger: When Odoo disables the form or button during RPC call */
+                            .o_form_view:has(button[name="action_biziship_fetch_live_quotes"]:disabled) .biziship-fetch-progress-container,
+                            .o_form_view:has(button[name="action_biziship_fetch_live_quotes"].disabled) .biziship-fetch-progress-container,
+                            .o_form_view:has(button[name="action_biziship_fetch_live_quotes"].o_disabled) .biziship-fetch-progress-container {
+                                display: block;
+                            }
+                            .o_form_view:has(button[name="action_biziship_fetch_live_quotes"]:disabled) .biziship-fetch-progress-bar,
+                            .o_form_view:has(button[name="action_biziship_fetch_live_quotes"].disabled) .biziship-fetch-progress-bar,
+                            .o_form_view:has(button[name="action_biziship_fetch_live_quotes"].o_disabled) .biziship-fetch-progress-bar {
+                                animation: biziship-fetch-fill 15s cubic-bezier(0.1, 0.7, 1.0, 0.1) forwards, biziship-fetch-stripes 1s linear infinite;
+                            }
+                        </style>
+                        <div class="biziship-fetch-progress-container">
+                            <div class="biziship-fetch-progress-text">Fetching Live Quotes... (~15s)</div>
+                            <div class="biziship-fetch-progress-wrapper">
+                                <div class="biziship-fetch-progress-bar"></div>
+                            </div>
+                        </div>
+                        <button name="action_biziship_fetch_live_quotes" string="Fetch Live Quotes" type="object" class="btn-primary" invisible="state not in ['draft', 'sent', 'sale']"/>
+                    </div>
+                </page>
                 <page string="LTL Freight Quotes" name="biziship_freight_quotes">
                     <group invisible="not biziship_shipment_id">
                         <group>

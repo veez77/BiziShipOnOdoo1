@@ -13,7 +13,22 @@ class BizishipQuote(models.Model):
     total_charge = fields.Float(string='Total Charge')
     currency = fields.Char(string='Currency', default='USD')
     currency_id = fields.Many2one(related='sale_order_id.currency_id')
-    quote_id_ref = fields.Char(string='Quote ID')
+    quote_id_ref = fields.Char(string="Quote ID Ref") # Changed string from 'Quote ID' to 'Quote ID Ref'
+
+    # New Address & Terminal Fields
+    origin_address = fields.Char(string="Origin Address")
+    origin_address2 = fields.Char(string="Origin Address 2")
+    destination_address = fields.Char(string="Destination Address")
+    destination_address2 = fields.Char(string="Destination Address 2")
+    
+    origin_terminal_city = fields.Char(string="Origin Terminal City")
+    origin_terminal_state = fields.Char(string="Origin Terminal State")
+    origin_terminal_phone = fields.Char(string="Origin Terminal Phone")
+    
+    destination_terminal_city = fields.Char(string="Destination Terminal City")
+    destination_terminal_state = fields.Char(string="Destination Terminal State")
+    destination_terminal_phone = fields.Char(string="Destination Terminal Phone")
+
     is_selected = fields.Boolean(string='Selected', default=False)
     quote_details = fields.Text(string='Quote Details')
 

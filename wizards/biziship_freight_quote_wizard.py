@@ -15,6 +15,8 @@ class BizishipFreightQuoteWizard(models.TransientModel):
     
     # Pre-filled Origin
     origin_company = fields.Char(string="Origin Company")
+    origin_address = fields.Char(string="Origin Address Line 1", required=True)
+    origin_address2 = fields.Char(string="Origin Address Line 2")
     origin_city = fields.Char(string="Origin City")
     origin_state = fields.Char(string="Origin State", help="2-letter abbreviation")
     origin_zip = fields.Char(string="Origin Zip Code", required=True)
@@ -22,6 +24,8 @@ class BizishipFreightQuoteWizard(models.TransientModel):
     
     # Pre-filled Destination
     destination_company = fields.Char(string="Destination Company")
+    destination_address = fields.Char(string="Destination Address Line 1", required=True)
+    destination_address2 = fields.Char(string="Destination Address Line 2")
     destination_city = fields.Char(string="Destination City")
     destination_state = fields.Char(string="Destination State", help="2-letter abbreviation")
     destination_zip = fields.Char(string="Destination Zip Code", required=True)
@@ -68,6 +72,8 @@ class BizishipFreightQuoteWizard(models.TransientModel):
         # Origin mapping (Company warehouse)
         company = self.env.company
         res['origin_company'] = company.name or ''
+        res['origin_address'] = company.street or ''
+        res['origin_address2'] = company.street2 or ''
         res['origin_city'] = company.city or ''
         res['origin_state'] = company.state_id.code if company.state_id else ''
         res['origin_zip'] = company.zip or '43341'
@@ -76,6 +82,8 @@ class BizishipFreightQuoteWizard(models.TransientModel):
         # Destination mapping (Customer)
         partner = order.partner_shipping_id or order.partner_id
         res['destination_company'] = partner.name or ''
+        res['destination_address'] = partner.street or ''
+        res['destination_address2'] = partner.street2 or ''
         res['destination_city'] = partner.city or ''
         res['destination_state'] = partner.state_id.code if partner.state_id else ''
         res['destination_zip'] = partner.zip or '93036'
@@ -160,11 +168,15 @@ class BizishipFreightQuoteWizard(models.TransientModel):
         # Build JSON Payload
         payload = {
             "origin_company": self.origin_company or "",
+            "origin_address": self.origin_address or "",
+            "origin_address2": self.origin_address2 or "",
             "origin_city": self.origin_city or "",
             "origin_state": self.origin_state or "",
             "origin_zip": self.origin_zip or "43341",
             "origin_phone": self._format_phone(self.origin_phone),
             "destination_company": self.destination_company or "",
+            "destination_address": self.destination_address or "",
+            "destination_address2": self.destination_address2 or "",
             "destination_city": self.destination_city or "",
             "destination_state": self.destination_state or "",
             "destination_zip": self.destination_zip or "93036",
@@ -229,6 +241,16 @@ class BizishipFreightQuoteWizard(models.TransientModel):
                     'total_charge': q.get('total_charge'),
                     'currency': q.get('currency', 'USD'),
                     'quote_id_ref': q.get('quote_id'),
+                    'origin_address': extracted_details.get('origin_address'),
+                    'origin_address2': extracted_details.get('origin_address2'),
+                    'destination_address': extracted_details.get('destination_address'),
+                    'destination_address2': extracted_details.get('destination_address2'),
+                    'origin_terminal_city': extracted_details.get('origin_terminal_city'),
+                    'origin_terminal_state': extracted_details.get('origin_terminal_state'),
+                    'origin_terminal_phone': extracted_details.get('origin_terminal_phone'),
+                    'destination_terminal_city': extracted_details.get('destination_terminal_city'),
+                    'destination_terminal_state': extracted_details.get('destination_terminal_state'),
+                    'destination_terminal_phone': extracted_details.get('destination_terminal_phone'),
                     'quote_details': details_text,
                 })
 

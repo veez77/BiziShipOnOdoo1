@@ -19,6 +19,8 @@ class SaleOrder(models.Model):
     # --- LTL Freight Fields ---
     # Origin & Pickup
     biziship_pickup_date = fields.Date(string="Pickup Date", default=lambda self: fields.Date.context_today(self))
+    biziship_origin_address = fields.Char(string="Pickup Address Line 1", default=lambda self: self.env.company.street or '')
+    biziship_origin_address2 = fields.Char(string="Pickup Address Line 2", default=lambda self: self.env.company.street2 or '')
     biziship_origin_zip = fields.Char(string="Pickup Zip Code", default=lambda self: self.env.company.zip or '')
     biziship_origin_country_id = fields.Many2one('res.country', string="Origin Country", default=lambda self: self.env.company.country_id.id if self.env.company.country_id else False)
     
@@ -27,6 +29,8 @@ class SaleOrder(models.Model):
     biziship_origin_limited_access = fields.Boolean(string="Limited Access Pickup")
 
     # Destination
+    biziship_dest_address = fields.Char(string="Destination Address Line 1", related="partner_shipping_id.street", readonly=False, store=True)
+    biziship_dest_address2 = fields.Char(string="Destination Address Line 2", related="partner_shipping_id.street2", readonly=False, store=True)
     biziship_dest_zip = fields.Char(string="Destination Zip Code", related="partner_shipping_id.zip", readonly=False, store=True)
     biziship_dest_country_id = fields.Many2one('res.country', string="Destination Country", compute='_compute_biziship_dest_country_id', readonly=False, store=True)
     
@@ -270,11 +274,15 @@ class SaleOrder(models.Model):
         # Build JSON Payload
         payload = {
             "origin_company": self.company_id.name or self.env.company.name or "",
+            "origin_address": self.biziship_origin_address or "",
+            "origin_address2": self.biziship_origin_address2 or "",
             "origin_city": self.company_id.city or self.env.company.city or "",
             "origin_state": self.company_id.state_id.code if self.company_id.state_id else "",
             "origin_zip": self.biziship_origin_zip,
             "origin_phone": self._format_phone(origin_phone),
             "destination_company": self.partner_shipping_id.name or self.partner_id.name or "",
+            "destination_address": self.biziship_dest_address or "",
+            "destination_address2": self.biziship_dest_address2 or "",
             "destination_city": self.partner_shipping_id.city or self.partner_id.city or "",
             "destination_state": self.partner_shipping_id.state_id.code if self.partner_shipping_id.state_id else "",
             "destination_zip": self.biziship_dest_zip,
@@ -339,6 +347,16 @@ class SaleOrder(models.Model):
                     'total_charge': q.get('total_charge'),
                     'currency': q.get('currency', 'USD'),
                     'quote_id_ref': q.get('quote_id'),
+                    'origin_address': extracted_details.get('origin_address'),
+                    'origin_address2': extracted_details.get('origin_address2'),
+                    'destination_address': extracted_details.get('destination_address'),
+                    'destination_address2': extracted_details.get('destination_address2'),
+                    'origin_terminal_city': extracted_details.get('origin_terminal_city'),
+                    'origin_terminal_state': extracted_details.get('origin_terminal_state'),
+                    'origin_terminal_phone': extracted_details.get('origin_terminal_phone'),
+                    'destination_terminal_city': extracted_details.get('destination_terminal_city'),
+                    'destination_terminal_state': extracted_details.get('destination_terminal_state'),
+                    'destination_terminal_phone': extracted_details.get('destination_terminal_phone'),
                     'quote_details': details_text,
                 })
 

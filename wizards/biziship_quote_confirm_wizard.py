@@ -50,24 +50,26 @@ class BizishipQuoteConfirmWizard(models.TransientModel):
 
         company = self.env.company
         shipper = {
-            "company_name": company.name or "Shipper LLC",
-            "address_line1": f"{company.street or ''} {company.street2 or ''}".strip() or "123 Main St",
-            "city": extracted_data.get("origin_city", company.city or ""),
-            "state": extracted_data.get("origin_state", company.state_id.code if company.state_id else ""),
-            "zip": extracted_data.get("origin_zip", company.zip or ""),
+            "company_name": extracted_data.get("origin_company") or company.name,
+            "address_line1": extracted_data.get("origin_address") or company.street or "",
+            "address_line2": extracted_data.get("origin_address2") or company.street2 or "",
+            "city": extracted_data.get("origin_city") or company.city or "",
+            "state": extracted_data.get("origin_state") or (company.state_id.code if company.state_id else ""),
+            "zip": extracted_data.get("origin_zip") or company.zip or "",
             "contact": company.name or "Contact",
-            "phone": format_phone(extracted_data.get("origin_phone", company.phone))
+            "phone": format_phone(extracted_data.get("origin_phone") or company.phone)
         }
         
         partner = sale_order.partner_shipping_id or sale_order.partner_id
         consignee = {
-            "company_name": partner.name or "Consignee LLC",
-            "address_line1": f"{partner.street or ''} {partner.street2 or ''}".strip() or "456 Main St",
-            "city": extracted_data.get("destination_city", partner.city or ""),
-            "state": extracted_data.get("destination_state", partner.state_id.code if partner.state_id else ""),
-            "zip": extracted_data.get("destination_zip", partner.zip or ""),
+            "company_name": extracted_data.get("destination_company") or partner.name,
+            "address_line1": extracted_data.get("destination_address") or partner.street or "",
+            "address_line2": extracted_data.get("destination_address2") or partner.street2 or "",
+            "city": extracted_data.get("destination_city") or partner.city or "",
+            "state": extracted_data.get("destination_state") or (partner.state_id.code if partner.state_id else ""),
+            "zip": extracted_data.get("destination_zip") or partner.zip or "",
             "contact": partner.name or "Contact",
-            "phone": format_phone(extracted_data.get("destination_phone", partner.phone))
+            "phone": format_phone(extracted_data.get("destination_phone") or partner.phone)
         }
         
         from datetime import timedelta

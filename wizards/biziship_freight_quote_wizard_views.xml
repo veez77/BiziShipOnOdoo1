@@ -92,6 +92,8 @@
                     <group string="Routing (Origin to Destination)">
                         <group string="Origin (Warehouse)">
                             <field name="origin_company" />
+                            <field name="origin_address" />
+                            <field name="origin_address2" />
                             <field name="origin_city" />
                             <field name="origin_state" />
                             <field name="origin_zip" />
@@ -99,6 +101,8 @@
                         </group>
                         <group string="Destination (Customer)">
                             <field name="destination_company" />
+                            <field name="destination_address" />
+                            <field name="destination_address2" />
                             <field name="destination_city" />
                             <field name="destination_state" />
                             <field name="destination_zip" />

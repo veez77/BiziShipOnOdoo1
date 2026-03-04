@@ -178,6 +178,16 @@ Respond ONLY with a valid JSON object, without any markdown formatting, backtick
                         'total_charge': q.get('total_charge'),
                         'currency': q.get('currency', 'USD'),
                         'quote_id_ref': q.get('quote_id'),
+                        'origin_address': extracted_details.get('origin_address'),
+                        'origin_address2': extracted_details.get('origin_address2'),
+                        'destination_address': extracted_details.get('destination_address'),
+                        'destination_address2': extracted_details.get('destination_address2'),
+                        'origin_terminal_city': extracted_details.get('origin_terminal_city'),
+                        'origin_terminal_state': extracted_details.get('origin_terminal_state'),
+                        'origin_terminal_phone': extracted_details.get('origin_terminal_phone'),
+                        'destination_terminal_city': extracted_details.get('destination_terminal_city'),
+                        'destination_terminal_state': extracted_details.get('destination_terminal_state'),
+                        'destination_terminal_phone': extracted_details.get('destination_terminal_phone'),
                         'quote_details': details_text,
                     })
 

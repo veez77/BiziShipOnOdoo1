@@ -5,13 +5,7 @@ import os
 from odoo import models, fields, api, _
 from odoo.exceptions import UserError
 
-def get_secrets():
-    secrets_path = os.path.join(os.path.dirname(__file__), '..', 'secrets.json')
-    if os.path.exists(secrets_path):
-        with open(secrets_path, 'r') as f:
-            return json.load(f)
-    return {}
-
+from odoo.addons.BiziShipOnOdoo1.api_utils import get_biziship_api_url, get_email2quote_api_key
 class SaleOrder(models.Model):
     _inherit = 'sale.order'
 
@@ -248,9 +242,8 @@ class SaleOrder(models.Model):
         if not self.biziship_origin_zip or not self.biziship_dest_zip or not self.biziship_weight or not self.biziship_pickup_date:
             raise UserError(_("Origin Zip, Destination Zip, Weight, and Pickup Date are required to fetch LTL quotes."))
 
-        secrets = get_secrets()
-        email2quote_api_url = secrets.get("EMAIL2QUOTE_API_URL", "http://localhost:8000")
-        email2quote_api_key = secrets.get("EMAIL2QUOTE_API_KEY", "")
+        email2quote_api_url = get_biziship_api_url()
+        email2quote_api_key = get_email2quote_api_key()
         
         api_url = f"{email2quote_api_url.rstrip('/')}/quote/details"
         headers = {

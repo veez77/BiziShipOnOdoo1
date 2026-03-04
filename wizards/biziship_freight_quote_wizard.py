@@ -5,12 +5,7 @@ from odoo import models, fields, api, _
 from odoo.exceptions import UserError
 import os
 
-def get_secrets():
-    secrets_path = os.path.join(os.path.dirname(__file__), '..', 'secrets.json')
-    if os.path.exists(secrets_path):
-        with open(secrets_path, 'r') as f:
-            return json.load(f)
-    return {}
+from odoo.addons.BiziShipOnOdoo1.api_utils import get_biziship_api_url, get_email2quote_api_key
 
 class BizishipFreightQuoteWizard(models.TransientModel):
     _name = 'biziship.freight.quote.wizard'
@@ -153,9 +148,8 @@ class BizishipFreightQuoteWizard(models.TransientModel):
     def action_get_quotes(self):
         self.ensure_one()
         
-        secrets = get_secrets()
-        email2quote_api_url = secrets.get("EMAIL2QUOTE_API_URL", "http://localhost:8000")
-        email2quote_api_key = secrets.get("EMAIL2QUOTE_API_KEY", "")
+        email2quote_api_url = get_biziship_api_url()
+        email2quote_api_key = get_email2quote_api_key()
         
         api_url = f"{email2quote_api_url.rstrip('/')}/quote/details"
         headers = {

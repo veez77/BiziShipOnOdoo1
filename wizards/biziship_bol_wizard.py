@@ -6,12 +6,7 @@ import os
 from odoo import models, fields, api, _
 from odoo.exceptions import UserError
 
-def get_secrets():
-    secrets_path = os.path.join(os.path.dirname(__file__), '..', 'secrets.json')
-    if os.path.exists(secrets_path):
-        with open(secrets_path, 'r') as f:
-            return json.load(f)
-    return {}
+from odoo.addons.BiziShipOnOdoo1.api_utils import get_biziship_api_url, get_email2quote_api_key, get_groq_api_key
 
 try:
     from PyPDF2 import PdfReader
@@ -20,13 +15,6 @@ except ImportError:
         from PyPDF2 import PdfFileReader as PdfReader
     except ImportError:
         PdfReader = None
-
-def get_secrets():
-    secrets_path = os.path.join(os.path.dirname(__file__), '..', 'secrets.json')
-    if os.path.exists(secrets_path):
-        with open(secrets_path, 'r') as f:
-            return json.load(f)
-    return {}
 
 class BizishipBolImportWizard(models.TransientModel):
     _name = 'biziship.bol.import.wizard'
@@ -39,8 +27,6 @@ class BizishipBolImportWizard(models.TransientModel):
         self.ensure_one()
         if not self.bol_file:
             raise UserError(_("Please upload a BOL PDF file."))
-
-        secrets = get_secrets()
 
         # 1. Base64 PDF string (Odoo Binary fields are already base64 encoded bytes)
         file_base64 = self.bol_file.decode('utf-8')
@@ -62,7 +48,7 @@ class BizishipBolImportWizard(models.TransientModel):
             pdf_text = f"Error extracting PDF text: {str(e)}"
 
         # 2. Call Groq API
-        groq_api_key = secrets.get("GROQ_API_KEY", "")
+        groq_api_key = get_groq_api_key()
         if not groq_api_key:
             raise UserError(_("Groq API Key is not configured in secrets.json"))
             
@@ -126,10 +112,9 @@ Respond ONLY with a valid JSON object, without any markdown formatting, backtick
             )
 
         # 3. Send to Local API (Email2Quote)
-        secrets = get_secrets()
-        email2quote_api_url = secrets.get("EMAIL2QUOTE_API_URL", "http://localhost:8000")
+        email2quote_api_url = get_biziship_api_url()
         local_api_bol_url = f"{email2quote_api_url.rstrip('/')}/quote/bol"
-        email2quote_api_key = secrets.get("EMAIL2QUOTE_API_KEY", "")
+        email2quote_api_key = get_email2quote_api_key()
         api_key_header = {"X-API-Key": email2quote_api_key}
 
         # Decode base64 PDF bytes from Odoo

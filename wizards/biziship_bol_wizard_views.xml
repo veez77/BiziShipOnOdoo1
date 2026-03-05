@@ -62,12 +62,12 @@
                 
                 <div class="text-center mb-4 mt-2 biziship-help-text">
                     <h2 style="font-weight: 300;">Extract BOL Details</h2>
-                    <p class="text-muted">Select your Bill of Lading PDF file and click Process.</p>
+                    <p class="text-muted">Select your Bill of Lading document (PDF, PNG, JPG) and click Process.</p>
                 </div>
                 
                 <group class="biziship-help-text">
                     <field name="file_name" invisible="1"/>
-                    <field name="bol_file" filename="file_name" widget="pdf_viewer"/>
+                    <field name="bol_file" filename="file_name"/>
                 </group>
 
                 <div class="biziship-progress-container">

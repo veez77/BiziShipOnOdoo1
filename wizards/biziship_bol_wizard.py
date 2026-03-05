@@ -20,7 +20,7 @@ class BizishipBolImportWizard(models.TransientModel):
     _name = 'biziship.bol.import.wizard'
     _description = 'BiziShip BOL Import Wizard'
 
-    bol_file = fields.Binary(string="BOL PDF File", required=True)
+    bol_file = fields.Binary(string="BOL Document (PDF/Image)", required=True)
     file_name = fields.Char(string="File Name")
 
     def action_process_bol(self):
@@ -28,37 +28,28 @@ class BizishipBolImportWizard(models.TransientModel):
         if not self.bol_file:
             raise UserError(_("Please upload a BOL PDF file."))
 
-        # 1. Base64 PDF string (Odoo Binary fields are already base64 encoded bytes)
+        # 1. Base64 file string (Odoo Binary fields are already base64 encoded bytes)
         file_base64 = self.bol_file.decode('utf-8')
+        file_name = self.file_name or "document.pdf"
+        
+        is_pdf = file_name.lower().endswith('.pdf')
+        is_image = file_name.lower().endswith(('.png', '.jpg', '.jpeg'))
+        
+        if not is_pdf and not is_image:
+            # Default to PDF behavior if unknown extension, or could enforce
+            is_pdf = True
 
-        # Extract text from the PDF
+        mime_type = "application/pdf"
+        if is_image:
+            mime_type = "image/png" if file_name.lower().endswith('.png') else "image/jpeg"
+
+        # Determine extraction strategy
         pdf_text = ""
-        try:
-            if PdfReader:
-                pdf_bytes = base64.b64decode(self.bol_file)
-                reader = PdfReader(io.BytesIO(pdf_bytes))
-                pages = reader.pages if hasattr(reader, 'pages') else reader.pages
-                for page in pages:
-                    text = page.extract_text() if hasattr(page, 'extract_text') else page.extractText()
-                    if text:
-                        pdf_text += text + "\n"
-            else:
-                pdf_text = "Error: PyPDF2 library is not available in Odoo to extract text."
-        except Exception as e:
-            pdf_text = f"Error extracting PDF text: {str(e)}"
-
-        # 2. Call Groq API
-        groq_api_key = get_groq_api_key()
-        if not groq_api_key:
-            raise UserError(_("Groq API Key is not configured in secrets.json"))
-            
-        groq_endpoint = "https://api.groq.com/openai/v1/chat/completions"
-
+        payload = {}
         prompt = """
 You are an expert logistics data extractor. I have a Bill of Lading (BOL). 
-I need to get Freight details from the document text for an LTL Freight request to be passed to freight brokers.
-I am providing the extracted document text below. 
-Please parse the text data, and extract the following information in a strict JSON format with exactly these keys:
+I need to get Freight details from the document for an LTL Freight request to be passed to freight brokers.
+Please parse the provided data, and extract the following information in a strict JSON format with exactly these keys:
 - "Weight"
 - "Dimensions"
 - "Origin"
@@ -73,28 +64,63 @@ Respond ONLY with a valid JSON object, without any markdown formatting, backtick
             "Content-Type": "application/json"
         }
 
-        # Use a model that supports large context / JSON mode
-        payload = {
-            "model": "llama-3.3-70b-versatile",
-            "messages": [
-                {
-                    "role": "system",
-                    "content": "You are a helpful logistics assistant that outputs data in strict JSON."
-                },
-                {
-                    "role": "user",
-                    "content": f"{prompt}\n\nDocument Text:\n{pdf_text}"
-                }
-            ],
-            "temperature": 0.1,
-            "response_format": {"type": "json_object"}
-        }
+        if is_pdf:
+            try:
+                if PdfReader:
+                    pdf_bytes = base64.b64decode(self.bol_file)
+                    reader = PdfReader(io.BytesIO(pdf_bytes))
+                    pages = reader.pages if hasattr(reader, 'pages') else reader.pages
+                    for page in pages:
+                        text = page.extract_text() if hasattr(page, 'extract_text') else page.extractText()
+                        if text:
+                            pdf_text += text + "\n"
+                else:
+                    pdf_text = "Error: PyPDF2 library is not available in Odoo to extract text."
+            except Exception as e:
+                pdf_text = f"Error extracting PDF text: {str(e)}"
+                
+            payload = {
+                "model": "llama-3.3-70b-versatile",
+                "messages": [
+                    {
+                        "role": "system",
+                        "content": "You are a helpful logistics assistant that outputs data in strict JSON."
+                    },
+                    {
+                        "role": "user",
+                        "content": f"{prompt}\n\nDocument Text:\n{pdf_text}"
+                    }
+                ],
+                "temperature": 0.1,
+                "response_format": {"type": "json_object"}
+            }
+        else:
+            payload = {
+                "model": "llama-3.2-90b-vision-preview",
+                "messages": [
+                    {
+                        "role": "user",
+                        "content": [
+                            {"type": "text", "text": prompt},
+                            {"type": "image_url", "image_url": {"url": f"data:{mime_type};base64,{file_base64}"}}
+                        ]
+                    }
+                ],
+                "temperature": 0.1
+            }
 
         try:
             response = requests.post(groq_endpoint, headers=headers, json=payload, timeout=60)
             response.raise_for_status()
             ai_data = response.json()
             message_content = ai_data.get('choices', [{}])[0].get('message', {}).get('content', '')
+            
+            # Clean up potential markdown wrapper from vision model if present
+            if message_content.startswith('```json'):
+                message_content = message_content.strip('`').replace('json\n', '', 1)
+            elif message_content.startswith('```'):
+                message_content = message_content.strip('`')
+                
             parsed_json = json.loads(message_content)
         except requests.exceptions.RequestException as e:
             error_details = e.response.text if hasattr(e, 'response') and e.response is not None else str(e)
@@ -117,13 +143,12 @@ Respond ONLY with a valid JSON object, without any markdown formatting, backtick
         email2quote_api_key = get_email2quote_api_key()
         api_key_header = {"X-API-Key": email2quote_api_key}
 
-        # Decode base64 PDF bytes from Odoo
-        pdf_bytes = base64.b64decode(self.bol_file)
-        file_name = self.file_name or "bol.pdf"
+        # Decode base64 PDF/Image bytes from Odoo
+        file_bytes = base64.b64decode(self.bol_file)
 
         try:
-            # Send BOL PDF
-            files = {"file": (file_name, pdf_bytes, "application/pdf")}
+            # Send BOL Document (PDF or Image)
+            files = {"file": (file_name, file_bytes, mime_type)}
             local_response_bol = requests.post(
                 local_api_bol_url, 
                 headers=api_key_header, 

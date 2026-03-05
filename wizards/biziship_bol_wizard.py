@@ -46,104 +46,108 @@ class BizishipBolImportWizard(models.TransientModel):
         # Determine extraction strategy
         pdf_text = ""
         payload = {}
-        prompt = """
-You are an expert logistics data extractor. I have a Bill of Lading (BOL). 
-I need to get Freight details from the document for an LTL Freight request to be passed to freight brokers.
-Please parse the provided data, and extract the following information in a strict JSON format with exactly these keys:
-- "Weight"
-- "Dimensions"
-- "Origin"
-- "Destination"
-- "Freight Class"
-
-Respond ONLY with a valid JSON object, without any markdown formatting, backticks, or additional explanation.
-"""
-
-
-        # 2. Setup API Key and Endpoint
-        groq_api_key = get_groq_api_key()
-        if not groq_api_key:
-            raise UserError(_("Groq API Key is not configured in secrets.json"))
-            
-        groq_endpoint = "https://api.groq.com/openai/v1/chat/completions"
-
-        headers = {
-            "Authorization": f"Bearer {groq_api_key}",
-            "Content-Type": "application/json"
-        }
-
-        if is_pdf:
-            try:
-                if PdfReader:
-                    pdf_bytes = base64.b64decode(self.bol_file)
-                    reader = PdfReader(io.BytesIO(pdf_bytes))
-                    pages = reader.pages if hasattr(reader, 'pages') else reader.pages
-                    for page in pages:
-                        text = page.extract_text() if hasattr(page, 'extract_text') else page.extractText()
-                        if text:
-                            pdf_text += text + "\n"
-                else:
-                    pdf_text = "Error: PyPDF2 library is not available in Odoo to extract text."
-            except Exception as e:
-                pdf_text = f"Error extracting PDF text: {str(e)}"
-                
-            payload = {
-                "model": "llama-3.3-70b-versatile",
-                "messages": [
-                    {
-                        "role": "system",
-                        "content": "You are a helpful logistics assistant that outputs data in strict JSON."
-                    },
-                    {
-                        "role": "user",
-                        "content": f"{prompt}\n\nDocument Text:\n{pdf_text}"
-                    }
-                ],
-                "temperature": 0.1,
-                "response_format": {"type": "json_object"}
-            }
-        else:
-            payload = {
-                "model": "llama-3.2-90b-vision-preview",
-                "messages": [
-                    {
-                        "role": "user",
-                        "content": [
-                            {"type": "text", "text": prompt},
-                            {"type": "image_url", "image_url": {"url": f"data:{mime_type};base64,{file_base64}"}}
-                        ]
-                    }
-                ],
-                "temperature": 0.1
-            }
-
-        try:
-            response = requests.post(groq_endpoint, headers=headers, json=payload, timeout=60)
-            response.raise_for_status()
-            ai_data = response.json()
-            message_content = ai_data.get('choices', [{}])[0].get('message', {}).get('content', '')
-            
-            # Clean up potential markdown wrapper from vision model if present
-            if message_content.startswith('```json'):
-                message_content = message_content.strip('`').replace('json\n', '', 1)
-            elif message_content.startswith('```'):
-                message_content = message_content.strip('`')
-                
-            parsed_json = json.loads(message_content)
-        except requests.exceptions.RequestException as e:
-            error_details = e.response.text if hasattr(e, 'response') and e.response is not None else str(e)
-            raise UserError(_("Failed to connect to Groq API. Error: %s") % error_details)
-        except json.JSONDecodeError:
-            raise UserError(_("Groq API did not return valid JSON. Response was: %s") % message_content)
-
-        # Validate required data presence
-        required_keys = ["Weight", "Dimensions", "Origin", "Destination", "Freight Class"]
-        if not all(key in parsed_json for key in required_keys):
-            raise UserError(
-                _("Groq API failed to find required LTL data.\n"
-                  "Expected keys: %s\n"
-                  "Parsed data received:\n%s") % (required_keys, json.dumps(parsed_json, indent=2))
-            )
+        
+        # --- GROQ EXTRACTION TEMPORARILY DISABLED ---
+        # prompt = """
+        # You are an expert logistics data extractor. I have a Bill of Lading (BOL). 
+        # I need to get Freight details from the document for an LTL Freight request to be passed to freight brokers.
+        # Please parse the provided data, and extract the following information in a strict JSON format with exactly these keys:
+        # - "Weight"
+        # - "Dimensions"
+        # - "Origin"
+        # - "Destination"
+        # - "Freight Class"
+        # 
+        # Respond ONLY with a valid JSON object, without any markdown formatting, backticks, or additional explanation.
+        # """
+        # 
+        # # 2. Setup API Key and Endpoint
+        # groq_api_key = get_groq_api_key()
+        # if not groq_api_key:
+        #     raise UserError(_("Groq API Key is not configured in secrets.json"))
+        #     
+        # groq_endpoint = "https://api.groq.com/openai/v1/chat/completions"
+        # 
+        # headers = {
+        #     "Authorization": f"Bearer {groq_api_key}",
+        #     "Content-Type": "application/json"
+        # }
+        # 
+        # if is_pdf:
+        #     try:
+        #         if PdfReader:
+        #             pdf_bytes = base64.b64decode(self.bol_file)
+        #             reader = PdfReader(io.BytesIO(pdf_bytes))
+        #             pages = reader.pages if hasattr(reader, 'pages') else reader.pages
+        #             for page in pages:
+        #                 text = page.extract_text() if hasattr(page, 'extract_text') else page.extractText()
+        #                 if text:
+        #                     pdf_text += text + "\n"
+        #         else:
+        #             pdf_text = "Error: PyPDF2 library is not available in Odoo to extract text."
+        #     except Exception as e:
+        #         pdf_text = f"Error extracting PDF text: {str(e)}"
+        #         
+        #     payload = {
+        #         "model": "llama-3.3-70b-versatile",
+        #         "messages": [
+        #             {
+        #                 "role": "system",
+        #                 "content": "You are a helpful logistics assistant that outputs data in strict JSON."
+        #             },
+        #             {
+        #                 "role": "user",
+        #                 "content": f"{prompt}\n\nDocument Text:\n{pdf_text}"
+        #             }
+        #         ],
+        #         "temperature": 0.1,
+        #         "response_format": {"type": "json_object"}
+        #     }
+        # else:
+        #     payload = {
+        #         "model": "llama-3.2-90b-vision-preview",
+        #         "messages": [
+        #             {
+        #                 "role": "user",
+        #                 "content": [
+        #                     {"type": "text", "text": prompt},
+        #                     {"type": "image_url", "image_url": {"url": f"data:{mime_type};base64,{file_base64}"}}
+        #                 ]
+        #             }
+        #         ],
+        #         "temperature": 0.1
+        #     }
+        # 
+        # try:
+        #     response = requests.post(groq_endpoint, headers=headers, json=payload, timeout=60)
+        #     response.raise_for_status()
+        #     ai_data = response.json()
+        #     message_content = ai_data.get('choices', [{}])[0].get('message', {}).get('content', '')
+        #     
+        #     # Clean up potential markdown wrapper from vision model if present
+        #     if message_content.startswith('```json'):
+        #         message_content = message_content.strip('`').replace('json\n', '', 1)
+        #     elif message_content.startswith('```'):
+        #         message_content = message_content.strip('`')
+        #         
+        #     parsed_json = json.loads(message_content)
+        # except requests.exceptions.RequestException as e:
+        #     error_details = e.response.text if hasattr(e, 'response') and e.response is not None else str(e)
+        #     raise UserError(_("Failed to connect to Groq API. Error: %s") % error_details)
+        # except json.JSONDecodeError:
+        #     raise UserError(_("Groq API did not return valid JSON. Response was: %s") % message_content)
+        # 
+        # # Validate required data presence
+        # required_keys = ["Weight", "Dimensions", "Origin", "Destination", "Freight Class"]
+        # if not all(key in parsed_json for key in required_keys):
+        #     raise UserError(
+        #         _("Groq API failed to find required LTL data.\n"
+        #           "Expected keys: %s\n"
+        #           "Parsed data received:\n%s") % (required_keys, json.dumps(parsed_json, indent=2))
+        #     )
+        # --- END GROQ EXTRACTION TEMPORARILY DISABLED ---
+        
+        parsed_json = {}
 
         # 3. Send to Local API (Email2Quote)
         email2quote_api_url = get_biziship_api_url()

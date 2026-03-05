@@ -59,6 +59,14 @@ Please parse the provided data, and extract the following information in a stric
 Respond ONLY with a valid JSON object, without any markdown formatting, backticks, or additional explanation.
 """
 
+
+        # 2. Setup API Key and Endpoint
+        groq_api_key = get_groq_api_key()
+        if not groq_api_key:
+            raise UserError(_("Groq API Key is not configured in secrets.json"))
+            
+        groq_endpoint = "https://api.groq.com/openai/v1/chat/completions"
+
         headers = {
             "Authorization": f"Bearer {groq_api_key}",
             "Content-Type": "application/json"

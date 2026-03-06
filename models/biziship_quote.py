@@ -1,4 +1,4 @@
-from odoo import models, fields
+from odoo import models, fields, api
 
 class BizishipQuote(models.Model):
     _name = 'biziship.quote'
@@ -32,12 +32,31 @@ class BizishipQuote(models.Model):
     is_selected = fields.Boolean(string='Selected', default=False)
     quote_details = fields.Text(string='Quote Details')
 
-    def action_select_quote(self):
+    def action_select_quote_toggle(self):
         for record in self:
-            # Deselect all quotes for this order
-            self.search([('sale_order_id', '=', record.sale_order_id.id), ('id', '!=', record.id)]).write({'is_selected': False})
-            # Select this one
-            record.is_selected = True
+            if record.is_selected:
+                record.is_selected = False
+            else:
+                self.search([
+                    ('sale_order_id', '=', record.sale_order_id.id),
+                    ('id', '!=', record.id),
+                    ('is_selected', '=', True)
+                ]).write({'is_selected': False})
+                record.is_selected = True
+        return True
+
+    def write(self, vals):
+        if vals.get('is_selected'):
+            # If we are setting this quote to selected, deselect others for the same order
+            for record in self:
+                other_quotes = self.env['biziship.quote'].search([
+                    ('sale_order_id', '=', record.sale_order_id.id),
+                    ('id', '!=', record.id),
+                    ('is_selected', '=', True)
+                ])
+                if other_quotes:
+                    other_quotes.write({'is_selected': False})
+        return super().write(vals)
 
     def name_get(self):
         result = []

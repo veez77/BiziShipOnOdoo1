@@ -73,7 +73,12 @@
                         <field name="currency_id" invisible="1"/>
                         <field name="quote_id_ref" string="Quote ID"/>
                         <field name="quote_id" invisible="1"/>
+                        <field name="has_accessorials" invisible="1"/>
                     </group>
+                </group>
+
+                <group class="biziship-quote-help-group" invisible="not has_accessorials" string="Accessorial Services">
+                    <field name="accessorial_services_text" nolabel="1" readonly="1" colspan="2" style="white-space: pre; margin-left:10px;"/>
                 </group>
 
                 <div class="biziship-quote-progress-container">

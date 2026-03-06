@@ -1,8 +1,29 @@
 import json
 import requests
 import os
-from odoo import models, fields, _
+from odoo import models, fields, api, _
 from odoo.exceptions import UserError
+
+ACCESSORIAL_MAPPING = {
+    "APPT": "Delivery Appointment",
+    "LGDEL": "Lift Gate Delivery",
+    "LGPU": "Lift Gate Pickup",
+    "RESDEL": "Residential Delivery",
+    "RESPU": "Residential Pickup",
+    "INDEL": "Inside Delivery",
+    "INPU": "Inside Pickup",
+    "LTDDEL": "Limited Access Delivery",
+    "LTDPU": "Limited Access Pickup",
+    "NOTIFY": "Notify Consignee",
+    "HAZM": "Hazardous Material",
+    "SORTDEL": "Sort/Segregate Delivery",
+    "SORTPU": "Sort/Segregate Pickup",
+    "CONDEL": "Construction Site Delivery",
+    "CONPU": "Construction Site Pickup",
+    "PFZ": "Protection From Freezing",
+    "CNVDEL": "Trade Show Delivery",
+    "CNVPU": "Trade Show Pickup"
+}
 
 from odoo.addons.BiziShipOnOdoo1.api_utils import get_biziship_api_url, get_email2quote_api_key
 
@@ -18,6 +39,28 @@ class BizishipQuoteConfirmWizard(models.TransientModel):
     currency = fields.Char(related="quote_id.currency", readonly=True)
     currency_id = fields.Many2one(related="quote_id.currency_id", readonly=True)
     quote_id_ref = fields.Char(related="quote_id.quote_id_ref", readonly=True)
+
+    accessorial_services_text = fields.Text(string="Accessorial Services", compute='_compute_accessorial_services')
+    has_accessorials = fields.Boolean(compute='_compute_accessorial_services')
+
+    @api.depends('quote_id.sale_order_id.biziship_extracted_json')
+    def _compute_accessorial_services(self):
+        for rec in self:
+            services_text = ""
+            has_acc = False
+            if rec.quote_id and rec.quote_id.sale_order_id and rec.quote_id.sale_order_id.biziship_extracted_json:
+                try:
+                    data = json.loads(rec.quote_id.sale_order_id.biziship_extracted_json)
+                    codes = data.get('accessorial_codes', [])
+                    if codes:
+                        labels = [ACCESSORIAL_MAPPING.get(code, code) for code in codes]
+                        services_text = "\n".join(f"• {label}" for label in labels)
+                        has_acc = True
+                except Exception:
+                    pass
+            rec.accessorial_services_text = services_text
+            rec.has_accessorials = has_acc
+
 
     def action_confirm_and_send(self):
         self.ensure_one()
@@ -101,7 +144,8 @@ class BizishipQuoteConfirmWizard(models.TransientModel):
             sale_order.write({
                 'biziship_bol_number': response_json.get('bol_number'),
                 'biziship_shipment_id': response_json.get('shipment_id'),
-                'biziship_bol_url': response_json.get('bol_url')
+                'biziship_bol_url': response_json.get('bol_url'),
+                'biziship_documents_json': json.dumps(response_json.get('documents', [])) if response_json.get('documents') else False
             })
             
         except requests.exceptions.RequestException as e:

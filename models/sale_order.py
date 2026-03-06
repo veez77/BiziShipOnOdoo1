@@ -16,6 +16,44 @@ class SaleOrder(models.Model):
     biziship_bol_url = fields.Char(string='BiziShip BOL Document URL', readonly=True, copy=False)
     biziship_has_selected_quote = fields.Boolean(compute='_compute_biziship_has_selected_quote')
 
+    biziship_documents_json = fields.Text(string='Shipment Documents JSON', readonly=True, copy=False)
+    biziship_documents_html = fields.Html(string='Shipment Documents', compute='_compute_biziship_documents_html', readonly=True)
+
+    @api.depends('biziship_documents_json', 'biziship_bol_url')
+    def _compute_biziship_documents_html(self):
+        for order in self:
+            html_links = []
+            if order.biziship_documents_json:
+                try:
+                    docs = json.loads(order.biziship_documents_json)
+                    if isinstance(docs, list):
+                        for doc in docs:
+                            url = doc.get('url')
+                            label = doc.get('label', doc.get('type', 'Document'))
+                            if url:
+                                html_links.append(
+                                    f'<div class="mb-2">'
+                                    f'<a href="{url}" target="_blank" style="color: #0b7a40; font-weight: 500; font-size: 15px; text-decoration: underline; white-space: nowrap; display: inline-block;">'
+                                    f'{label} <i class="fa fa-download ms-1"></i></a>'
+                                    f'</div>'
+                                )
+                except Exception:
+                    pass
+            
+            # Fallback to single BOL URL if no valid documents array found, but URL exists
+            if not html_links and order.biziship_bol_url:
+                html_links.append(
+                    f'<div class="mb-2">'
+                    f'<a href="{order.biziship_bol_url}" target="_blank" style="color: #0b7a40; font-weight: 500; font-size: 15px; text-decoration: underline; white-space: nowrap; display: inline-block;">'
+                    f'Bill of Lading <i class="fa fa-download ms-1"></i></a>'
+                    f'</div>'
+                )
+            
+            if html_links:
+                order.biziship_documents_html = f'<div class="d-flex flex-column mt-2">{"".join(html_links)}</div>'
+            else:
+                order.biziship_documents_html = ""
+
     # --- LTL Freight Fields ---
     # Origin & Pickup
     biziship_pickup_date = fields.Date(string="Pickup Date", default=lambda self: fields.Date.context_today(self))
@@ -159,6 +197,7 @@ class SaleOrder(models.Model):
                 'biziship_shipment_id': False,
                 'biziship_bol_url': False,
                 'biziship_extracted_json': False,
+                'biziship_documents_json': False,
             })
             # Also reset selection
             for quote in order.biziship_quote_ids:

@@ -44,16 +44,20 @@ class BizishipQuoteConfirmWizard(models.TransientModel):
     accessorial_services_text = fields.Text(string="Accessorial Services", compute='_compute_accessorial_services')
     has_accessorials = fields.Boolean(compute='_compute_accessorial_services')
 
-    @api.depends('quote_id.sale_order_id.biziship_extracted_json')
+    @api.depends('quote_id.sale_order_id.biziship_po_number', 'quote_id.sale_order_id.biziship_extracted_json')
     def _compute_po_number(self):
         for rec in self:
             po = False
-            if rec.quote_id and rec.quote_id.sale_order_id and rec.quote_id.sale_order_id.biziship_extracted_json:
-                try:
-                    data = json.loads(rec.quote_id.sale_order_id.biziship_extracted_json)
-                    po = data.get('po_number', False)
-                except Exception:
-                    pass
+            if rec.quote_id and rec.quote_id.sale_order_id:
+                po = rec.quote_id.sale_order_id.biziship_po_number
+                
+                # Fallback to extracted JSON if empty
+                if not po and rec.quote_id.sale_order_id.biziship_extracted_json:
+                    try:
+                        data = json.loads(rec.quote_id.sale_order_id.biziship_extracted_json)
+                        po = data.get('po_number', False)
+                    except Exception:
+                        pass
             rec.po_number = po
 
     @api.depends('quote_id.sale_order_id.biziship_extracted_json')
@@ -77,6 +81,10 @@ class BizishipQuoteConfirmWizard(models.TransientModel):
 
     def action_confirm_and_send(self):
         self.ensure_one()
+        
+        if not self.po_number:
+            raise UserError(_("Please provide a PO Number before submitting the quote."))
+            
         email2quote_api_url = get_biziship_api_url()
         email2quote_api_key = get_email2quote_api_key()
         
@@ -87,6 +95,11 @@ class BizishipQuoteConfirmWizard(models.TransientModel):
         }
         
         sale_order = self.quote_id.sale_order_id
+        
+        # Save the confirmed PO Number back to the Sale Order if it was modified here
+        if sale_order.biziship_po_number != self.po_number:
+            sale_order.biziship_po_number = self.po_number
+        
         
         extracted_data = {}
         if sale_order.biziship_extracted_json:

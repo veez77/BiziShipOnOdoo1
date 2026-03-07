@@ -13,6 +13,7 @@
                 <page string="LTL Freight Details" name="biziship_freight_details">
                     <group>
                         <group string="Origin &amp; Pickup">
+                            <field name="biziship_po_number"/>
                             <field name="biziship_pickup_date"/>
                             <field name="biziship_origin_address"/>
                             <field name="biziship_origin_address2"/>
@@ -21,7 +22,7 @@
                             <field name="biziship_origin_residential"/>
                             <field name="biziship_origin_liftgate"/>
                             <field name="biziship_origin_limited_access"/>
-                            <field name="biziship_origin_accessorial_ids" widget="many2many_tags" options="{'no_create': True}"/>
+                            <field name="biziship_origin_accessorial_ids" widget="many2many_tags" options="{'no_create': True}" placeholder="Select more services..."/>
                         </group>
                         <group string="Destination">
                             <field name="biziship_dest_address"/>
@@ -34,7 +35,7 @@
                             <field name="biziship_dest_limited_access"/>
                             <field name="biziship_dest_liftgate"/>
                             <field name="biziship_dest_hazmat"/>
-                            <field name="biziship_dest_accessorial_ids" widget="many2many_tags" options="{'no_create': True}"/>
+                            <field name="biziship_dest_accessorial_ids" widget="many2many_tags" options="{'no_create': True}" placeholder="Select more services..."/>
                         </group>
                     </group>
                     <group string="Cargo Details">

@@ -165,6 +165,24 @@ class BizishipFreightQuoteWizard(models.TransientModel):
             "Content-Type": "application/json"
         }
         
+        # Compile accessorials starting with tags
+        accessorials_list = self.order_id.biziship_origin_accessorial_ids.mapped('code') + self.order_id.biziship_dest_accessorial_ids.mapped('code')
+        
+        # Origin Checkboxes
+        if self.order_id.biziship_origin_residential: accessorials_list.append("RESPU")
+        if self.order_id.biziship_origin_liftgate: accessorials_list.append("LGPU")
+        if self.order_id.biziship_origin_limited_access: accessorials_list.append("LTDPU")
+        
+        # Destination Checkboxes
+        if self.order_id.biziship_dest_residential: accessorials_list.append("RESDEL")
+        if self.order_id.biziship_dest_liftgate: accessorials_list.append("LGDEL")
+        if self.order_id.biziship_dest_limited_access: accessorials_list.append("LTDDEL")
+        if self.order_id.biziship_dest_appointment: accessorials_list.append("APPT")
+        if self.order_id.biziship_dest_notify: accessorials_list.append("NOTIFY")
+        if self.order_id.biziship_dest_hazmat: accessorials_list.append("HAZM")
+        
+        accessorials_list = list(set(accessorials_list))  # Ensure uniqueness
+        
         # Build JSON Payload
         payload = {
             "origin_company": self.origin_company or "",
@@ -191,8 +209,8 @@ class BizishipFreightQuoteWizard(models.TransientModel):
             "num_pieces": self.num_pieces or 1,
             "packaging_type": self.packaging_type or "",
             "freight_class": self.freight_class or "",
-            "special_requirements": [req.strip() for req in self.special_requirements.split(',')] if self.special_requirements else [],
-            "accessorial_codes": self.order_id.biziship_origin_accessorial_ids.mapped('code') + self.order_id.biziship_dest_accessorial_ids.mapped('code'),
+            "special_requirements": [],
+            "accessorial_codes": accessorials_list,
             "pickup_date": str(self.pickup_date) if self.pickup_date else "",
             "additional_notes": self.additional_notes or ""
         }

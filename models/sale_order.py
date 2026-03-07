@@ -18,6 +18,7 @@ class SaleOrder(models.Model):
 
     biziship_documents_json = fields.Text(string='Shipment Documents JSON', readonly=True, copy=False)
     biziship_documents_html = fields.Html(string='Shipment Documents', compute='_compute_biziship_documents_html', readonly=True)
+    biziship_po_number = fields.Char(string="PO Number")
 
     @api.depends('biziship_documents_json', 'biziship_bol_url')
     def _compute_biziship_documents_html(self):
@@ -321,8 +322,8 @@ class SaleOrder(models.Model):
         if self.biziship_dest_liftgate: accessorials_list.append("LGDEL")
         if self.biziship_dest_limited_access: accessorials_list.append("LTDDEL")
         if self.biziship_dest_appointment: accessorials_list.append("APPT")
-        if self.biziship_dest_notify: accessorials_list.append("NOTD")
-        if self.biziship_dest_hazmat: accessorials_list.append("HAZMAT")
+        if self.biziship_dest_notify: accessorials_list.append("NOTIFY")
+        if self.biziship_dest_hazmat: accessorials_list.append("HAZM")
         
         accessorials_list = list(set(accessorials_list))  # Ensure uniqueness
 

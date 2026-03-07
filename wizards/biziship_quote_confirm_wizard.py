@@ -39,9 +39,22 @@ class BizishipQuoteConfirmWizard(models.TransientModel):
     currency = fields.Char(related="quote_id.currency", readonly=True)
     currency_id = fields.Many2one(related="quote_id.currency_id", readonly=True)
     quote_id_ref = fields.Char(related="quote_id.quote_id_ref", readonly=True)
+    po_number = fields.Char(string="PO Number", compute='_compute_po_number', store=True, readonly=False)
 
     accessorial_services_text = fields.Text(string="Accessorial Services", compute='_compute_accessorial_services')
     has_accessorials = fields.Boolean(compute='_compute_accessorial_services')
+
+    @api.depends('quote_id.sale_order_id.biziship_extracted_json')
+    def _compute_po_number(self):
+        for rec in self:
+            po = False
+            if rec.quote_id and rec.quote_id.sale_order_id and rec.quote_id.sale_order_id.biziship_extracted_json:
+                try:
+                    data = json.loads(rec.quote_id.sale_order_id.biziship_extracted_json)
+                    po = data.get('po_number', False)
+                except Exception:
+                    pass
+            rec.po_number = po
 
     @api.depends('quote_id.sale_order_id.biziship_extracted_json')
     def _compute_accessorial_services(self):
@@ -125,6 +138,7 @@ class BizishipQuoteConfirmWizard(models.TransientModel):
             
         payload = {
             "quote_id": self.quote_id_ref,
+            "po_number": self.po_number or "",
             "shipper": shipper,
             "consignee": consignee,
             "pickup_date": pickup_date
@@ -138,6 +152,14 @@ class BizishipQuoteConfirmWizard(models.TransientModel):
                 timeout=45
             )
             if not response.ok:
+                try:
+                    error_json = response.json()
+                    errors = error_json.get('errors')
+                    if errors and isinstance(errors, list):
+                        error_msg = "\n".join(errors)
+                        raise UserError(_("Booking Failed:\n\n%s") % error_msg)
+                except Exception:
+                    pass
                 raise UserError(_("Email2Quote API error: %s") % response.text)
                 
             response_json = response.json()

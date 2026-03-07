@@ -72,6 +72,7 @@
                         <field name="currency" invisible="1"/>
                         <field name="currency_id" invisible="1"/>
                         <field name="quote_id_ref" string="Quote ID"/>
+                        <field name="po_number"/>
                         <field name="quote_id" invisible="1"/>
                         <field name="has_accessorials" invisible="1"/>
                     </group>

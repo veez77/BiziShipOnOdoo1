@@ -3,3 +3,4 @@ access_biziship_bol_wizard,biziship.bol.import.wizard,model_biziship_bol_import_
 access_biziship_quote,biziship.quote,model_biziship_quote,base.group_user,1,1,1,1
 access_biziship_quote_confirm_wizard,biziship.quote.confirm.wizard,model_biziship_quote_confirm_wizard,base.group_user,1,1,1,1
 access_biziship_freight_quote_wizard,biziship.freight.quote.wizard,model_biziship_freight_quote_wizard,base.group_user,1,1,1,1
+access_biziship_accessorial,biziship.accessorial,model_biziship_accessorial,base.group_user,1,1,1,1

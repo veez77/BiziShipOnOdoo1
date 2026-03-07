@@ -1,0 +1,191 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <!-- Pickup Accessorials -->
+        <record id="accessorial_SORTPU" model="biziship.accessorial">
+            <field name="name">Sort/Segregate Pickup</field>
+            <field name="code">SORTPU</field>
+            <field name="type">origin</field>
+        </record>
+        <record id="accessorial_CONPU" model="biziship.accessorial">
+            <field name="name">Construction Site Pickup</field>
+            <field name="code">CONPU</field>
+            <field name="type">origin</field>
+        </record>
+        <record id="accessorial_INPU" model="biziship.accessorial">
+            <field name="name">Inside Pickup</field>
+            <field name="code">INPU</field>
+            <field name="type">origin</field>
+        </record>
+        <record id="accessorial_CNVPU" model="biziship.accessorial">
+            <field name="name">Trade Show Pickup</field>
+            <field name="code">CNVPU</field>
+            <field name="type">origin</field>
+        </record>
+        <record id="accessorial_AIRPU" model="biziship.accessorial">
+            <field name="name">Airport Pickup</field>
+            <field name="code">AIRPU</field>
+            <field name="type">origin</field>
+        </record>
+        <record id="accessorial_CFSPU" model="biziship.accessorial">
+            <field name="name">Container Freight Station Pickup</field>
+            <field name="code">CFSPU</field>
+            <field name="type">origin</field>
+        </record>
+        <record id="accessorial_CAMPPU" model="biziship.accessorial">
+            <field name="name">Camp Pickup</field>
+            <field name="code">CAMPPU</field>
+            <field name="type">origin</field>
+        </record>
+        <record id="accessorial_CHRCPU" model="biziship.accessorial">
+            <field name="name">Church Pickup</field>
+            <field name="code">CHRCPU</field>
+            <field name="type">origin</field>
+        </record>
+        <record id="accessorial_EDUPU" model="biziship.accessorial">
+            <field name="name">School Pickup</field>
+            <field name="code">EDUPU</field>
+            <field name="type">origin</field>
+        </record>
+        <record id="accessorial_CLUBPU" model="biziship.accessorial">
+            <field name="name">Country Club Pickup</field>
+            <field name="code">CLUBPU</field>
+            <field name="type">origin</field>
+        </record>
+        <record id="accessorial_FARMPU" model="biziship.accessorial">
+            <field name="name">Farm Pickup</field>
+            <field name="code">FARMPU</field>
+            <field name="type">origin</field>
+        </record>
+        <record id="accessorial_GOVPU" model="biziship.accessorial">
+            <field name="name">Government Site Pickup</field>
+            <field name="code">GOVPU</field>
+            <field name="type">origin</field>
+        </record>
+        <record id="accessorial_HOSPU" model="biziship.accessorial">
+            <field name="name">Hospital Pickup</field>
+            <field name="code">HOSPU</field>
+            <field name="type">origin</field>
+        </record>
+        <record id="accessorial_HOTLPU" model="biziship.accessorial">
+            <field name="name">Hotel Pickup</field>
+            <field name="code">HOTLPU</field>
+            <field name="type">origin</field>
+        </record>
+        <record id="accessorial_PRISPU" model="biziship.accessorial">
+            <field name="name">Prison Pickup</field>
+            <field name="code">PRISPU</field>
+            <field name="type">origin</field>
+        </record>
+        <record id="accessorial_UTLPU" model="biziship.accessorial">
+            <field name="name">Utility Site Pickup</field>
+            <field name="code">UTLPU</field>
+            <field name="type">origin</field>
+        </record>
+        <record id="accessorial_PIERPU" model="biziship.accessorial">
+            <field name="name">Pier Pickup</field>
+            <field name="code">PIERPU</field>
+            <field name="type">origin</field>
+        </record>
+        <record id="accessorial_MILPU" model="biziship.accessorial">
+            <field name="name">Military Installation Pickup</field>
+            <field name="code">MILPU</field>
+            <field name="type">origin</field>
+        </record>
+        <record id="accessorial_GROPU" model="biziship.accessorial">
+            <field name="name">Grocery Warehouse Pickup</field>
+            <field name="code">GROPU</field>
+            <field name="type">origin</field>
+        </record>
+        <record id="accessorial_MINEPU" model="biziship.accessorial">
+            <field name="name">Mine Site Pickup</field>
+            <field name="code">MINEPU</field>
+            <field name="type">origin</field>
+        </record>
+        <record id="accessorial_ELS_9" model="biziship.accessorial">
+            <field name="name">Excessive Length, 9ft</field>
+            <field name="code">ELS_9</field>
+            <field name="type">origin</field>
+        </record>
+        <record id="accessorial_ELS_11" model="biziship.accessorial">
+            <field name="name">Excessive Length, 11ft</field>
+            <field name="code">ELS_11</field>
+            <field name="type">origin</field>
+        </record>
+        <record id="accessorial_ELS_13" model="biziship.accessorial">
+            <field name="name">Excessive Length, 13ft</field>
+            <field name="code">ELS_13</field>
+            <field name="type">origin</field>
+        </record>
+        <record id="accessorial_ELS_15" model="biziship.accessorial">
+            <field name="name">Excessive Length, 15ft</field>
+            <field name="code">ELS_15</field>
+            <field name="type">origin</field>
+        </record>
+        <record id="accessorial_ELS_17" model="biziship.accessorial">
+            <field name="name">Excessive Length, 17ft</field>
+            <field name="code">ELS_17</field>
+            <field name="type">origin</field>
+        </record>
+        <record id="accessorial_ELS_18" model="biziship.accessorial">
+            <field name="name">Excessive Length, 18ft</field>
+            <field name="code">ELS_18</field>
+            <field name="type">origin</field>
+        </record>
+        <record id="accessorial_ELS_19" model="biziship.accessorial">
+            <field name="name">Excessive Length, 19ft</field>
+            <field name="code">ELS_19</field>
+            <field name="type">origin</field>
+        </record>
+        <record id="accessorial_ELS_21" model="biziship.accessorial">
+            <field name="name">Excessive Length, 21ft</field>
+            <field name="code">ELS_21</field>
+            <field name="type">origin</field>
+        </record>
+        <record id="accessorial_ELS_22" model="biziship.accessorial">
+            <field name="name">Excessive Length, 22ft</field>
+            <field name="code">ELS_22</field>
+            <field name="type">origin</field>
+        </record>
+        <record id="accessorial_ELS_23" model="biziship.accessorial">
+            <field name="name">Excessive Length, 23ft</field>
+            <field name="code">ELS_23</field>
+            <field name="type">origin</field>
+        </record>
+        <record id="accessorial_ELS_24" model="biziship.accessorial">
+            <field name="name">Excessive Length, 24ft</field>
+            <field name="code">ELS_24</field>
+            <field name="type">origin</field>
+        </record>
+        <record id="accessorial_ELS_25" model="biziship.accessorial">
+            <field name="name">Excessive Length, 25ft</field>
+            <field name="code">ELS_25</field>
+            <field name="type">origin</field>
+        </record>
+        <record id="accessorial_ELS_26" model="biziship.accessorial">
+            <field name="name">Excessive Length, 26ft</field>
+            <field name="code">ELS_26</field>
+            <field name="type">origin</field>
+        </record>
+        <record id="accessorial_ELS_27" model="biziship.accessorial">
+            <field name="name">Excessive Length, 27ft</field>
+            <field name="code">ELS_27</field>
+            <field name="type">origin</field>
+        </record>
+        <record id="accessorial_ELS_28" model="biziship.accessorial">
+            <field name="name">Excessive Length, 28ft</field>
+            <field name="code">ELS_28</field>
+            <field name="type">origin</field>
+        </record>
+        <record id="accessorial_ELS_29" model="biziship.accessorial">
+            <field name="name">Excessive Length, 29ft</field>
+            <field name="code">ELS_29</field>
+            <field name="type">origin</field>
+        </record>
+        <record id="accessorial_ELS_30" model="biziship.accessorial">
+            <field name="name">Excessive Length, 30ft and over</field>
+            <field name="code">ELS_30</field>
+            <field name="type">origin</field>
+        </record>
+    </data>
+</odoo>

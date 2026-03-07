@@ -21,6 +21,7 @@
                             <field name="biziship_origin_residential"/>
                             <field name="biziship_origin_liftgate"/>
                             <field name="biziship_origin_limited_access"/>
+                            <field name="biziship_origin_accessorial_ids" widget="many2many_tags" options="{'no_create': True}"/>
                         </group>
                         <group string="Destination">
                             <field name="biziship_dest_address"/>
@@ -33,6 +34,7 @@
                             <field name="biziship_dest_limited_access"/>
                             <field name="biziship_dest_liftgate"/>
                             <field name="biziship_dest_hazmat"/>
+                            <field name="biziship_dest_accessorial_ids" widget="many2many_tags" options="{'no_create': True}"/>
                         </group>
                     </group>
                     <group string="Cargo Details">

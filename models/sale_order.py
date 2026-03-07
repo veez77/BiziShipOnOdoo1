@@ -65,6 +65,13 @@ class SaleOrder(models.Model):
     biziship_origin_residential = fields.Boolean(string="Residential Pickup")
     biziship_origin_liftgate = fields.Boolean(string="Lift Gate Pickup")
     biziship_origin_limited_access = fields.Boolean(string="Limited Access Pickup")
+    biziship_origin_accessorial_ids = fields.Many2many(
+        'biziship.accessorial',
+        'sale_order_origin_accessorial_rel',
+        'order_id', 'accessorial_id',
+        string="More Services (Pickup)",
+        domain="[('type', '=', 'origin')]"
+    )
 
     # Destination
     biziship_dest_address = fields.Char(string="Destination Address Line 1", related="partner_shipping_id.street", readonly=False, store=True)
@@ -78,6 +85,13 @@ class SaleOrder(models.Model):
     biziship_dest_limited_access = fields.Boolean(string="Limited Access Delivery")
     biziship_dest_liftgate = fields.Boolean(string="Lift Gate Delivery")
     biziship_dest_hazmat = fields.Boolean(string="Hazardous Material")
+    biziship_dest_accessorial_ids = fields.Many2many(
+        'biziship.accessorial',
+        'sale_order_dest_accessorial_rel',
+        'order_id', 'accessorial_id',
+        string="More Services (Delivery)",
+        domain="[('type', '=', 'destination')]"
+    )
 
     @api.depends('partner_shipping_id', 'partner_shipping_id.country_id')
     def _compute_biziship_dest_country_id(self):
@@ -294,17 +308,23 @@ class SaleOrder(models.Model):
             "Content-Type": "application/json"
         }
         
-        # Compile special requirements
-        special_reqs = []
-        if self.biziship_origin_residential: special_reqs.append("residential_pickup")
-        if self.biziship_origin_liftgate: special_reqs.append("liftgate_pickup")
-        if self.biziship_origin_limited_access: special_reqs.append("limited_access_pickup")
-        if self.biziship_dest_appointment: special_reqs.append("appointment")
-        if self.biziship_dest_residential: special_reqs.append("residential_delivery")
-        if self.biziship_dest_notify: special_reqs.append("notify_consignee")
-        if self.biziship_dest_limited_access: special_reqs.append("limited_access_delivery")
-        if self.biziship_dest_liftgate: special_reqs.append("liftgate_delivery")
-        if self.biziship_dest_hazmat: special_reqs.append("hazmat")
+        # Compile accessorials starting with tags
+        accessorials_list = self.biziship_origin_accessorial_ids.mapped('code') + self.biziship_dest_accessorial_ids.mapped('code')
+        
+        # Origin Checkboxes
+        if self.biziship_origin_residential: accessorials_list.append("RESPU")
+        if self.biziship_origin_liftgate: accessorials_list.append("LGPU")
+        if self.biziship_origin_limited_access: accessorials_list.append("LTDPU")
+        
+        # Destination Checkboxes
+        if self.biziship_dest_residential: accessorials_list.append("RESDEL")
+        if self.biziship_dest_liftgate: accessorials_list.append("LGDEL")
+        if self.biziship_dest_limited_access: accessorials_list.append("LTDDEL")
+        if self.biziship_dest_appointment: accessorials_list.append("APPT")
+        if self.biziship_dest_notify: accessorials_list.append("NOTD")
+        if self.biziship_dest_hazmat: accessorials_list.append("HAZMAT")
+        
+        accessorials_list = list(set(accessorials_list))  # Ensure uniqueness
 
         # Basic phone retrieval (company vs partner)
         origin_phone = self.company_id.phone or self.env.company.phone or ''
@@ -336,10 +356,15 @@ class SaleOrder(models.Model):
             "num_pieces": self.biziship_pieces or 1,
             "packaging_type": self.biziship_packaging_type or "",
             "freight_class": self.biziship_freight_class or "",
-            "special_requirements": special_reqs,
+            "special_requirements": [],
+            "accessorial_codes": accessorials_list,
             "pickup_date": str(self.biziship_pickup_date) if self.biziship_pickup_date else "",
             "additional_notes": "" # Can add note field later if requested
         }
+        
+        import logging
+        _logger = logging.getLogger(__name__)
+        _logger.info("Email2Quote API Payload (Sale Order): %s", json.dumps(payload, indent=2))
         
         try:
             response = requests.post(api_url, headers=headers, json=payload, timeout=45)

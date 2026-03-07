@@ -192,9 +192,13 @@ class BizishipFreightQuoteWizard(models.TransientModel):
             "packaging_type": self.packaging_type or "",
             "freight_class": self.freight_class or "",
             "special_requirements": [req.strip() for req in self.special_requirements.split(',')] if self.special_requirements else [],
+            "accessorial_codes": self.order_id.biziship_origin_accessorial_ids.mapped('code') + self.order_id.biziship_dest_accessorial_ids.mapped('code'),
             "pickup_date": str(self.pickup_date) if self.pickup_date else "",
             "additional_notes": self.additional_notes or ""
         }
+        import logging
+        _logger = logging.getLogger(__name__)
+        _logger.info("Email2Quote API Payload (Wizard): %s", json.dumps(payload, indent=2))
         
         try:
             response = requests.post(api_url, headers=headers, json=payload, timeout=45)

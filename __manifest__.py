@@ -12,6 +12,7 @@
     'depends': ['base', 'sale'],
     'data': [
         'security/ir.model.access.csv',
+        'data/accessorial_data.xml',
         'wizards/biziship_bol_wizard_views.xml',
         'wizards/biziship_quote_confirm_wizard_views.xml',
         'wizards/biziship_freight_quote_wizard_views.xml',

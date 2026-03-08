@@ -48,7 +48,7 @@ class BizishipFreightQuoteWizard(models.TransientModel):
         ('50', '50'), ('55', '55'), ('60', '60'), ('65', '65'),
         ('70', '70'), ('77.5', '77.5'), ('85', '85'), ('92.5', '92.5'),
         ('100', '100'), ('110', '110'), ('125', '125'), ('150', '150'),
-        ('175', '175'), ('200', '200'), ('250', '250'), ('300', '300'),
+        ('175', '175'), ('250', '250'), ('300', '300'),
         ('400', '400'), ('500', '500')
     ], string="Freight Class", required=True, default='50')
     
@@ -116,8 +116,6 @@ class BizishipFreightQuoteWizard(models.TransientModel):
                         rec.freight_class = '300'
                     elif density < 4:
                         rec.freight_class = '250'
-                    elif density < 5:
-                        rec.freight_class = '200'
                     elif density < 6:
                         rec.freight_class = '175'
                     elif density < 7:

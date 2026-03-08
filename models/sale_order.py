@@ -119,7 +119,7 @@ class SaleOrder(models.Model):
         ('50', '50'), ('55', '55'), ('60', '60'), ('65', '65'),
         ('70', '70'), ('77.5', '77.5'), ('85', '85'), ('92.5', '92.5'),
         ('100', '100'), ('110', '110'), ('125', '125'), ('150', '150'),
-        ('175', '175'), ('200', '200'), ('250', '250'), ('300', '300'),
+        ('175', '175'), ('250', '250'), ('300', '300'),
         ('400', '400'), ('500', '500')
     ], string="Class", default='50')
     
@@ -127,7 +127,7 @@ class SaleOrder(models.Model):
         ('50', '50'), ('55', '55'), ('60', '60'), ('65', '65'),
         ('70', '70'), ('77.5', '77.5'), ('85', '85'), ('92.5', '92.5'),
         ('100', '100'), ('110', '110'), ('125', '125'), ('150', '150'),
-        ('175', '175'), ('200', '200'), ('250', '250'), ('300', '300'),
+        ('175', '175'), ('250', '250'), ('300', '300'),
         ('400', '400'), ('500', '500')
     ], string="Computed Class", compute='_compute_biziship_computed_class', store=True)
     
@@ -236,7 +236,6 @@ class SaleOrder(models.Model):
                     elif density < 2: rec.biziship_computed_freight_class = '400'
                     elif density < 3: rec.biziship_computed_freight_class = '300'
                     elif density < 4: rec.biziship_computed_freight_class = '250'
-                    elif density < 5: rec.biziship_computed_freight_class = '200'
                     elif density < 6: rec.biziship_computed_freight_class = '175'
                     elif density < 7: rec.biziship_computed_freight_class = '150'
                     elif density < 8: rec.biziship_computed_freight_class = '125'

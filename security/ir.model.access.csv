@@ -4,3 +4,5 @@ access_biziship_quote,biziship.quote,model_biziship_quote,base.group_user,1,1,1,
 access_biziship_quote_confirm_wizard,biziship.quote.confirm.wizard,model_biziship_quote_confirm_wizard,base.group_user,1,1,1,1
 access_biziship_freight_quote_wizard,biziship.freight.quote.wizard,model_biziship_freight_quote_wizard,base.group_user,1,1,1,1
 access_biziship_accessorial,biziship.accessorial,model_biziship_accessorial,base.group_user,1,1,1,1
+access_biziship_sale_cargo_line,biziship.sale.cargo.line,model_biziship_sale_cargo_line,base.group_user,1,1,1,1
+access_biziship_quote_cargo_line,biziship.quote.cargo.line,model_biziship_quote_cargo_line,base.group_user,1,1,1,1

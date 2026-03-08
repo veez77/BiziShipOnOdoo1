@@ -104,40 +104,27 @@ class SaleOrder(models.Model):
                 order.biziship_dest_country_id = us_country
 
     # Cargo details
-    biziship_packaging_type = fields.Selection([
-        ('pallet', 'Pallet'),
-        ('crate', 'Crate'),
-        ('box', 'Box'),
-        ('drum', 'Drum'),
-    ], string="Packaging Type", default="pallet")
-    biziship_pieces = fields.Integer(string="Pieces (Handling Units)", default=1)
-    biziship_weight = fields.Float(string="Total Weight", default=800.0)
-    biziship_weight_unit = fields.Selection([('lbs', 'lbs'), ('kg', 'kg')], string="Weight Unit", default='lbs', required=True)
-    biziship_length = fields.Float(string="Length", default=48.0)
-    biziship_width = fields.Float(string="Width", default=40.0)
-    biziship_height = fields.Float(string="Height", default=48.0)
-    biziship_dim_unit = fields.Selection([('in', 'in'), ('cm', 'cm'), ('m', 'm'), ('ft', 'ft')], string="Dimension Unit", default='in', required=True)
-    biziship_freight_class = fields.Selection([
-        ('50', '50'), ('55', '55'), ('60', '60'), ('65', '65'),
-        ('70', '70'), ('77.5', '77.5'), ('85', '85'), ('92.5', '92.5'),
-        ('100', '100'), ('110', '110'), ('125', '125'), ('150', '150'),
-        ('175', '175'), ('250', '250'), ('300', '300'),
-        ('400', '400'), ('500', '500')
-    ], string="Class", default='50')
+    biziship_cargo_line_ids = fields.One2many('biziship.sale.cargo.line', 'sale_order_id', string="Cargo Lines")
     
-    biziship_computed_freight_class = fields.Selection([
-        ('50', '50'), ('55', '55'), ('60', '60'), ('65', '65'),
-        ('70', '70'), ('77.5', '77.5'), ('85', '85'), ('92.5', '92.5'),
-        ('100', '100'), ('110', '110'), ('125', '125'), ('150', '150'),
-        ('175', '175'), ('250', '250'), ('300', '300'),
-        ('400', '400'), ('500', '500')
-    ], string="Computed Class", compute='_compute_biziship_computed_class', store=True)
+    biziship_total_weight = fields.Float(string="Total Weight", compute='_compute_biziship_totals', store=True)
+    biziship_total_weight_unit = fields.Selection([('lbs', 'lbs'), ('kg', 'kg')], string="Weight Unit", default='lbs', required=True)
     
-    biziship_is_class_overridden = fields.Boolean(compute='_compute_biziship_is_class_overridden')
-    biziship_class_calculation_error = fields.Char(compute='_compute_biziship_class_calculation_error')
-    
-    biziship_nmfc = fields.Char(string="NMFC")
     biziship_cargo_desc = fields.Char(string="Cargo Description", default="General Freight")
+
+    @api.depends('biziship_cargo_line_ids.weight', 'biziship_cargo_line_ids.weight_unit', 'biziship_total_weight_unit')
+    def _compute_biziship_totals(self):
+        for order in self:
+            total_lbs = 0.0
+            for line in order.biziship_cargo_line_ids:
+                if line.weight_unit == 'kg':
+                    total_lbs += line.weight * 2.20462
+                else:
+                    total_lbs += line.weight
+                    
+            if order.biziship_total_weight_unit == 'kg':
+                order.biziship_total_weight = round(total_lbs / 2.20462, 2)
+            else:
+                order.biziship_total_weight = round(total_lbs, 2)
 
     @api.depends('biziship_quote_ids.is_selected')
     def _compute_biziship_has_selected_quote(self):
@@ -222,78 +209,10 @@ class SaleOrder(models.Model):
         return True
 
     def action_biziship_compute_weight(self):
+        """Hook for later when computing total weight from order lines."""
         for order in self:
-            total_weight = sum(line.product_id.weight * line.product_uom_qty for line in order.order_line if line.product_id)
-            order.biziship_weight = max(total_weight, 800.0)
+            pass
         return True
-
-    @api.depends('biziship_weight', 'biziship_weight_unit', 'biziship_length', 'biziship_width', 'biziship_height', 'biziship_dim_unit', 'biziship_pieces')
-    def _compute_biziship_computed_class(self):
-        for rec in self:
-            if rec.biziship_length and rec.biziship_width and rec.biziship_height and rec.biziship_weight and rec.biziship_pieces:
-                l, w, h = rec.biziship_length, rec.biziship_width, rec.biziship_height
-                if rec.biziship_dim_unit == 'cm':
-                    l, w, h = l * 0.393701, w * 0.393701, h * 0.393701
-                elif rec.biziship_dim_unit == 'm':
-                    l, w, h = l * 39.3701, w * 39.3701, h * 39.3701
-                elif rec.biziship_dim_unit == 'ft':
-                    l, w, h = l * 12.0, w * 12.0, h * 12.0
-                    
-                volume_cf = (l * w * h * rec.biziship_pieces) / 1728.0
-                if volume_cf > 0:
-                    effective_weight = rec.biziship_weight * 2.20462 if rec.biziship_weight_unit == 'kg' else rec.biziship_weight
-                    density = effective_weight / volume_cf
-                    if density < 1: rec.biziship_computed_freight_class = '500'
-                    elif density < 2: rec.biziship_computed_freight_class = '400'
-                    elif density < 3: rec.biziship_computed_freight_class = '300'
-                    elif density < 4: rec.biziship_computed_freight_class = '250'
-                    elif density < 6: rec.biziship_computed_freight_class = '175'
-                    elif density < 7: rec.biziship_computed_freight_class = '150'
-                    elif density < 8: rec.biziship_computed_freight_class = '125'
-                    elif density < 9: rec.biziship_computed_freight_class = '110'
-                    elif density < 10.5: rec.biziship_computed_freight_class = '100'
-                    elif density < 12: rec.biziship_computed_freight_class = '92.5'
-                    elif density < 13.5: rec.biziship_computed_freight_class = '85'
-                    elif density < 15: rec.biziship_computed_freight_class = '77.5'
-                    elif density < 22.5: rec.biziship_computed_freight_class = '70'
-                    elif density < 30: rec.biziship_computed_freight_class = '65'
-                    elif density < 35: rec.biziship_computed_freight_class = '60'
-                    elif density < 50: rec.biziship_computed_freight_class = '55'
-                    else: rec.biziship_computed_freight_class = '50'
-                else:
-                    rec.biziship_computed_freight_class = '50'
-            else:
-                rec.biziship_computed_freight_class = '50'
-
-    @api.onchange('biziship_computed_freight_class')
-    def _onchange_biziship_computed_class(self):
-        for rec in self:
-            rec.biziship_freight_class = rec.biziship_computed_freight_class
-
-    @api.depends('biziship_freight_class', 'biziship_computed_freight_class')
-    def _compute_biziship_is_class_overridden(self):
-        for rec in self:
-            rec.biziship_is_class_overridden = bool(
-                rec.biziship_freight_class 
-                and rec.biziship_computed_freight_class 
-                and rec.biziship_freight_class != rec.biziship_computed_freight_class
-            )
-
-    @api.depends('biziship_weight', 'biziship_weight_unit', 'biziship_length', 'biziship_width', 'biziship_height', 'biziship_pieces')
-    def _compute_biziship_class_calculation_error(self):
-        for rec in self:
-            errors = []
-            if not rec.biziship_weight:
-                errors.append("Missing Weight.")
-            if not rec.biziship_length or not rec.biziship_width or not rec.biziship_height:
-                errors.append("Missing Dimensions.")
-            if not rec.biziship_pieces:
-                errors.append("Invalid Pieces.")
-            
-            if errors:
-                rec.biziship_class_calculation_error = " ".join(errors)
-            else:
-                rec.biziship_class_calculation_error = False
 
     def _format_phone(self, phone_str):
         if not phone_str:
@@ -307,8 +226,10 @@ class SaleOrder(models.Model):
         self.ensure_one()
         
         # Validation
-        if not self.biziship_origin_zip or not self.biziship_dest_zip or not self.biziship_weight or not self.biziship_pickup_date:
-            raise UserError(_("Origin Zip, Destination Zip, Weight, and Pickup Date are required to fetch LTL quotes."))
+        if not self.biziship_origin_zip or not self.biziship_dest_zip or not self.biziship_total_weight or not self.biziship_pickup_date:
+            raise UserError(_("Origin Zip, Destination Zip, Total Weight, and Pickup Date are required to fetch LTL quotes."))
+        if not self.biziship_cargo_line_ids:
+            raise UserError(_("At least one cargo line is required to fetch LTL quotes."))
 
         email2quote_api_url = get_biziship_api_url()
         email2quote_api_key = get_email2quote_api_key()
@@ -341,24 +262,37 @@ class SaleOrder(models.Model):
         origin_phone = self.company_id.phone or self.env.company.phone or ''
         dest_phone = self.partner_shipping_id.phone or self.partner_id.phone or ''
         
-        # Convert weight to lbs
-        payload_weight = self.biziship_weight or 0.0
-        if self.biziship_weight_unit == 'kg':
+        # Build generic payload weights
+        payload_weight = self.biziship_total_weight or 0.0
+        if self.biziship_total_weight_unit == 'kg':
             payload_weight = payload_weight * 2.20462
 
-        # Convert dimensions to inches
-        payload_l = self.biziship_length or 0.0
-        payload_w = self.biziship_width or 0.0
-        payload_h = self.biziship_height or 0.0
-        
-        if self.biziship_dim_unit == 'cm':
-            payload_l, payload_w, payload_h = payload_l * 0.393701, payload_w * 0.393701, payload_h * 0.393701
-        elif self.biziship_dim_unit == 'm':
-            payload_l, payload_w, payload_h = payload_l * 39.3701, payload_w * 39.3701, payload_h * 39.3701
-        elif self.biziship_dim_unit == 'ft':
-            payload_l, payload_w, payload_h = payload_l * 12.0, payload_w * 12.0, payload_h * 12.0
+        payload_items = []
+        for line in self.biziship_cargo_line_ids:
+            line_w = line.weight * 2.20462 if line.weight_unit == 'kg' else line.weight
+            
+            payload_l, payload_w, payload_h = line.length, line.width, line.height
+            if line.dim_unit == 'cm':
+                payload_l, payload_w, payload_h = payload_l * 0.393701, payload_w * 0.393701, payload_h * 0.393701
+            elif line.dim_unit == 'm':
+                payload_l, payload_w, payload_h = payload_l * 39.3701, payload_w * 39.3701, payload_h * 39.3701
+            elif line.dim_unit == 'ft':
+                payload_l, payload_w, payload_h = payload_l * 12.0, payload_w * 12.0, payload_h * 12.0
+                
+            payload_items.append({
+                "weight": round(line_w, 2),
+                "weight_unit": "lbs",
+                "length": round(payload_l, 2),
+                "width": round(payload_w, 2),
+                "height": round(payload_h, 2),
+                "dimension_unit": "inches",
+                "num_pieces": line.pieces or 1,
+                "packaging_type": line.packaging_type or "",
+                "freight_class": line.computed_freight_class or line.freight_class or "",
+                "cargo_description": line.cargo_desc or ""
+            })
 
-        # Build JSON Payload
+        # Base payload properties
         payload = {
             "origin_company": self.company_id.name or self.env.company.name or "",
             "origin_address": self.biziship_origin_address or "",
@@ -379,17 +313,10 @@ class SaleOrder(models.Model):
             "cargo_description": self.biziship_cargo_desc or "",
             "weight": round(payload_weight, 2),
             "weight_unit": "lbs",
-            "length": round(payload_l, 2),
-            "width": round(payload_w, 2),
-            "height": round(payload_h, 2),
-            "dimension_unit": "inches",
-            "num_pieces": self.biziship_pieces or 1,
-            "packaging_type": self.biziship_packaging_type or "",
-            "freight_class": self.biziship_freight_class or "",
-            "special_requirements": [],
+            "line_items": payload_items,
             "accessorial_codes": accessorials_list,
             "pickup_date": str(self.biziship_pickup_date) if self.biziship_pickup_date else "",
-            "additional_notes": "" # Can add note field later if requested
+            "is_biziship": True
         }
         
         import logging
@@ -459,10 +386,13 @@ class SaleOrder(models.Model):
             if hasattr(e, 'response') and e.response is not None:
                 try:
                     err_json = e.response.json()
-                    err_msg = err_json.get('detail', err_msg)
+                    if 'errors' in err_json and isinstance(err_json['errors'], list) and len(err_json['errors']) > 0:
+                        err_msg = err_json['errors'][0]
+                    else:
+                        err_msg = err_json.get('detail', err_msg)
                 except ValueError:
                     err_msg = e.response.text
-            raise UserError(_("Email2Quote API Error:\n%s") % err_msg)
+            raise UserError(_("%s") % err_msg)
         except requests.exceptions.RequestException as e:
             raise UserError(_("Failed to connect to local Email2Quote API.\nEnsure server is running.\nDetails: %s") % str(e))
 

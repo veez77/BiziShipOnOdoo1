@@ -167,13 +167,13 @@ class BizishipQuoteConfirmWizard(models.TransientModel):
             if not response.ok:
                 try:
                     error_json = response.json()
-                    errors = error_json.get('errors')
-                    if errors and isinstance(errors, list):
-                        error_msg = "\n".join(errors)
-                        raise UserError(_("Booking Failed:\n\n%s") % error_msg)
+                    if 'errors' in error_json and isinstance(error_json['errors'], list) and len(error_json['errors']) > 0:
+                        error_msg = error_json['errors'][0]
+                    else:
+                        error_msg = error_json.get('detail', response.text)
                 except Exception:
-                    pass
-                raise UserError(_("Email2Quote API error: %s") % response.text)
+                    error_msg = response.text
+                raise UserError(_("%s") % error_msg)
                 
             response_json = response.json()
             sale_order.write({

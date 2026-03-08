@@ -66,31 +66,54 @@
                     </div>
                     
                     <group>
-                        <!-- Left Column: Cargo Details -->
-                        <group string="Cargo Details">
-                            <label for="weight" string="Total Weight"/>
-                            <div class="o_row">
-                                <field name="weight" nolabel="1" class="oe_inline"/>
-                                <field name="weight_unit" nolabel="1" class="oe_inline" style="width: 50px;"/>
-                            </div>
-                            <field name="freight_class"/>
-                            <field name="num_pieces"/>
-                            <field name="packaging_type"/>
-                            <label for="length" string="Dimensions (L x W x H)"/>
-                            <div class="o_row">
-                                <field name="length" nolabel="1" class="oe_inline"/> x
-                                <field name="width" nolabel="1" class="oe_inline"/> x
-                                <field name="height" nolabel="1" class="oe_inline"/>
-                                <field name="dim_unit" nolabel="1" class="oe_inline" style="width: 50px;"/>
-                            </div>
-                            <field name="cargo_description"/>
-                        </group>
+                        <!-- Top block: Cargo Details -->
+                        <div colspan="2" class="d-flex align-items-center o_horizontal_separator mb-2 mt-0">
+                            <span class="fw-bold">CARGO DETAILS</span>
+                        </div>
+                        <field name="cargo_line_ids" nolabel="1" colspan="2">
+                            <tree editable="bottom">
+                                <field name="packaging_type" />
+                                <field name="pieces" />
+                                <field name="weight" />
+                                <field name="weight_unit" />
+                                <field name="last_weight_unit" column_invisible="True" />
+                                <field name="length" />
+                                <field name="width" />
+                                <field name="height" />
+                                <field name="dim_unit" />
+                                <field name="freight_class" string="Class" />
+                                <field name="cargo_desc" />
+                            </tree>
+                        </field>
                         
-                        <!-- Right Column: Shipment Logistics -->
+                        <group name="cargo_footer" col="6" class="mt-2 mt-md-0">
+                            <group colspan="4">
+                            </group>
+                            <group class="oe_subtotal_footer oe_right" colspan="2" name="cargo_total_weight">
+                                <div class="oe_subtotal_footer_separator oe_inline o_td_label">
+                                    <label for="total_weight" string="Total Weight"/>
+                                </div>
+                                <div class="oe_subtotal_footer_separator oe_inline">
+                                    <field name="total_weight" nolabel="1" class="oe_inline oe_right" style="font-weight: bold; font-size: 1.2em;"/>
+                                    <field name="total_weight_unit" nolabel="1" class="oe_inline ms-1"/>
+                                </div>
+                            </group>
+                            <div class="oe_clear"/>
+                        </group>
+                    </group>
+                    
+                    <group>
+                        <!-- Logistics Details -->
                         <group string="Logistics Details">
                             <field name="pickup_date"/>
+                            <field name="cargo_description"/>
                             <field name="special_requirements" placeholder="liftgate, residential_delivery"/>
                             <field name="additional_notes" placeholder="Any order notes..."/>
+                        </group>
+                        
+                        <group string="Accessorials">
+                            <field name="biziship_origin_accessorial_ids" widget="many2many_tags" options="{'no_create': True}" placeholder="Origin services..."/>
+                            <field name="biziship_dest_accessorial_ids" widget="many2many_tags" options="{'no_create': True}" placeholder="Destination services..."/>
                         </group>
                     </group>
                     

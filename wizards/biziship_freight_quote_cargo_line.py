@@ -1,0 +1,87 @@
+from odoo import models, fields, api
+
+class BizishipQuoteCargoLine(models.TransientModel):
+    _name = 'biziship.quote.cargo.line'
+    _description = 'BiziShip Quote Cargo Line'
+
+    wizard_id = fields.Many2one('biziship.freight.quote.wizard', string='Wizard', required=True, ondelete='cascade')
+    
+    packaging_type = fields.Selection([
+        ('pallet', 'Pallet'),
+        ('crate', 'Crate'),
+        ('box', 'Box'),
+        ('drum', 'Drum'),
+    ], string="Packaging Type", default="pallet", required=True)
+    
+    pieces = fields.Integer(string="Pieces (Handling Units)", default=1, required=True)
+    
+    weight = fields.Float(string="Weight", default=800.0, required=True)
+    weight_unit = fields.Selection([('lbs', 'lbs'), ('kg', 'kg')], string="Weight Unit", default='lbs', required=True)
+    last_weight_unit = fields.Selection([('lbs', 'lbs'), ('kg', 'kg')], default='lbs')
+
+    @api.onchange('weight_unit')
+    def _onchange_weight_unit(self):
+        for rec in self:
+            # Fallback for existing records where last_weight_unit is False
+            last = rec.last_weight_unit
+            if not last:
+                last = rec._origin.weight_unit if getattr(rec, '_origin', False) and rec._origin.weight_unit else 'lbs'
+                
+            if last != rec.weight_unit:
+                if rec.weight:
+                    if rec.weight_unit == 'kg' and last == 'lbs':
+                        rec.weight = round(rec.weight / 2.20462, 2)
+                    elif rec.weight_unit == 'lbs' and last == 'kg':
+                        rec.weight = round(rec.weight * 2.20462, 2)
+            rec.last_weight_unit = rec.weight_unit
+    
+    length = fields.Float(string="Length", default=48.0, required=True)
+    width = fields.Float(string="Width", default=40.0, required=True)
+    height = fields.Float(string="Height", default=48.0, required=True)
+    dim_unit = fields.Selection([('in', 'in'), ('cm', 'cm'), ('m', 'm'), ('ft', 'ft')], string="Dimension Unit", default='in', required=True)
+    
+    freight_class = fields.Selection([
+        ('50', '50'), ('55', '55'), ('60', '60'), ('65', '65'),
+        ('70', '70'), ('77.5', '77.5'), ('85', '85'), ('92.5', '92.5'),
+        ('100', '100'), ('110', '110'), ('125', '125'), ('150', '150'),
+        ('175', '175'), ('250', '250'), ('300', '300'),
+        ('400', '400'), ('500', '500')
+    ], string="Class", default='50', required=True)
+    
+    cargo_desc = fields.Char(string="Cargo Description", default="General Freight")
+
+    @api.onchange('weight', 'weight_unit', 'length', 'width', 'height', 'dim_unit', 'pieces')
+    def _onchange_dimensions_for_class(self):
+        for rec in self:
+            if rec.length and rec.width and rec.height and rec.weight and rec.pieces:
+                l, w, h = rec.length, rec.width, rec.height
+                if rec.dim_unit == 'cm':
+                    l, w, h = l * 0.393701, w * 0.393701, h * 0.393701
+                elif rec.dim_unit == 'm':
+                    l, w, h = l * 39.3701, w * 39.3701, h * 39.3701
+                elif rec.dim_unit == 'ft':
+                    l, w, h = l * 12.0, w * 12.0, h * 12.0
+                    
+                volume_cf = (l * w * h * rec.pieces) / 1728.0
+                if volume_cf > 0:
+                    effective_weight = rec.weight * 2.20462 if rec.weight_unit == 'kg' else rec.weight
+                    density = effective_weight / volume_cf
+                    if density < 1: rec.freight_class = '500'
+                    elif density < 2: rec.freight_class = '400'
+                    elif density < 3: rec.freight_class = '300'
+                    elif density < 4: rec.freight_class = '250'
+                    elif density < 6: rec.freight_class = '175'
+                    elif density < 7: rec.freight_class = '150'
+                    elif density < 8: rec.freight_class = '125'
+                    elif density < 9: rec.freight_class = '110'
+                    elif density < 10.5: rec.freight_class = '100'
+                    elif density < 12: rec.freight_class = '92.5'
+                    elif density < 13.5: rec.freight_class = '85'
+                    elif density < 15: rec.freight_class = '77.5'
+                    elif density < 22.5: rec.freight_class = '70'
+                    elif density < 30: rec.freight_class = '65'
+                    elif density < 35: rec.freight_class = '60'
+                    elif density < 50: rec.freight_class = '55'
+                    else: rec.freight_class = '50'
+                else:
+                    rec.freight_class = '50'

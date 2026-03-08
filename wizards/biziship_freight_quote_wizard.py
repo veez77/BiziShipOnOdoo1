@@ -31,32 +31,47 @@ class BizishipFreightQuoteWizard(models.TransientModel):
     destination_zip = fields.Char(string="Destination Zip Code", required=True)
     destination_phone = fields.Char(string="Destination Phone")
     
-    # Freight Cargo details
+    # Cargo Details (Multiple Lines)
+    cargo_line_ids = fields.One2many('biziship.quote.cargo.line', 'wizard_id', string="Cargo Lines")
+    
+    total_weight = fields.Float(string="Total Weight", compute='_compute_totals', store=True)
+    total_weight_unit = fields.Selection([('lbs', 'lbs'), ('kg', 'kg')], string="Weight Unit", default='lbs', required=True)
+    
     cargo_description = fields.Char(string="Cargo Description", default="General Freight")
-    weight = fields.Float(string="Total Weight", required=True, default=800.0)
-    weight_unit = fields.Selection([('lbs', 'lbs'), ('kg', 'kg')], string="Weight Unit", default='lbs', required=True)
-    length = fields.Float(string="Length", default=48.0)
-    width = fields.Float(string="Width", default=40.0)
-    height = fields.Float(string="Height", default=48.0)
-    dim_unit = fields.Selection([('in', 'in'), ('cm', 'cm'), ('m', 'm'), ('ft', 'ft')], string="Dimension Unit", default='in', required=True)
-    num_pieces = fields.Integer(string="Pieces (Handling Units)", default=1, required=True)
-    packaging_type = fields.Selection([
-        ('pallet', 'Pallet'),
-        ('crate', 'Crate'),
-        ('box', 'Box'),
-        ('drum', 'Drum'),
-    ], string="Packaging Type", default="pallet")
-    freight_class = fields.Selection([
-        ('50', '50'), ('55', '55'), ('60', '60'), ('65', '65'),
-        ('70', '70'), ('77.5', '77.5'), ('85', '85'), ('92.5', '92.5'),
-        ('100', '100'), ('110', '110'), ('125', '125'), ('150', '150'),
-        ('175', '175'), ('250', '250'), ('300', '300'),
-        ('400', '400'), ('500', '500')
-    ], string="Freight Class", required=True, default='50')
+
+    # Accessorials
+    biziship_origin_accessorial_ids = fields.Many2many('biziship.accessorial', 'biziship_wizard_origin_acc_rel', 'wizard_id', 'accessorial_id', string="Origin Accessorials")
+    biziship_dest_accessorial_ids = fields.Many2many('biziship.accessorial', 'biziship_wizard_dest_acc_rel', 'wizard_id', 'accessorial_id', string="Destination Accessorials")
+    
+    biziship_origin_residential = fields.Boolean(string="Origin Residential")
+    biziship_origin_liftgate = fields.Boolean(string="Origin Liftgate")
+    biziship_origin_limited_access = fields.Boolean(string="Origin Limited Access")
+    
+    biziship_dest_residential = fields.Boolean(string="Destination Residential")
+    biziship_dest_liftgate = fields.Boolean(string="Destination Liftgate")
+    biziship_dest_limited_access = fields.Boolean(string="Destination Limited Access")
+    biziship_dest_appointment = fields.Boolean(string="Destination Appointment")
+    biziship_dest_notify = fields.Boolean(string="Destination Notify")
+    biziship_dest_hazmat = fields.Boolean(string="Destination Hazmat")
     
     special_requirements = fields.Char(string="Special Requirements", help="Comma-separated. e.g. liftgate,residential_delivery")
     pickup_date = fields.Date(string="Pickup Date", required=True)
     additional_notes = fields.Text(string="Additional Notes")
+
+    @api.depends('cargo_line_ids.weight', 'cargo_line_ids.weight_unit', 'total_weight_unit')
+    def _compute_totals(self):
+        for rec in self:
+            total_lbs = 0.0
+            for line in rec.cargo_line_ids:
+                if line.weight_unit == 'kg':
+                    total_lbs += line.weight * 2.20462
+                else:
+                    total_lbs += line.weight
+                    
+            if rec.total_weight_unit == 'kg':
+                rec.total_weight = round(total_lbs / 2.20462, 2)
+            else:
+                rec.total_weight = round(total_lbs, 2)
 
     @api.model
     def default_get(self, fields_list):
@@ -95,66 +110,45 @@ class BizishipFreightQuoteWizard(models.TransientModel):
         total_weight = sum(line.product_id.weight * line.product_uom_qty for line in order.order_line if line.product_id)
         # Odoo's default demo products have a weight of 0.08, which overrides the 800.0 default. 
         # We enforce a minimum of 800.0 lbs for LTL quoting.
-        res['weight'] = max(total_weight, 800.0)
-        res['weight_unit'] = order.biziship_weight_unit or 'lbs'
-        res['dim_unit'] = order.biziship_dim_unit or 'in'
+        res['total_weight'] = max(total_weight, 800.0)
+        res['total_weight_unit'] = order.biziship_total_weight_unit or 'lbs'
             
         # Default Pickup Date to Tomorrow
         from datetime import timedelta
         res['pickup_date'] = fields.Date.context_today(self) + timedelta(days=1)
+
+        # Prepopulate lines
+        if 'cargo_line_ids' in fields_list or True:
+            line_vals = []
+            for so_line in order.biziship_cargo_line_ids:
+                line_vals.append((0, 0, {
+                    'packaging_type': so_line.packaging_type,
+                    'pieces': so_line.pieces,
+                    'weight': so_line.weight,
+                    'weight_unit': so_line.weight_unit,
+                    'length': so_line.length,
+                    'width': so_line.width,
+                    'height': so_line.height,
+                    'dim_unit': so_line.dim_unit,
+                    'freight_class': so_line.freight_class,
+                    'cargo_desc': so_line.cargo_desc,
+                }))
+            if not line_vals: # Fallback single line if order has no cargo lines
+                line_vals.append((0, 0, {
+                    'weight': max(total_weight, 800.0),
+                    'weight_unit': 'lbs',
+                    'length': 48.0,
+                    'width': 40.0,
+                    'height': 48.0,
+                    'dim_unit': 'in',
+                    'pieces': 1,
+                    'packaging_type': 'pallet',
+                    'freight_class': '50',
+                    'cargo_desc': 'General Freight'
+                }))
+            res['cargo_line_ids'] = line_vals
             
         return res
-
-    @api.onchange('weight', 'weight_unit', 'length', 'width', 'height', 'dim_unit', 'num_pieces')
-    def _onchange_dimensions_for_class(self):
-        for rec in self:
-            if rec.length and rec.width and rec.height and rec.weight and rec.num_pieces:
-                l, w, h = rec.length, rec.width, rec.height
-                if rec.dim_unit == 'cm':
-                    l, w, h = l * 0.393701, w * 0.393701, h * 0.393701
-                elif rec.dim_unit == 'm':
-                    l, w, h = l * 39.3701, w * 39.3701, h * 39.3701
-                elif rec.dim_unit == 'ft':
-                    l, w, h = l * 12.0, w * 12.0, h * 12.0
-                    
-                volume_cf = (l * w * h * rec.num_pieces) / 1728.0
-                if volume_cf > 0:
-                    effective_weight = rec.weight * 2.20462 if rec.weight_unit == 'kg' else rec.weight
-                    density = effective_weight / volume_cf
-                    if density < 1:
-                        rec.freight_class = '500'
-                    elif density < 2:
-                        rec.freight_class = '400'
-                    elif density < 3:
-                        rec.freight_class = '300'
-                    elif density < 4:
-                        rec.freight_class = '250'
-                    elif density < 6:
-                        rec.freight_class = '175'
-                    elif density < 7:
-                        rec.freight_class = '150'
-                    elif density < 8:
-                        rec.freight_class = '125'
-                    elif density < 9:
-                        rec.freight_class = '110'
-                    elif density < 10.5:
-                        rec.freight_class = '100'
-                    elif density < 12:
-                        rec.freight_class = '92.5'
-                    elif density < 13.5:
-                        rec.freight_class = '85'
-                    elif density < 15:
-                        rec.freight_class = '77.5'
-                    elif density < 22.5:
-                        rec.freight_class = '70'
-                    elif density < 30:
-                        rec.freight_class = '65'
-                    elif density < 35:
-                        rec.freight_class = '60'
-                    elif density < 50:
-                        rec.freight_class = '55'
-                    else:
-                        rec.freight_class = '50'
 
     def _format_phone(self, phone_str):
         if not phone_str:
@@ -194,7 +188,42 @@ class BizishipFreightQuoteWizard(models.TransientModel):
         
         accessorials_list = list(set(accessorials_list))  # Ensure uniqueness
         
-        # Build JSON Payload
+        # Define missing format_phone 
+        def format_phone(p):
+            import re
+            p = p or ""
+            d = re.sub(r'\D', '', p)
+            return d[-10:] if len(d) >= 10 else "5555555555"
+        
+        # Base weights sum
+        payload_weight = self.total_weight or 0.0
+        if self.total_weight_unit == 'kg':
+            payload_weight = payload_weight * 2.20462
+
+        payload_items = []
+        for line in self.cargo_line_ids:
+            line_w = line.weight * 2.20462 if line.weight_unit == 'kg' else line.weight
+            payload_l, payload_w, payload_h = line.length, line.width, line.height
+            if line.dim_unit == 'cm':
+                payload_l, payload_w, payload_h = payload_l * 0.393701, payload_w * 0.393701, payload_h * 0.393701
+            elif line.dim_unit == 'm':
+                payload_l, payload_w, payload_h = payload_l * 39.3701, payload_w * 39.3701, payload_h * 39.3701
+            elif line.dim_unit == 'ft':
+                payload_l, payload_w, payload_h = payload_l * 12.0, payload_w * 12.0, payload_h * 12.0
+                
+            payload_items.append({
+                "weight": round(line_w, 2),
+                "weight_unit": "lbs",
+                "length": round(payload_l, 2),
+                "width": round(payload_w, 2),
+                "height": round(payload_h, 2),
+                "dimension_unit": "inches",
+                "num_pieces": line.pieces or 1,
+                "packaging_type": line.packaging_type or "",
+                "freight_class": line.freight_class or "",
+                "cargo_description": line.cargo_desc or ""
+            })
+
         payload = {
             "origin_company": self.origin_company or "",
             "origin_address": self.origin_address or "",
@@ -213,14 +242,7 @@ class BizishipFreightQuoteWizard(models.TransientModel):
             "cargo_description": self.cargo_description or "",
             "weight": round(payload_weight, 2),
             "weight_unit": "lbs",
-            "length": round(payload_l, 2),
-            "width": round(payload_w, 2),
-            "height": round(payload_h, 2),
-            "dimension_unit": "inches",
-            "num_pieces": self.num_pieces or 1,
-            "packaging_type": self.packaging_type or "",
-            "freight_class": self.freight_class or "",
-            "special_requirements": [],
+            "line_items": payload_items,
             "accessorial_codes": accessorials_list,
             "pickup_date": str(self.pickup_date) if self.pickup_date else "",
             "additional_notes": self.additional_notes or ""
@@ -292,10 +314,13 @@ class BizishipFreightQuoteWizard(models.TransientModel):
             if hasattr(e, 'response') and e.response is not None:
                 try:
                     err_json = e.response.json()
-                    err_msg = err_json.get('detail', err_msg)
+                    if 'errors' in err_json and isinstance(err_json['errors'], list) and len(err_json['errors']) > 0:
+                        err_msg = err_json['errors'][0]
+                    else:
+                        err_msg = err_json.get('detail', err_msg)
                 except ValueError:
                     err_msg = e.response.text
-            raise UserError(_("Email2Quote API Error:\n%s") % err_msg)
+            raise UserError(_("%s") % err_msg)
         except requests.exceptions.RequestException as e:
             raise UserError(_("Failed to connect to local Email2Quote API.\nEnsure server is running.\nDetails: %s") % str(e))
 

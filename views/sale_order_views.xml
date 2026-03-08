@@ -39,47 +39,41 @@
                         </group>
                     </group>
                     <group string="Cargo Details">
-                        <group>
-                            <field name="biziship_packaging_type"/>
-                            <field name="biziship_pieces"/>
-                            <label for="biziship_weight" string="Total Weight"/>
-                            <div class="o_row">
-                                <field name="biziship_weight"/>
-                                <field name="biziship_weight_unit" class="oe_inline"/>
-                                <button name="action_biziship_compute_weight" string="Compute from Order Lines" type="object" class="btn-link oe_inline"/>
-                            </div>
-                            <label for="biziship_length" string="Dimensions (L x W x H)"/>
-                            <div class="o_row">
-                                <field name="biziship_length" nolabel="1" class="oe_inline"/> x
-                                <field name="biziship_width" nolabel="1" class="oe_inline"/> x
-                                <field name="biziship_height" nolabel="1" class="oe_inline"/>
-                                <field name="biziship_dim_unit" nolabel="1" class="oe_inline" style="width: 50px;"/>
-                            </div>
+                        <div colspan="2" class="d-flex align-items-center o_horizontal_separator mb-2 mt-0">
+                            <span class="fw-bold">CARGO DETAILS</span>
+                        </div>
+                        
+                        <field name="biziship_cargo_line_ids" nolabel="1" colspan="2" context="{'default_sale_order_id': id}">
+                            <tree editable="bottom">
+                                <field name="packaging_type" />
+                                <field name="pieces" />
+                                <field name="weight" />
+                                <field name="weight_unit" />
+                                <field name="last_weight_unit" column_invisible="True" />
+                                <field name="length" />
+                                <field name="width" />
+                                <field name="height" />
+                                <field name="dim_unit" />
+                                <field name="computed_freight_class" string="Class" />
+                                <field name="cargo_desc" />
+                            </tree>
+                        </field>
+                        
+                        <group name="cargo_footer" col="6" class="mt-2 mt-md-0">
+                            <group colspan="4">
+                            </group>
+                            <group class="oe_subtotal_footer oe_right" colspan="2" name="cargo_total_weight">
+                                <div class="oe_subtotal_footer_separator oe_inline o_td_label">
+                                    <label for="biziship_total_weight" string="Total Weight"/>
+                                </div>
+                                <div class="oe_subtotal_footer_separator oe_inline">
+                                    <field name="biziship_total_weight" nolabel="1" class="oe_inline oe_right" style="font-weight: bold; font-size: 1.2em;"/>
+                                    <field name="biziship_total_weight_unit" nolabel="1" class="oe_inline ms-1"/>
+                                </div>
+                            </group>
+                            <div class="oe_clear"/>
                         </group>
-                        <group>
-                            <label for="biziship_freight_class"/>
-                            <div class="o_row">
-                                <field name="biziship_freight_class"/>
-                                <field name="biziship_is_class_overridden" invisible="1"/>
-                                <field name="biziship_computed_freight_class" invisible="1"/>
-                                <field name="biziship_class_calculation_error" invisible="1"/>
-                                
-                                <span class="text-success" invisible="biziship_class_calculation_error or biziship_is_class_overridden" title="Auto-calculated from dimensions and weight">
-                                    <i class="fa fa-check-circle" role="img" aria-label="Auto"/> Auto
-                                </span>
-                                
-                                <span class="text-danger" invisible="not biziship_class_calculation_error" title="Missing information to auto-calculate class">
-                                    <i class="fa fa-exclamation-circle" role="img" aria-label="Error"/> <field name="biziship_class_calculation_error" nolabel="1" class="oe_inline text-danger"/>
-                                </span>
-
-                                <span class="text-warning" invisible="not biziship_is_class_overridden or biziship_class_calculation_error" title="Differs from auto-calculated LTL standard class">
-                                    <i class="fa fa-exclamation-triangle" role="img" aria-label="Warning"/> Modified
-                                </span>
-                            </div>
-                            <field name="biziship_nmfc"/>
-                            <field name="biziship_cargo_desc"/>
                         </group>
-                    </group>
                     <div class="mt-4 text-center">
                         <style>
                             /* Modern Progress Bar for Fetch Quotes */

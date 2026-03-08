@@ -68,7 +68,11 @@
                     <group>
                         <!-- Left Column: Cargo Details -->
                         <group string="Cargo Details">
-                            <field name="weight"/>
+                            <label for="weight" string="Total Weight"/>
+                            <div class="o_row">
+                                <field name="weight" nolabel="1" class="oe_inline"/>
+                                <field name="weight_unit" nolabel="1" class="oe_inline" style="width: 50px;"/>
+                            </div>
                             <field name="freight_class"/>
                             <field name="num_pieces"/>
                             <field name="packaging_type"/>
@@ -76,7 +80,8 @@
                             <div class="o_row">
                                 <field name="length" nolabel="1" class="oe_inline"/> x
                                 <field name="width" nolabel="1" class="oe_inline"/> x
-                                <field name="height" nolabel="1" class="oe_inline"/> (in)
+                                <field name="height" nolabel="1" class="oe_inline"/>
+                                <field name="dim_unit" nolabel="1" class="oe_inline" style="width: 50px;"/>
                             </div>
                             <field name="cargo_description"/>
                         </group>

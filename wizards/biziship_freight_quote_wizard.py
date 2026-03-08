@@ -33,10 +33,12 @@ class BizishipFreightQuoteWizard(models.TransientModel):
     
     # Freight Cargo details
     cargo_description = fields.Char(string="Cargo Description", default="General Freight")
-    weight = fields.Float(string="Total Weight (lbs)", required=True, default=800.0)
-    length = fields.Float(string="Length (in)", default=48.0)
-    width = fields.Float(string="Width (in)", default=40.0)
-    height = fields.Float(string="Height (in)", default=48.0)
+    weight = fields.Float(string="Total Weight", required=True, default=800.0)
+    weight_unit = fields.Selection([('lbs', 'lbs'), ('kg', 'kg')], string="Weight Unit", default='lbs', required=True)
+    length = fields.Float(string="Length", default=48.0)
+    width = fields.Float(string="Width", default=40.0)
+    height = fields.Float(string="Height", default=48.0)
+    dim_unit = fields.Selection([('in', 'in'), ('cm', 'cm'), ('m', 'm'), ('ft', 'ft')], string="Dimension Unit", default='in', required=True)
     num_pieces = fields.Integer(string="Pieces (Handling Units)", default=1, required=True)
     packaging_type = fields.Selection([
         ('pallet', 'Pallet'),
@@ -94,6 +96,8 @@ class BizishipFreightQuoteWizard(models.TransientModel):
         # Odoo's default demo products have a weight of 0.08, which overrides the 800.0 default. 
         # We enforce a minimum of 800.0 lbs for LTL quoting.
         res['weight'] = max(total_weight, 800.0)
+        res['weight_unit'] = order.biziship_weight_unit or 'lbs'
+        res['dim_unit'] = order.biziship_dim_unit or 'in'
             
         # Default Pickup Date to Tomorrow
         from datetime import timedelta
@@ -101,13 +105,22 @@ class BizishipFreightQuoteWizard(models.TransientModel):
             
         return res
 
-    @api.onchange('weight', 'length', 'width', 'height', 'num_pieces')
+    @api.onchange('weight', 'weight_unit', 'length', 'width', 'height', 'dim_unit', 'num_pieces')
     def _onchange_dimensions_for_class(self):
         for rec in self:
             if rec.length and rec.width and rec.height and rec.weight and rec.num_pieces:
-                volume_cf = (rec.length * rec.width * rec.height * rec.num_pieces) / 1728.0
+                l, w, h = rec.length, rec.width, rec.height
+                if rec.dim_unit == 'cm':
+                    l, w, h = l * 0.393701, w * 0.393701, h * 0.393701
+                elif rec.dim_unit == 'm':
+                    l, w, h = l * 39.3701, w * 39.3701, h * 39.3701
+                elif rec.dim_unit == 'ft':
+                    l, w, h = l * 12.0, w * 12.0, h * 12.0
+                    
+                volume_cf = (l * w * h * rec.num_pieces) / 1728.0
                 if volume_cf > 0:
-                    density = rec.weight / volume_cf
+                    effective_weight = rec.weight * 2.20462 if rec.weight_unit == 'kg' else rec.weight
+                    density = effective_weight / volume_cf
                     if density < 1:
                         rec.freight_class = '500'
                     elif density < 2:
@@ -198,11 +211,11 @@ class BizishipFreightQuoteWizard(models.TransientModel):
             "destination_zip": self.destination_zip or "93036",
             "destination_phone": self._format_phone(self.destination_phone),
             "cargo_description": self.cargo_description or "",
-            "weight": self.weight or 0.0,
+            "weight": round(payload_weight, 2),
             "weight_unit": "lbs",
-            "length": self.length or 0.0,
-            "width": self.width or 0.0,
-            "height": self.height or 0.0,
+            "length": round(payload_l, 2),
+            "width": round(payload_w, 2),
+            "height": round(payload_h, 2),
             "dimension_unit": "inches",
             "num_pieces": self.num_pieces or 1,
             "packaging_type": self.packaging_type or "",

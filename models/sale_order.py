@@ -111,10 +111,12 @@ class SaleOrder(models.Model):
         ('drum', 'Drum'),
     ], string="Packaging Type", default="pallet")
     biziship_pieces = fields.Integer(string="Pieces (Handling Units)", default=1)
-    biziship_weight = fields.Float(string="Total Weight (lbs)", default=800.0)
-    biziship_length = fields.Float(string="Length (in)", default=48.0)
-    biziship_width = fields.Float(string="Width (in)", default=40.0)
-    biziship_height = fields.Float(string="Height (in)", default=48.0)
+    biziship_weight = fields.Float(string="Total Weight", default=800.0)
+    biziship_weight_unit = fields.Selection([('lbs', 'lbs'), ('kg', 'kg')], string="Weight Unit", default='lbs', required=True)
+    biziship_length = fields.Float(string="Length", default=48.0)
+    biziship_width = fields.Float(string="Width", default=40.0)
+    biziship_height = fields.Float(string="Height", default=48.0)
+    biziship_dim_unit = fields.Selection([('in', 'in'), ('cm', 'cm'), ('m', 'm'), ('ft', 'ft')], string="Dimension Unit", default='in', required=True)
     biziship_freight_class = fields.Selection([
         ('50', '50'), ('55', '55'), ('60', '60'), ('65', '65'),
         ('70', '70'), ('77.5', '77.5'), ('85', '85'), ('92.5', '92.5'),
@@ -225,13 +227,22 @@ class SaleOrder(models.Model):
             order.biziship_weight = max(total_weight, 800.0)
         return True
 
-    @api.depends('biziship_weight', 'biziship_length', 'biziship_width', 'biziship_height', 'biziship_pieces')
+    @api.depends('biziship_weight', 'biziship_weight_unit', 'biziship_length', 'biziship_width', 'biziship_height', 'biziship_dim_unit', 'biziship_pieces')
     def _compute_biziship_computed_class(self):
         for rec in self:
             if rec.biziship_length and rec.biziship_width and rec.biziship_height and rec.biziship_weight and rec.biziship_pieces:
-                volume_cf = (rec.biziship_length * rec.biziship_width * rec.biziship_height * rec.biziship_pieces) / 1728.0
+                l, w, h = rec.biziship_length, rec.biziship_width, rec.biziship_height
+                if rec.biziship_dim_unit == 'cm':
+                    l, w, h = l * 0.393701, w * 0.393701, h * 0.393701
+                elif rec.biziship_dim_unit == 'm':
+                    l, w, h = l * 39.3701, w * 39.3701, h * 39.3701
+                elif rec.biziship_dim_unit == 'ft':
+                    l, w, h = l * 12.0, w * 12.0, h * 12.0
+                    
+                volume_cf = (l * w * h * rec.biziship_pieces) / 1728.0
                 if volume_cf > 0:
-                    density = rec.biziship_weight / volume_cf
+                    effective_weight = rec.biziship_weight * 2.20462 if rec.biziship_weight_unit == 'kg' else rec.biziship_weight
+                    density = effective_weight / volume_cf
                     if density < 1: rec.biziship_computed_freight_class = '500'
                     elif density < 2: rec.biziship_computed_freight_class = '400'
                     elif density < 3: rec.biziship_computed_freight_class = '300'
@@ -268,7 +279,7 @@ class SaleOrder(models.Model):
                 and rec.biziship_freight_class != rec.biziship_computed_freight_class
             )
 
-    @api.depends('biziship_weight', 'biziship_length', 'biziship_width', 'biziship_height', 'biziship_pieces')
+    @api.depends('biziship_weight', 'biziship_weight_unit', 'biziship_length', 'biziship_width', 'biziship_height', 'biziship_pieces')
     def _compute_biziship_class_calculation_error(self):
         for rec in self:
             errors = []
@@ -330,6 +341,23 @@ class SaleOrder(models.Model):
         origin_phone = self.company_id.phone or self.env.company.phone or ''
         dest_phone = self.partner_shipping_id.phone or self.partner_id.phone or ''
         
+        # Convert weight to lbs
+        payload_weight = self.biziship_weight or 0.0
+        if self.biziship_weight_unit == 'kg':
+            payload_weight = payload_weight * 2.20462
+
+        # Convert dimensions to inches
+        payload_l = self.biziship_length or 0.0
+        payload_w = self.biziship_width or 0.0
+        payload_h = self.biziship_height or 0.0
+        
+        if self.biziship_dim_unit == 'cm':
+            payload_l, payload_w, payload_h = payload_l * 0.393701, payload_w * 0.393701, payload_h * 0.393701
+        elif self.biziship_dim_unit == 'm':
+            payload_l, payload_w, payload_h = payload_l * 39.3701, payload_w * 39.3701, payload_h * 39.3701
+        elif self.biziship_dim_unit == 'ft':
+            payload_l, payload_w, payload_h = payload_l * 12.0, payload_w * 12.0, payload_h * 12.0
+
         # Build JSON Payload
         payload = {
             "origin_company": self.company_id.name or self.env.company.name or "",
@@ -338,6 +366,7 @@ class SaleOrder(models.Model):
             "origin_city": self.company_id.city or self.env.company.city or "",
             "origin_state": self.company_id.state_id.code if self.company_id.state_id else "",
             "origin_zip": self.biziship_origin_zip,
+            "origin_country": self.biziship_origin_country_id.code if self.biziship_origin_country_id else "US",
             "origin_phone": self._format_phone(origin_phone),
             "destination_company": self.partner_shipping_id.name or self.partner_id.name or "",
             "destination_address": self.biziship_dest_address or "",
@@ -345,13 +374,14 @@ class SaleOrder(models.Model):
             "destination_city": self.partner_shipping_id.city or self.partner_id.city or "",
             "destination_state": self.partner_shipping_id.state_id.code if self.partner_shipping_id.state_id else "",
             "destination_zip": self.biziship_dest_zip,
+            "destination_country": self.biziship_dest_country_id.code if self.biziship_dest_country_id else "US",
             "destination_phone": self._format_phone(dest_phone),
             "cargo_description": self.biziship_cargo_desc or "",
-            "weight": self.biziship_weight or 0.0,
+            "weight": round(payload_weight, 2),
             "weight_unit": "lbs",
-            "length": self.biziship_length or 0.0,
-            "width": self.biziship_width or 0.0,
-            "height": self.biziship_height or 0.0,
+            "length": round(payload_l, 2),
+            "width": round(payload_w, 2),
+            "height": round(payload_h, 2),
             "dimension_unit": "inches",
             "num_pieces": self.biziship_pieces or 1,
             "packaging_type": self.biziship_packaging_type or "",

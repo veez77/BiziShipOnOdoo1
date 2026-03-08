@@ -42,17 +42,18 @@
                         <group>
                             <field name="biziship_packaging_type"/>
                             <field name="biziship_pieces"/>
-                            <label for="biziship_weight"/>
+                            <label for="biziship_weight" string="Total Weight"/>
                             <div class="o_row">
                                 <field name="biziship_weight"/>
-                                <span>lbs</span>
+                                <field name="biziship_weight_unit" class="oe_inline"/>
                                 <button name="action_biziship_compute_weight" string="Compute from Order Lines" type="object" class="btn-link oe_inline"/>
                             </div>
                             <label for="biziship_length" string="Dimensions (L x W x H)"/>
                             <div class="o_row">
-                                <field name="biziship_length"/> x
-                                <field name="biziship_width"/> x
-                                <field name="biziship_height"/> in
+                                <field name="biziship_length" nolabel="1" class="oe_inline"/> x
+                                <field name="biziship_width" nolabel="1" class="oe_inline"/> x
+                                <field name="biziship_height" nolabel="1" class="oe_inline"/>
+                                <field name="biziship_dim_unit" nolabel="1" class="oe_inline" style="width: 50px;"/>
                             </div>
                         </group>
                         <group>

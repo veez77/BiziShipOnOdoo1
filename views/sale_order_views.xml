@@ -9,6 +9,10 @@
                 <button name="%(BiziShip.action_biziship_bol_import_wizard)d" string="BiziShip: Process BOL" type="action" class="btn-secondary" invisible="state not in ['draft', 'sent', 'sale']"/>
                 <button name="action_demo_vinegar_order" string="Populate Demo Vinegar Order" type="object" class="btn-info" invisible="state != 'draft'"/>
             </xpath>
+            <xpath expr="//field[@name='date_order']" position="attributes">
+                <attribute name="widget">date</attribute>
+                <attribute name="help"></attribute>
+            </xpath>
             <xpath expr="//notebook" position="inside">
                 <page string="LTL Freight Details" name="biziship_freight_details">
                     <group>
@@ -47,13 +51,14 @@
                             <tree editable="bottom">
                                 <field name="packaging_type" />
                                 <field name="pieces" />
-                                <field name="weight" />
+                                <field name="weight" decoration-danger="weight == 0" />
                                 <field name="weight_unit" />
                                 <field name="last_weight_unit" column_invisible="True" />
-                                <field name="length" />
-                                <field name="width" />
-                                <field name="height" />
+                                <field name="length" decoration-danger="length == 0" />
+                                <field name="width" decoration-danger="width == 0" />
+                                <field name="height" decoration-danger="height == 0" />
                                 <field name="dim_unit" />
+                                <field name="last_dim_unit" column_invisible="True" />
                                 <field name="computed_freight_class" string="Class" />
                                 <field name="cargo_desc" />
                             </tree>

@@ -111,7 +111,7 @@ class SaleOrder(models.Model):
     
     biziship_cargo_desc = fields.Char(string="Cargo Description", default="General Freight")
 
-    @api.depends('biziship_cargo_line_ids.weight', 'biziship_cargo_line_ids.weight_unit', 'biziship_total_weight_unit')
+    @api.depends('biziship_cargo_line_ids', 'biziship_cargo_line_ids.weight', 'biziship_cargo_line_ids.weight_unit', 'biziship_total_weight_unit')
     def _compute_biziship_totals(self):
         for order in self:
             total_lbs = 0.0
@@ -230,6 +230,10 @@ class SaleOrder(models.Model):
             raise UserError(_("Origin Zip, Destination Zip, Total Weight, and Pickup Date are required to fetch LTL quotes."))
         if not self.biziship_cargo_line_ids:
             raise UserError(_("At least one cargo line is required to fetch LTL quotes."))
+            
+        for idx, line in enumerate(self.biziship_cargo_line_ids, start=1):
+            if line.weight <= 0 or line.length <= 0 or line.width <= 0 or line.height <= 0:
+                raise UserError(_("Cargo Line #%s has a missing or zero value. All cargo lines must have a Weight, Length, Width, and Height greater than 0.") % idx)
 
         email2quote_api_url = get_biziship_api_url()
         email2quote_api_key = get_email2quote_api_key()

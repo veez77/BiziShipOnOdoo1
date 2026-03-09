@@ -33,13 +33,103 @@ class BizishipQuoteConfirmWizard(models.TransientModel):
     _description = 'Confirm BiziShip Quote'
 
     quote_id = fields.Many2one('biziship.quote', string="Selected Quote", required=True)
+    sale_order_id = fields.Many2one(related="quote_id.sale_order_id", readonly=True)
+    biziship_cargo_line_ids = fields.One2many(related="sale_order_id.biziship_cargo_line_ids", readonly=True)
+    
+    # Terminals
+    origin_terminal_city = fields.Char(related="quote_id.origin_terminal_city", readonly=True)
+    origin_terminal_state = fields.Char(related="quote_id.origin_terminal_state", readonly=True)
+    origin_terminal_phone = fields.Char(related="quote_id.origin_terminal_phone", readonly=True)
+    destination_terminal_city = fields.Char(related="quote_id.destination_terminal_city", readonly=True)
+    destination_terminal_state = fields.Char(related="quote_id.destination_terminal_state", readonly=True)
+    destination_terminal_phone = fields.Char(related="quote_id.destination_terminal_phone", readonly=True)
+    
+    # Pickup Date & Totals
+    biziship_pickup_date = fields.Date(related="sale_order_id.biziship_pickup_date", readonly=True)
+    biziship_total_weight = fields.Float(related="sale_order_id.biziship_total_weight", readonly=True)
+    biziship_total_weight_unit = fields.Selection(related="sale_order_id.biziship_total_weight_unit", readonly=True)
+
+    # Origin Details
+    origin_company = fields.Char(related="sale_order_id.company_id.name", readonly=True)
+    origin_address = fields.Char(related="quote_id.origin_address", string="Origin Address", readonly=True)
+    origin_address2 = fields.Char(related="quote_id.origin_address2", string="Origin Address 2", readonly=True)
+    origin_city = fields.Char(related="sale_order_id.company_id.city", string="Origin City", readonly=True)
+    origin_state = fields.Char(related="sale_order_id.company_id.state_id.code", string="Origin State", readonly=True)
+    origin_zip = fields.Char(related="sale_order_id.biziship_origin_zip", string="Origin Zip", readonly=True)
+    origin_phone = fields.Char(related="sale_order_id.company_id.phone", string="Origin Phone", readonly=True)
+    
+    # Destination Details
+    destination_company = fields.Char(related="sale_order_id.partner_shipping_id.name", readonly=True)
+    destination_address = fields.Char(related="quote_id.destination_address", string="Dest Address", readonly=True)
+    destination_address2 = fields.Char(related="quote_id.destination_address2", string="Dest Address 2", readonly=True)
+    destination_city = fields.Char(related="sale_order_id.partner_shipping_id.city", string="Dest City", readonly=True)
+    destination_state = fields.Char(related="sale_order_id.partner_shipping_id.state_id.code", string="Dest State", readonly=True)
+    destination_zip = fields.Char(related="sale_order_id.biziship_dest_zip", string="Dest Zip", readonly=True)
+    destination_phone = fields.Char(related="sale_order_id.partner_shipping_id.phone", string="Dest Phone", readonly=True)
+
+    # Quote Detailed Charges
+    quote_details = fields.Text(related="quote_id.quote_details", readonly=True)
+
     carrier_name = fields.Char(related="quote_id.carrier_name", readonly=True)
+    carrier_code = fields.Char(related="quote_id.carrier_code", readonly=True)
     total_charge = fields.Float(related="quote_id.total_charge", readonly=True)
     delivery_date = fields.Datetime(related="quote_id.delivery_date", readonly=True)
     currency = fields.Char(related="quote_id.currency", readonly=True)
     currency_id = fields.Many2one(related="quote_id.currency_id", readonly=True)
     quote_id_ref = fields.Char(related="quote_id.quote_id_ref", readonly=True)
     po_number = fields.Char(string="PO Number", compute='_compute_po_number', store=True, readonly=False)
+
+    carrier_logo = fields.Binary(string="Carrier Logo", compute="_compute_carrier_logo")
+
+    @api.depends('carrier_name', 'carrier_code')
+    def _compute_carrier_logo(self):
+        import base64
+        import os
+        from odoo.modules.module import get_module_resource
+        
+        mapping = {
+            'fedex': 'fedex1.png',
+            'r&l': 'RLCarriers.jpg',
+            'rl': 'RLCarriers.jpg',
+            'r l': 'RLCarriers.jpg',
+            'abf': 'abf.png',
+            'averitt': 'averitt.ico',
+            'dayton': 'dayton.png',
+            'estes': 'estes.png',
+            'old dominion': 'odfl.ico',
+            'odfl': 'odfl.ico',
+            'pitt': 'pittohio.png',
+            'saia': 'saia.ico',
+            'south': 'sefl.ico',
+            'sefl': 'sefl.ico',
+            'tforce': 'tforce.png',
+            't-force': 'tforce.png',
+            'xpo': 'xpo.ico',
+            'aaa': 'aaa.png'
+        }
+        
+        for rec in self:
+            logo_data = False
+            name_lower = (rec.carrier_name or '').lower()
+            code_lower = (rec.carrier_code or '').lower()
+            
+            best_match = None
+            for key, filename in mapping.items():
+                if key in name_lower or key in code_lower:
+                    best_match = filename
+                    break
+                    
+            if best_match:
+                # Resolve path
+                img_path = get_module_resource('BiziShip', 'static', 'carriers', best_match)
+                if img_path and os.path.exists(img_path):
+                    try:
+                        with open(img_path, 'rb') as f:
+                            logo_data = base64.b64encode(f.read())
+                    except Exception:
+                        pass
+            
+            rec.carrier_logo = logo_data
 
     accessorial_services_text = fields.Text(string="Accessorial Services", compute='_compute_accessorial_services')
     has_accessorials = fields.Boolean(compute='_compute_accessorial_services')

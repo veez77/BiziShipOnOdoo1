@@ -15,7 +15,7 @@ class BizishipSaleCargoLine(models.Model):
     
     pieces = fields.Integer(string="Pieces (Handling Units)", default=1, required=True)
     
-    weight = fields.Float(string="Weight", default=800.0, required=True)
+    weight = fields.Float(string="Weight", default=0.0, required=True)
     weight_unit = fields.Selection([('lbs', 'lbs'), ('kg', 'kg')], string="Weight Unit", default='lbs', required=True)
     last_weight_unit = fields.Selection([('lbs', 'lbs'), ('kg', 'kg')], default='lbs')
 
@@ -39,6 +39,37 @@ class BizishipSaleCargoLine(models.Model):
     width = fields.Float(string="Width", default=40.0, required=True)
     height = fields.Float(string="Height", default=48.0, required=True)
     dim_unit = fields.Selection([('in', 'in'), ('cm', 'cm'), ('m', 'm'), ('ft', 'ft')], string="Dimension Unit", default='in', required=True)
+    last_dim_unit = fields.Selection([('in', 'in'), ('cm', 'cm'), ('m', 'm'), ('ft', 'ft')], default='in')
+
+    @api.onchange('dim_unit')
+    def _onchange_dim_unit(self):
+        for rec in self:
+            last = rec.last_dim_unit
+            if not last:
+                last = rec._origin.dim_unit if getattr(rec, '_origin', False) and rec._origin.dim_unit else 'in'
+                
+            if last != rec.dim_unit:
+                def convert_dim(val, from_u, to_u):
+                    if not val: return val
+                    # Convert to base unit: inches
+                    in_val = val
+                    if from_u == 'cm': in_val = val / 2.54
+                    elif from_u == 'm': in_val = val / 0.0254
+                    elif from_u == 'ft': in_val = val * 12.0
+                    
+                    # Convert from inches to target unit
+                    out_val = in_val
+                    if to_u == 'cm': out_val = in_val * 2.54
+                    elif to_u == 'm': out_val = in_val * 0.0254
+                    elif to_u == 'ft': out_val = in_val / 12.0
+                    
+                    return round(out_val, 2)
+                    
+                rec.length = convert_dim(rec.length, last, rec.dim_unit)
+                rec.width = convert_dim(rec.width, last, rec.dim_unit)
+                rec.height = convert_dim(rec.height, last, rec.dim_unit)
+                
+            rec.last_dim_unit = rec.dim_unit
     
     freight_class = fields.Selection([
         ('50', '50'), ('55', '55'), ('60', '60'), ('65', '65'),

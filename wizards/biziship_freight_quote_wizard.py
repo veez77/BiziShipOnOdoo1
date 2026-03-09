@@ -58,7 +58,7 @@ class BizishipFreightQuoteWizard(models.TransientModel):
     pickup_date = fields.Date(string="Pickup Date", required=True)
     additional_notes = fields.Text(string="Additional Notes")
 
-    @api.depends('cargo_line_ids.weight', 'cargo_line_ids.weight_unit', 'total_weight_unit')
+    @api.depends('cargo_line_ids', 'cargo_line_ids.weight', 'cargo_line_ids.weight_unit', 'total_weight_unit')
     def _compute_totals(self):
         for rec in self:
             total_lbs = 0.0
@@ -160,6 +160,14 @@ class BizishipFreightQuoteWizard(models.TransientModel):
 
     def action_get_quotes(self):
         self.ensure_one()
+        
+        # Validation
+        if not self.cargo_line_ids:
+            raise UserError(_("At least one cargo line is required to fetch LTL quotes."))
+            
+        for idx, line in enumerate(self.cargo_line_ids, start=1):
+            if line.weight <= 0 or line.length <= 0 or line.width <= 0 or line.height <= 0:
+                raise UserError(_("Cargo Line #%s has a missing or zero value. All cargo lines must have a Weight, Length, Width, and Height greater than 0.") % idx)
         
         email2quote_api_url = get_biziship_api_url()
         email2quote_api_key = get_email2quote_api_key()

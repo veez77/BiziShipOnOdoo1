@@ -2,11 +2,11 @@
     'name': 'BiziShip',
     'version': '17.0.2.0.0',
     'category': 'Sales',
-    'summary': 'Parse BOL PDFs and send to Email2Quote API',
+    'summary': 'AI-Powered LTL Quoting & Automated Freight Procurement',
     'description': """
-        This module allows users to upload a Bill of Lading (BOL) PDF,
-        parses it using an AI LLM (Groq) to extract LTL dimensions, weight, etc.,
-        and sends the data to an external API.
+        The ultimate shipping companion for Odoo. Supercharge your logistics 
+        with instant Mega-Search LTL quoting, real-time rate shopping, and 
+        AI-driven BOL extraction to optimize your bottom line.
     """,
     'author': 'BiziShip',
     'depends': ['base', 'sale'],

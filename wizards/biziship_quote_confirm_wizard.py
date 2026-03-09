@@ -25,7 +25,7 @@ ACCESSORIAL_MAPPING = {
     "CNVPU": "Trade Show Pickup"
 }
 
-from odoo.addons.BiziShipOnOdoo1.api_utils import get_biziship_api_url, get_email2quote_api_key
+from odoo.addons.BiziShip.api_utils import get_biziship_api_url, get_email2quote_api_key
 
 
 class BizishipQuoteConfirmWizard(models.TransientModel):

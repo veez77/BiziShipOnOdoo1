@@ -5,7 +5,7 @@ import os
 from odoo import models, fields, api, _
 from odoo.exceptions import UserError
 
-from odoo.addons.BiziShipOnOdoo1.api_utils import get_biziship_api_url, get_email2quote_api_key
+from odoo.addons.BiziShip.api_utils import get_biziship_api_url, get_email2quote_api_key
 class SaleOrder(models.Model):
     _inherit = 'sale.order'
 

@@ -15,6 +15,10 @@ class BizishipQuote(models.Model):
     currency_id = fields.Many2one(related='sale_order_id.currency_id')
     quote_id_ref = fields.Char(string="Quote ID Ref") # Changed string from 'Quote ID' to 'Quote ID Ref'
 
+    carrier_liability_new = fields.Float(string='Carrier Liability New')
+    carrier_liability_used = fields.Float(string='Carrier Liability Used')
+
+
     # New Address & Terminal Fields
     origin_address = fields.Char(string="Origin Address")
     origin_address2 = fields.Char(string="Origin Address 2")

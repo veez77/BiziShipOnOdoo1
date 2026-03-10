@@ -73,6 +73,8 @@ class BizishipQuoteConfirmWizard(models.TransientModel):
     carrier_name = fields.Char(related="quote_id.carrier_name", readonly=True)
     carrier_code = fields.Char(related="quote_id.carrier_code", readonly=True)
     total_charge = fields.Float(related="quote_id.total_charge", readonly=True)
+    carrier_liability_new = fields.Float(related="quote_id.carrier_liability_new", readonly=True)
+    carrier_liability_used = fields.Float(related="quote_id.carrier_liability_used", readonly=True)
     delivery_date = fields.Datetime(related="quote_id.delivery_date", readonly=True)
     currency = fields.Char(related="quote_id.currency", readonly=True)
     currency_id = fields.Many2one(related="quote_id.currency_id", readonly=True)

@@ -80,6 +80,8 @@
                     <group>
                         <!-- Right column -->
                         <field name="total_charge" widget="monetary" options="{'currency_field': 'currency_id'}"/>
+                        <field name="carrier_liability_new" widget="monetary" options="{'currency_field': 'currency_id'}" invisible="carrier_liability_new == 0"/>
+                        <field name="carrier_liability_used" widget="monetary" options="{'currency_field': 'currency_id'}" invisible="carrier_liability_used == 0"/>
                         <field name="currency" invisible="1"/>
                         <field name="currency_id" invisible="1"/>
                         <field name="quote_id_ref" string="Quote ID"/>

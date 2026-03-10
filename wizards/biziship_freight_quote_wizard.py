@@ -304,6 +304,8 @@ class BizishipFreightQuoteWizard(models.TransientModel):
                     'total_charge': q.get('total_charge'),
                     'currency': q.get('currency', 'USD'),
                     'quote_id_ref': q.get('quote_id'),
+                    'carrier_liability_new': q.get('carrier_liability_new'),
+                    'carrier_liability_used': q.get('carrier_liability_used'),
                     'origin_address': extracted_details.get('origin_address'),
                     'origin_address2': extracted_details.get('origin_address2'),
                     'destination_address': extracted_details.get('destination_address'),

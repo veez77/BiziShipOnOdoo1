@@ -36,7 +36,7 @@
                             </group>
                             <div class="d-flex justify-content-between align-items-center mt-2 w-100" colspan="2">
                                 <field name="biziship_origin_accessorial_ids" widget="many2many_tags" options="{'no_create': True}" placeholder="+ More Services" nolabel="1" style="flex-grow: 1;"/>
-                                <button name="action_biziship_uncheck_all_origin" string="Uncheck all" type="object" class="btn btn-sm btn-link text-muted ms-2 p-0"/>
+                                <button name="action_biziship_uncheck_all_origin" string="Uncheck all" type="object" class="btn btn-sm btn-link text-muted ms-2 p-0 text-nowrap" invisible="not biziship_origin_residential and not biziship_origin_liftgate and not biziship_origin_limited_access and not biziship_origin_accessorial_ids"/>
                             </div>
                         </group>
                         <group string="Destination">
@@ -56,7 +56,7 @@
                             </group>
                             <div class="d-flex justify-content-between align-items-center mt-2 w-100" colspan="2">
                                 <field name="biziship_dest_accessorial_ids" widget="many2many_tags" options="{'no_create': True}" placeholder="+ More Services" nolabel="1" style="flex-grow: 1;"/>
-                                <button name="action_biziship_uncheck_all_dest" string="Uncheck all" type="object" class="btn btn-sm btn-link text-muted ms-2 p-0"/>
+                                <button name="action_biziship_uncheck_all_dest" string="Uncheck all" type="object" class="btn btn-sm btn-link text-muted ms-2 p-0 text-nowrap" invisible="not biziship_dest_appointment and not biziship_dest_residential and not biziship_dest_notify and not biziship_dest_limited_access and not biziship_dest_liftgate and not biziship_dest_hazmat and not biziship_dest_accessorial_ids"/>
                             </div>
                         </group>
                     </group>

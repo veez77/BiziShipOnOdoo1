@@ -15,36 +15,48 @@
             </xpath>
             <xpath expr="//notebook" position="inside">
                 <page string="LTL Freight Details" name="biziship_freight_details">
-                    <group>
-                        <group string="Origin &amp; Pickup">
+                    <group string="Logistics Details">
+                        <group>
                             <field name="biziship_po_number"/>
                             <field name="biziship_pickup_date"/>
-                            <field name="biziship_origin_address"/>
-                            <field name="biziship_origin_address2"/>
-                            <field name="biziship_origin_zip"/>
-                            <field name="biziship_origin_country_id"/>
-                            <field name="biziship_origin_residential"/>
-                            <field name="biziship_origin_liftgate"/>
-                            <field name="biziship_origin_limited_access"/>
-                            <field name="biziship_origin_accessorial_ids" widget="many2many_tags" options="{'no_create': True}" placeholder="Select more services..."/>
-                            <div class="mt-2 text-end">
-                                <button name="action_biziship_uncheck_all_origin" string="Uncheck All" type="object" class="btn btn-sm btn-outline-secondary"/>
+                        </group>
+                    </group>
+                    <group>
+                        <group string="Origin &amp; Pickup">
+                            <field name="biziship_origin_address" nolabel="1" colspan="2" placeholder="Address Line 1"/>
+                            <field name="biziship_origin_address2" nolabel="1" colspan="2" placeholder="Address Line 2 (optional)"/>
+                            <div class="o_row" colspan="2">
+                                <field name="biziship_origin_zip" placeholder="Zip Code"/>
+                                <field name="biziship_origin_country_id" nolabel="1" placeholder="Country"/>
+                            </div>
+                            <group colspan="2" class="mt-2">
+                                <field name="biziship_origin_residential"/>
+                                <field name="biziship_origin_liftgate"/>
+                                <field name="biziship_origin_limited_access"/>
+                            </group>
+                            <div class="d-flex justify-content-between align-items-center mt-2 w-100" colspan="2">
+                                <field name="biziship_origin_accessorial_ids" widget="many2many_tags" options="{'no_create': True}" placeholder="+ More Services" nolabel="1" style="flex-grow: 1;"/>
+                                <button name="action_biziship_uncheck_all_origin" string="Uncheck all" type="object" class="btn btn-sm btn-link text-muted ms-2 p-0"/>
                             </div>
                         </group>
                         <group string="Destination">
-                            <field name="biziship_dest_address"/>
-                            <field name="biziship_dest_address2"/>
-                            <field name="biziship_dest_zip"/>
-                            <field name="biziship_dest_country_id"/>
-                            <field name="biziship_dest_appointment"/>
-                            <field name="biziship_dest_residential"/>
-                            <field name="biziship_dest_notify"/>
-                            <field name="biziship_dest_limited_access"/>
-                            <field name="biziship_dest_liftgate"/>
-                            <field name="biziship_dest_hazmat"/>
-                            <field name="biziship_dest_accessorial_ids" widget="many2many_tags" options="{'no_create': True}" placeholder="Select more services..."/>
-                            <div class="mt-2 text-end">
-                                <button name="action_biziship_uncheck_all_dest" string="Uncheck All" type="object" class="btn btn-sm btn-outline-secondary"/>
+                            <field name="biziship_dest_address" nolabel="1" colspan="2" placeholder="Address Line 1"/>
+                            <field name="biziship_dest_address2" nolabel="1" colspan="2" placeholder="Address Line 2 (optional)"/>
+                            <div class="o_row" colspan="2">
+                                <field name="biziship_dest_zip" placeholder="Zip Code"/>
+                                <field name="biziship_dest_country_id" nolabel="1" placeholder="Country"/>
+                            </div>
+                            <group col="4" colspan="2" class="mt-2">
+                                <field name="biziship_dest_appointment" colspan="2"/>
+                                <field name="biziship_dest_residential" colspan="2"/>
+                                <field name="biziship_dest_notify" colspan="2"/>
+                                <field name="biziship_dest_limited_access" colspan="2"/>
+                                <field name="biziship_dest_liftgate" colspan="2"/>
+                                <field name="biziship_dest_hazmat" colspan="2"/>
+                            </group>
+                            <div class="d-flex justify-content-between align-items-center mt-2 w-100" colspan="2">
+                                <field name="biziship_dest_accessorial_ids" widget="many2many_tags" options="{'no_create': True}" placeholder="+ More Services" nolabel="1" style="flex-grow: 1;"/>
+                                <button name="action_biziship_uncheck_all_dest" string="Uncheck all" type="object" class="btn btn-sm btn-link text-muted ms-2 p-0"/>
                             </div>
                         </group>
                     </group>

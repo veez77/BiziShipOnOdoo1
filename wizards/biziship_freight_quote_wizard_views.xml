@@ -103,45 +103,62 @@
                         </group>
                     </group>
                     
-                    <group>
-                        <!-- Logistics Details -->
-                        <group string="Logistics Details">
+                    <group string="Logistics Details">
+                        <group>
                             <field name="pickup_date"/>
                             <field name="cargo_description"/>
+                        </group>
+                        <group>
                             <field name="special_requirements" placeholder="liftgate, residential_delivery"/>
                             <field name="additional_notes" placeholder="Any order notes..."/>
                         </group>
-                        
-                        <group string="Accessorials">
-                            <div>
-                                <field name="biziship_origin_accessorial_ids" widget="many2many_tags" options="{'no_create': True}" placeholder="Origin services..."/>
-                                <button name="action_uncheck_all_origin" string="Uncheck All" type="object" class="btn btn-sm btn-link p-0"/>
-                            </div>
-                            <div>
-                                <field name="biziship_dest_accessorial_ids" widget="many2many_tags" options="{'no_create': True}" placeholder="Destination services..."/>
-                                <button name="action_uncheck_all_dest" string="Uncheck All" type="object" class="btn btn-sm btn-link p-0"/>
-                            </div>
-                        </group>
                     </group>
                     
-                    <group string="Routing (Origin to Destination)">
-                        <group string="Origin (Warehouse)">
-                            <field name="origin_company" />
-                            <field name="origin_address" />
-                            <field name="origin_address2" />
-                            <field name="origin_city" />
-                            <field name="origin_state" />
-                            <field name="origin_zip" />
-                            <field name="origin_phone" />
+                    <group>
+                        <group string="Origin &amp; Pickup">
+                            <field name="origin_company" nolabel="1" colspan="2" placeholder="Company Name"/>
+                            <field name="origin_address" nolabel="1" colspan="2" placeholder="Address Line 1" />
+                            <field name="origin_address2" nolabel="1" colspan="2" placeholder="Address Line 2 (optional)" />
+                            <div class="o_row" colspan="2">
+                                <field name="origin_zip" placeholder="Zip Code" />
+                                <field name="origin_city" placeholder="City" />
+                                <field name="origin_state" nolabel="1" placeholder="State" />
+                            </div>
+                            <field name="origin_phone" nolabel="1" colspan="2" placeholder="Phone Number"/>
+                            
+                            <group colspan="2" class="mt-2">
+                                <field name="biziship_origin_residential" />
+                                <field name="biziship_origin_liftgate" />
+                                <field name="biziship_origin_limited_access" />
+                            </group>
+                            <div class="d-flex justify-content-between align-items-center mt-2 w-100" colspan="2">
+                                <field name="biziship_origin_accessorial_ids" widget="many2many_tags" options="{'no_create': True}" placeholder="+ More Services" nolabel="1" style="flex-grow: 1;"/>
+                                <button name="action_uncheck_all_origin" string="Uncheck all" type="object" class="btn btn-sm btn-link text-muted ms-2 p-0"/>
+                            </div>
                         </group>
-                        <group string="Destination (Customer)">
-                            <field name="destination_company" />
-                            <field name="destination_address" />
-                            <field name="destination_address2" />
-                            <field name="destination_city" />
-                            <field name="destination_state" />
-                            <field name="destination_zip" />
-                            <field name="destination_phone" />
+                        <group string="Destination">
+                            <field name="destination_company" nolabel="1" colspan="2" placeholder="Company Name" />
+                            <field name="destination_address" nolabel="1" colspan="2" placeholder="Address Line 1" />
+                            <field name="destination_address2" nolabel="1" colspan="2" placeholder="Address Line 2 (optional)" />
+                            <div class="o_row" colspan="2">
+                                <field name="destination_zip" placeholder="Zip Code" />
+                                <field name="destination_city" placeholder="City" />
+                                <field name="destination_state" nolabel="1" placeholder="State" />
+                            </div>
+                            <field name="destination_phone" nolabel="1" colspan="2" placeholder="Phone Number"/>
+                            
+                            <group col="4" colspan="2" class="mt-2">
+                                <field name="biziship_dest_appointment" colspan="2" />
+                                <field name="biziship_dest_residential" colspan="2" />
+                                <field name="biziship_dest_notify" colspan="2" />
+                                <field name="biziship_dest_limited_access" colspan="2" />
+                                <field name="biziship_dest_liftgate" colspan="2" />
+                                <field name="biziship_dest_hazmat" colspan="2" />
+                            </group>
+                            <div class="d-flex justify-content-between align-items-center mt-2 w-100" colspan="2">
+                                <field name="biziship_dest_accessorial_ids" widget="many2many_tags" options="{'no_create': True}" placeholder="+ More Services" nolabel="1" style="flex-grow: 1;"/>
+                                <button name="action_uncheck_all_dest" string="Uncheck all" type="object" class="btn btn-sm btn-link text-muted ms-2 p-0"/>
+                            </div>
                         </group>
                     </group>
                 </div>

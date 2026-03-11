@@ -119,10 +119,9 @@
                             <field name="origin_company" nolabel="1" colspan="2" placeholder="Company Name"/>
                             <field name="origin_address" nolabel="1" colspan="2" placeholder="Address Line 1" />
                             <field name="origin_address2" nolabel="1" colspan="2" placeholder="Address Line 2 (optional)" />
-                            <div class="o_row" colspan="2">
-                                <field name="origin_zip" placeholder="Zip Code" />
-                                <field name="origin_city" placeholder="City" />
-                                <field name="origin_state" nolabel="1" placeholder="State" />
+                            <div class="d-flex w-100" colspan="2">
+                                <field name="origin_zip" placeholder="Zip Code" style="flex: 2; margin-right: 8px;"/>
+                                <field name="origin_country_id" nolabel="1" placeholder="Country" options="{'no_open': True, 'no_create': True}" domain="[('code', 'in', ('US', 'CA', 'MX'))]" style="flex: 1;"/>
                             </div>
                             <field name="origin_phone" nolabel="1" colspan="2" placeholder="Phone Number"/>
                             
@@ -140,10 +139,9 @@
                             <field name="destination_company" nolabel="1" colspan="2" placeholder="Company Name" />
                             <field name="destination_address" nolabel="1" colspan="2" placeholder="Address Line 1" />
                             <field name="destination_address2" nolabel="1" colspan="2" placeholder="Address Line 2 (optional)" />
-                            <div class="o_row" colspan="2">
-                                <field name="destination_zip" placeholder="Zip Code" />
-                                <field name="destination_city" placeholder="City" />
-                                <field name="destination_state" nolabel="1" placeholder="State" />
+                            <div class="d-flex w-100" colspan="2">
+                                <field name="destination_zip" placeholder="Zip Code" style="flex: 2; margin-right: 8px;" />
+                                <field name="destination_country_id" nolabel="1" placeholder="Country" options="{'no_open': True, 'no_create': True}" domain="[('code', 'in', ('US', 'CA', 'MX'))]" style="flex: 1;"/>
                             </div>
                             <field name="destination_phone" nolabel="1" colspan="2" placeholder="Phone Number"/>
                             

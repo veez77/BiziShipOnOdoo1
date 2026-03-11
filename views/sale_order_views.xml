@@ -25,9 +25,9 @@
                         <group string="Origin &amp; Pickup">
                             <field name="biziship_origin_address" nolabel="1" colspan="2" placeholder="Address Line 1"/>
                             <field name="biziship_origin_address2" nolabel="1" colspan="2" placeholder="Address Line 2 (optional)"/>
-                            <div class="o_row" colspan="2">
-                                <field name="biziship_origin_zip" placeholder="Zip Code"/>
-                                <field name="biziship_origin_country_id" nolabel="1" placeholder="Country"/>
+                            <div class="d-flex w-100" colspan="2">
+                                <field name="biziship_origin_zip" placeholder="Zip Code" style="flex: 2; margin-right: 8px;"/>
+                                <field name="biziship_origin_country_id" nolabel="1" placeholder="Country" options="{'no_open': True, 'no_create': True}" domain="[('code', 'in', ('US', 'CA', 'MX'))]" style="flex: 1;"/>
                             </div>
                             <group colspan="2" class="mt-2">
                                 <field name="biziship_origin_residential"/>
@@ -42,9 +42,9 @@
                         <group string="Destination">
                             <field name="biziship_dest_address" nolabel="1" colspan="2" placeholder="Address Line 1"/>
                             <field name="biziship_dest_address2" nolabel="1" colspan="2" placeholder="Address Line 2 (optional)"/>
-                            <div class="o_row" colspan="2">
-                                <field name="biziship_dest_zip" placeholder="Zip Code"/>
-                                <field name="biziship_dest_country_id" nolabel="1" placeholder="Country"/>
+                            <div class="d-flex w-100" colspan="2">
+                                <field name="biziship_dest_zip" placeholder="Zip Code" style="flex: 2; margin-right: 8px;"/>
+                                <field name="biziship_dest_country_id" nolabel="1" placeholder="Country" options="{'no_open': True, 'no_create': True}" domain="[('code', 'in', ('US', 'CA', 'MX'))]" style="flex: 1;"/>
                             </div>
                             <group col="4" colspan="2" class="mt-2">
                                 <field name="biziship_dest_appointment" colspan="2"/>

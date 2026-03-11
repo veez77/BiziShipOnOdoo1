@@ -20,6 +20,7 @@ class BizishipFreightQuoteWizard(models.TransientModel):
     origin_city = fields.Char(string="Origin City")
     origin_state = fields.Char(string="Origin State", help="2-letter abbreviation")
     origin_zip = fields.Char(string="Origin Zip Code", required=True)
+    origin_country_id = fields.Many2one('res.country', string="Origin Country")
     origin_phone = fields.Char(string="Origin Phone")
     
     # Pre-filled Destination
@@ -29,6 +30,7 @@ class BizishipFreightQuoteWizard(models.TransientModel):
     destination_city = fields.Char(string="Destination City")
     destination_state = fields.Char(string="Destination State", help="2-letter abbreviation")
     destination_zip = fields.Char(string="Destination Zip Code", required=True)
+    destination_country_id = fields.Many2one('res.country', string="Destination Country")
     destination_phone = fields.Char(string="Destination Phone")
     
     # Cargo Details (Multiple Lines)
@@ -118,6 +120,7 @@ class BizishipFreightQuoteWizard(models.TransientModel):
         res['origin_city'] = company.city or ''
         res['origin_state'] = company.state_id.code if company.state_id else ''
         res['origin_zip'] = company.zip or '43341'
+        res['origin_country_id'] = company.country_id.id if company.country_id else self.env.ref('base.us', raise_if_not_found=False).id
         res['origin_phone'] = company.phone or ''
         
         # Destination mapping (Customer)
@@ -128,6 +131,7 @@ class BizishipFreightQuoteWizard(models.TransientModel):
         res['destination_city'] = partner.city or ''
         res['destination_state'] = partner.state_id.code if partner.state_id else ''
         res['destination_zip'] = partner.zip or '93036'
+        res['destination_country_id'] = partner.country_id.id if partner.country_id else self.env.ref('base.us', raise_if_not_found=False).id
         res['destination_phone'] = partner.phone or ''
         
         # Automatically calculate weight from order lines if available
@@ -263,6 +267,7 @@ class BizishipFreightQuoteWizard(models.TransientModel):
             "origin_city": self.origin_city or "",
             "origin_state": self.origin_state or "",
             "origin_zip": self.origin_zip or "43341",
+            "origin_country": self.origin_country_id.code if self.origin_country_id else "US",
             "origin_phone": self._format_phone(self.origin_phone),
             "destination_company": self.destination_company or "",
             "destination_address": self.destination_address or "",
@@ -270,6 +275,7 @@ class BizishipFreightQuoteWizard(models.TransientModel):
             "destination_city": self.destination_city or "",
             "destination_state": self.destination_state or "",
             "destination_zip": self.destination_zip or "93036",
+            "destination_country": self.destination_country_id.code if self.destination_country_id else "US",
             "destination_phone": self._format_phone(self.destination_phone),
             "cargo_description": self.cargo_description or "",
             "weight": round(payload_weight, 2),

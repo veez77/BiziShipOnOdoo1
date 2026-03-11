@@ -58,6 +58,30 @@ class BizishipFreightQuoteWizard(models.TransientModel):
     pickup_date = fields.Date(string="Pickup Date", required=True)
     additional_notes = fields.Text(string="Additional Notes")
 
+    @api.onchange('biziship_dest_residential')
+    def _onchange_biziship_dest_residential(self):
+        if self.biziship_dest_residential:
+            self.biziship_dest_liftgate = True
+
+    def action_uncheck_all_origin(self):
+        for rec in self:
+            rec.biziship_origin_residential = False
+            rec.biziship_origin_liftgate = False
+            rec.biziship_origin_limited_access = False
+            rec.biziship_origin_accessorial_ids = [(5, 0, 0)]
+        return {"type": "ir.actions.do_nothing"}
+
+    def action_uncheck_all_dest(self):
+        for rec in self:
+            rec.biziship_dest_appointment = False
+            rec.biziship_dest_residential = False
+            rec.biziship_dest_notify = False
+            rec.biziship_dest_limited_access = False
+            rec.biziship_dest_liftgate = False
+            rec.biziship_dest_hazmat = False
+            rec.biziship_dest_accessorial_ids = [(5, 0, 0)]
+        return {"type": "ir.actions.do_nothing"}
+
     @api.depends('cargo_line_ids', 'cargo_line_ids.weight', 'cargo_line_ids.weight_unit', 'total_weight_unit')
     def _compute_totals(self):
         for rec in self:

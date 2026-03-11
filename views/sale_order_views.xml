@@ -27,6 +27,9 @@
                             <field name="biziship_origin_liftgate"/>
                             <field name="biziship_origin_limited_access"/>
                             <field name="biziship_origin_accessorial_ids" widget="many2many_tags" options="{'no_create': True}" placeholder="Select more services..."/>
+                            <div class="mt-2 text-end">
+                                <button name="action_biziship_uncheck_all_origin" string="Uncheck All" type="object" class="btn btn-sm btn-outline-secondary"/>
+                            </div>
                         </group>
                         <group string="Destination">
                             <field name="biziship_dest_address"/>
@@ -40,6 +43,9 @@
                             <field name="biziship_dest_liftgate"/>
                             <field name="biziship_dest_hazmat"/>
                             <field name="biziship_dest_accessorial_ids" widget="many2many_tags" options="{'no_create': True}" placeholder="Select more services..."/>
+                            <div class="mt-2 text-end">
+                                <button name="action_biziship_uncheck_all_dest" string="Uncheck All" type="object" class="btn btn-sm btn-outline-secondary"/>
+                            </div>
                         </group>
                     </group>
                     <group string="Cargo Details">

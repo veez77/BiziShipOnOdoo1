@@ -113,8 +113,14 @@
                         </group>
                         
                         <group string="Accessorials">
-                            <field name="biziship_origin_accessorial_ids" widget="many2many_tags" options="{'no_create': True}" placeholder="Origin services..."/>
-                            <field name="biziship_dest_accessorial_ids" widget="many2many_tags" options="{'no_create': True}" placeholder="Destination services..."/>
+                            <div>
+                                <field name="biziship_origin_accessorial_ids" widget="many2many_tags" options="{'no_create': True}" placeholder="Origin services..."/>
+                                <button name="action_uncheck_all_origin" string="Uncheck All" type="object" class="btn btn-sm btn-link p-0"/>
+                            </div>
+                            <div>
+                                <field name="biziship_dest_accessorial_ids" widget="many2many_tags" options="{'no_create': True}" placeholder="Destination services..."/>
+                                <button name="action_uncheck_all_dest" string="Uncheck All" type="object" class="btn btn-sm btn-link p-0"/>
+                            </div>
                         </group>
                     </group>
                     

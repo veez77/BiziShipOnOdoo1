@@ -94,6 +94,11 @@ class SaleOrder(models.Model):
         domain="[('type', '=', 'destination')]"
     )
 
+    @api.onchange('biziship_dest_residential')
+    def _onchange_biziship_dest_residential(self):
+        if self.biziship_dest_residential:
+            self.biziship_dest_liftgate = True
+
     @api.depends('partner_shipping_id', 'partner_shipping_id.country_id')
     def _compute_biziship_dest_country_id(self):
         us_country = self.env.ref('base.us', raise_if_not_found=False)
@@ -147,6 +152,29 @@ class SaleOrder(models.Model):
                 'default_quote_id': selected_quote[0].id,
             }
         }
+
+    def action_biziship_uncheck_all_origin(self):
+        for order in self:
+            order.write({
+                'biziship_origin_residential': False,
+                'biziship_origin_liftgate': False,
+                'biziship_origin_limited_access': False,
+                'biziship_origin_accessorial_ids': [(5, 0, 0)]
+            })
+        return True
+
+    def action_biziship_uncheck_all_dest(self):
+        for order in self:
+            order.write({
+                'biziship_dest_appointment': False,
+                'biziship_dest_residential': False,
+                'biziship_dest_notify': False,
+                'biziship_dest_limited_access': False,
+                'biziship_dest_liftgate': False,
+                'biziship_dest_hazmat': False,
+                'biziship_dest_accessorial_ids': [(5, 0, 0)]
+            })
+        return True
 
     def action_demo_vinegar_order(self):
         self.ensure_one()

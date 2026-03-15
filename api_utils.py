@@ -8,6 +8,7 @@ import json
 # ==========================================
 BIZISHIP_ENV = 'PROD'
 BIZISHIP_MODULE_VERSION = '2.0.0'
+BIZISHIP_APP_NAME = 'BiziShip Odoo'
 
 def get_secrets():
     secrets_path = os.path.join(os.path.dirname(__file__), 'secrets.json')

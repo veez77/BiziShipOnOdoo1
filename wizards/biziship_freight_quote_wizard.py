@@ -8,7 +8,7 @@ import logging
 
 _logger = logging.getLogger(__name__)
 
-from odoo.addons.BiziShip.api_utils import get_biziship_api_url, get_email2quote_api_key, BIZISHIP_MODULE_VERSION
+from odoo.addons.BiziShip.api_utils import get_biziship_api_url, get_email2quote_api_key, BIZISHIP_MODULE_VERSION, BIZISHIP_APP_NAME
 
 class BizishipFreightQuoteWizard(models.TransientModel):
     _name = 'biziship.freight.quote.wizard'
@@ -208,7 +208,7 @@ class BizishipFreightQuoteWizard(models.TransientModel):
             "X-API-Key": email2quote_api_key,
             "Content-Type": "application/json",
             "X-User-Email": self.env.user.email or "",
-            "X-Client-App": "BiziShip Odoo",
+            "X-Client-App": BIZISHIP_APP_NAME,
             "X-Client-Version": BIZISHIP_MODULE_VERSION,
         }
         

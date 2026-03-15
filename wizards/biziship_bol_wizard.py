@@ -9,7 +9,7 @@ import logging
 
 _logger = logging.getLogger(__name__)
 
-from odoo.addons.BiziShip.api_utils import get_biziship_api_url, get_email2quote_api_key, get_groq_api_key, BIZISHIP_MODULE_VERSION
+from odoo.addons.BiziShip.api_utils import get_biziship_api_url, get_email2quote_api_key, get_groq_api_key, BIZISHIP_MODULE_VERSION, BIZISHIP_APP_NAME
 
 try:
     from PyPDF2 import PdfReader
@@ -159,7 +159,7 @@ class BizishipBolImportWizard(models.TransientModel):
         api_key_header = {
             "X-API-Key": email2quote_api_key,
             "X-User-Email": self.env.user.email or "",
-            "X-Client-App": "BiziShip Odoo",
+            "X-Client-App": BIZISHIP_APP_NAME,
             "X-Client-Version": BIZISHIP_MODULE_VERSION,
         }
 

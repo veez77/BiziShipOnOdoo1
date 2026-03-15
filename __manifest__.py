@@ -15,6 +15,7 @@
         'data/accessorial_data.xml',
         'wizards/biziship_bol_wizard_views.xml',
         'wizards/biziship_quote_confirm_wizard_views.xml',
+        'wizards/biziship_booking_warning_wizard_views.xml',
         'wizards/biziship_freight_quote_wizard_views.xml',
         'views/sale_order_views.xml',
     ],

@@ -23,6 +23,7 @@
                     </group>
                     <group>
                         <group string="Origin &amp; Pickup">
+                            <field name="biziship_origin_company" nolabel="1" colspan="2" placeholder="Origin Company Name"/>
                             <field name="biziship_origin_address" nolabel="1" colspan="2" placeholder="Address Line 1"/>
                             <field name="biziship_origin_address2" nolabel="1" colspan="2" placeholder="Address Line 2 (optional)"/>
                             <div class="d-flex w-100" colspan="2">
@@ -40,6 +41,7 @@
                             </div>
                         </group>
                         <group string="Destination">
+                            <field name="biziship_dest_company" nolabel="1" colspan="2" placeholder="Destination Company Name"/>
                             <field name="biziship_dest_address" nolabel="1" colspan="2" placeholder="Address Line 1"/>
                             <field name="biziship_dest_address2" nolabel="1" colspan="2" placeholder="Address Line 2 (optional)"/>
                             <div class="d-flex w-100" colspan="2">
@@ -66,7 +68,7 @@
                         </div>
                         
                         <field name="biziship_cargo_line_ids" nolabel="1" colspan="2" context="{'default_sale_order_id': id}">
-                            <tree editable="bottom">
+                            <tree editable="bottom" class="biziship-cargo-tree">
                                 <field name="packaging_type" />
                                 <field name="pieces" />
                                 <field name="weight" decoration-danger="weight == 0" />
@@ -152,6 +154,15 @@
                             .o_form_view:has(button[name="action_biziship_fetch_live_quotes"].o_disabled) .biziship-fetch-progress-bar {
                                 animation: biziship-fetch-fill 15s cubic-bezier(0.1, 0.7, 1.0, 0.1) forwards, biziship-fetch-stripes 1s linear infinite;
                             }
+
+                            /* Highlight 0 weight/dimensions with light red background */
+                            .biziship-cargo-tree .text-danger {
+                                background-color: #f8d7da !important;
+                                color: #721c24 !important;
+                                font-weight: bold;
+                                padding: 2px 4px;
+                                border-radius: 3px;
+                            }
                         </style>
                         <div class="biziship-fetch-progress-container">
                             <div class="biziship-fetch-progress-text">Fetching Live Quotes... (~15s)</div>
@@ -159,6 +170,12 @@
                                 <div class="biziship-fetch-progress-bar"></div>
                             </div>
                         </div>
+                        <group name="special_instructions_group" class="mb-3">
+                            <label for="biziship_special_instructions" style="font-size: 1.2rem; font-weight: bold;"/>
+                            <field name="biziship_special_instructions" nolabel="1" placeholder="Enter special instructions for the carrier (e.g. fragile, call before delivery)..." style="font-size: 1.1em; text-align: left;"/>
+                        </group>
+                        
+
                         <button name="action_biziship_fetch_live_quotes" string="Fetch Live Quotes" type="object" class="btn-primary" invisible="state not in ['draft', 'sent', 'sale']"/>
                     </div>
                 </page>
@@ -176,9 +193,15 @@
                         </group>
                     </group>
                     <group invisible="not biziship_quote_ids">
-                        <div colspan="2" class="d-flex align-items-center o_horizontal_separator mb-2 mt-4">
-                            <span class="text-uppercase fw-bold me-2">Available Quotes</span>
-                            <button name="action_delete_biziship_quotes" type="object" icon="fa-trash" class="btn btn-link text-muted p-0" title="Delete All Quotes" confirm="Are you sure you want to delete all quotes?"/>
+                        <div colspan="2" class="d-flex align-items-center justify-content-between mb-2 mt-4" style="border-bottom: 1px solid #dee2e6; padding-bottom: 8px;">
+                            <div class="d-flex align-items-center">
+                                <span class="text-uppercase fw-bold me-2" style="font-size: 0.9rem; color: #495057;">Available Quotes</span>
+                                <button name="action_delete_biziship_quotes" type="object" icon="fa-trash" class="btn btn-link text-muted p-0" title="Delete All Quotes" confirm="Are you sure you want to delete all quotes?"/>
+                            </div>
+                            <div class="d-flex align-items-center" invisible="biziship_priority1_env != 'PROD'">
+                                <span class="badge rounded-pill bg-success text-white px-2 py-1" style="font-size: 11px; font-weight: bold; letter-spacing: 0.5px;">Live!</span>
+                            </div>
+                            <field name="biziship_priority1_env" invisible="1"/>
                         </div>
                     </group>
                     <field name="biziship_quote_ids" nolabel="1">
@@ -186,6 +209,7 @@
                             <field name="is_selected" column_invisible="True"/>
                             <button name="action_select_quote_toggle" type="object" icon="fa-lg fa-toggle-on text-success" invisible="not is_selected" class="btn btn-link p-0" title="Selected" aria-label="Selected"/>
                             <button name="action_select_quote_toggle" type="object" icon="fa-lg fa-toggle-off text-muted" invisible="is_selected" class="btn btn-link p-0" title="Select" aria-label="Not Selected"/>
+                            <field name="carrier_logo" widget="image" options="{'size': [30, 30]}" class="me-2" nolabel="1" readonly="1" optional="show"/>
                             <field name="carrier_name" readonly="1"/>
                             <field name="service_level" readonly="1"/>
                             <field name="transit_days" readonly="1"/>
@@ -199,8 +223,11 @@
                         </tree>
                         <form string="Quote Details" create="false" edit="false">
                             <sheet>
-                                <div class="oe_title">
-                                    <h1><field name="carrier_name" readonly="1"/></h1>
+                                <div class="d-flex align-items-center justify-content-between mb-3">
+                                    <div class="oe_title mb-0">
+                                        <h1 class="mb-0"><field name="carrier_name" readonly="1"/></h1>
+                                    </div>
+                                    <field name="carrier_logo" widget="image" class="ms-3" style="max-height: 50px; max-width: 150px; object-fit: contain;" readonly="1"/>
                                 </div>
                                 <group>
                                     <group>

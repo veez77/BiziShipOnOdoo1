@@ -53,7 +53,7 @@ class BizishipQuoteConfirmWizard(models.TransientModel):
     biziship_total_weight_unit = fields.Selection(related="sale_order_id.biziship_total_weight_unit", readonly=True)
 
     # Origin Details
-    origin_company = fields.Char(related="sale_order_id.company_id.name", readonly=True)
+    origin_company = fields.Char(related="sale_order_id.biziship_origin_company", readonly=True)
     origin_address = fields.Char(related="quote_id.origin_address", string="Origin Address", readonly=True)
     origin_address2 = fields.Char(related="quote_id.origin_address2", string="Origin Address 2", readonly=True)
     origin_city = fields.Char(related="sale_order_id.company_id.city", string="Origin City", readonly=True)
@@ -62,7 +62,7 @@ class BizishipQuoteConfirmWizard(models.TransientModel):
     origin_phone = fields.Char(related="sale_order_id.company_id.phone", string="Origin Phone", readonly=True)
     
     # Destination Details
-    destination_company = fields.Char(related="sale_order_id.partner_shipping_id.name", readonly=True)
+    destination_company = fields.Char(related="sale_order_id.biziship_dest_company", readonly=True)
     destination_address = fields.Char(related="quote_id.destination_address", string="Dest Address", readonly=True)
     destination_address2 = fields.Char(related="quote_id.destination_address2", string="Dest Address 2", readonly=True)
     destination_city = fields.Char(related="sale_order_id.partner_shipping_id.city", string="Dest City", readonly=True)
@@ -82,59 +82,12 @@ class BizishipQuoteConfirmWizard(models.TransientModel):
     currency = fields.Char(related="quote_id.currency", readonly=True)
     currency_id = fields.Many2one(related="quote_id.currency_id", readonly=True)
     quote_id_ref = fields.Char(related="quote_id.quote_id_ref", readonly=True)
+    biziship_special_instructions = fields.Text(related="sale_order_id.biziship_special_instructions", readonly=True)
+    priority1_env = fields.Char(related="sale_order_id.biziship_priority1_env", readonly=True)
     po_number = fields.Char(string="PO Number", compute='_compute_po_number', store=True, readonly=False)
 
-    carrier_logo = fields.Binary(string="Carrier Logo", compute="_compute_carrier_logo")
+    carrier_logo = fields.Binary(related="quote_id.carrier_logo", string="Carrier Logo", readonly=True)
 
-    @api.depends('carrier_name', 'carrier_code')
-    def _compute_carrier_logo(self):
-        import base64
-        import os
-        from odoo.modules.module import get_module_resource
-        
-        mapping = {
-            'fedex': 'fedex1.png',
-            'r&l': 'RLCarriers.jpg',
-            'rl': 'RLCarriers.jpg',
-            'r l': 'RLCarriers.jpg',
-            'abf': 'abf.png',
-            'averitt': 'averitt.ico',
-            'dayton': 'dayton.png',
-            'estes': 'estes.png',
-            'old dominion': 'odfl.ico',
-            'odfl': 'odfl.ico',
-            'pitt': 'pittohio.png',
-            'saia': 'saia.ico',
-            'south': 'sefl.ico',
-            'sefl': 'sefl.ico',
-            'tforce': 'tforce.png',
-            't-force': 'tforce.png',
-            'xpo': 'xpo.ico',
-            'aaa': 'aaa.png'
-        }
-        
-        for rec in self:
-            logo_data = False
-            name_lower = (rec.carrier_name or '').lower()
-            code_lower = (rec.carrier_code or '').lower()
-            
-            best_match = None
-            for key, filename in mapping.items():
-                if key in name_lower or key in code_lower:
-                    best_match = filename
-                    break
-                    
-            if best_match:
-                # Resolve path
-                img_path = get_module_resource('BiziShip', 'static', 'carriers', best_match)
-                if img_path and os.path.exists(img_path):
-                    try:
-                        with open(img_path, 'rb') as f:
-                            logo_data = base64.b64encode(f.read())
-                    except Exception:
-                        pass
-            
-            rec.carrier_logo = logo_data
 
     accessorial_services_text = fields.Text(string="Accessorial Services", compute='_compute_accessorial_services')
     has_accessorials = fields.Boolean(compute='_compute_accessorial_services')
@@ -217,7 +170,7 @@ class BizishipQuoteConfirmWizard(models.TransientModel):
 
         company = self.env.company
         shipper = {
-            "company_name": extracted_data.get("origin_company") or company.name,
+            "company_name": sale_order.biziship_origin_company or extracted_data.get("origin_company") or company.name,
             "address_line1": extracted_data.get("origin_address") or company.street or "",
             "address_line2": extracted_data.get("origin_address2") or company.street2 or "",
             "city": extracted_data.get("origin_city") or company.city or "",
@@ -229,7 +182,7 @@ class BizishipQuoteConfirmWizard(models.TransientModel):
         
         partner = sale_order.partner_shipping_id or sale_order.partner_id
         consignee = {
-            "company_name": extracted_data.get("destination_company") or partner.name,
+            "company_name": sale_order.biziship_dest_company or extracted_data.get("destination_company") or partner.name,
             "address_line1": extracted_data.get("destination_address") or partner.street or "",
             "address_line2": extracted_data.get("destination_address2") or partner.street2 or "",
             "city": extracted_data.get("destination_city") or partner.city or "",
@@ -252,7 +205,8 @@ class BizishipQuoteConfirmWizard(models.TransientModel):
             "po_number": self.po_number or "",
             "shipper": shipper,
             "consignee": consignee,
-            "pickup_date": pickup_date
+            "pickup_date": pickup_date,
+            "pickup_note": sale_order.biziship_special_instructions or ""
         }
 
         _logger.info("BiziShip Booking API Request Headers: %s", headers)

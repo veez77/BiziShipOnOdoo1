@@ -92,26 +92,26 @@
 
                 <group class="biziship-quote-help-group" string="Routing (Origin to Destination)">
                     <group string="Origin">
-                        <field name="origin_company" nolabel="1" class="fw-bold"/>
-                        <div class="o_address_format">
+                        <field name="origin_company" nolabel="1" class="fw-bold mb-0" style="font-size: 1.1em; display: block;" colspan="2"/>
+                        <div class="o_address_format" colspan="2">
                             <field name="origin_address" class="o_address_street"/>
                             <field name="origin_address2" class="o_address_street"/>
                             <field name="origin_city" class="o_address_city"/>
                             <field name="origin_state" class="o_address_state"/>
                             <field name="origin_zip" class="o_address_zip"/>
                         </div>
-                        <field name="origin_phone" widget="phone" nolabel="1"/>
+                        <field name="origin_phone" widget="phone" nolabel="1" colspan="2" style="display: block; white-space: nowrap;"/>
                     </group>
                     <group string="Destination">
-                        <field name="destination_company" nolabel="1" class="fw-bold"/>
-                        <div class="o_address_format">
+                        <field name="destination_company" nolabel="1" class="fw-bold mb-0" style="font-size: 1.1em; display: block;" colspan="2"/>
+                        <div class="o_address_format" colspan="2">
                             <field name="destination_address" class="o_address_street"/>
                             <field name="destination_address2" class="o_address_street"/>
                             <field name="destination_city" class="o_address_city"/>
                             <field name="destination_state" class="o_address_state"/>
                             <field name="destination_zip" class="o_address_zip"/>
                         </div>
-                        <field name="destination_phone" widget="phone" nolabel="1"/>
+                        <field name="destination_phone" widget="phone" nolabel="1" colspan="2" style="display: block; white-space: nowrap;"/>
                     </group>
                 </group>
 
@@ -159,7 +159,19 @@
                         <group name="cargo_footer" col="6" class="mt-2 mt-md-0">
                             <group colspan="4">
                                 <field name="accessorial_services_text" string="Accessorials" readonly="1" invisible="not has_accessorials" style="white-space: pre; font-size: 13px; color: #666;"/>
-                            </group>
+                                <field name="biziship_special_instructions" string="Special Instructions" readonly="1" invisible="not biziship_special_instructions" style="white-space: pre; font-size: 1.1em; color: #000; text-align: left;"/>
+                        
+                        <!-- Environment Indicator -->
+                        <div class="mt-4 mb-2 text-center" invisible="not priority1_env">
+                            <span class="badge rounded-pill bg-warning text-dark px-3 py-2" style="font-size: 14px;" invisible="priority1_env != 'DEV'">
+                                <i class="fa fa-flask me-1"></i> DEVELOPMENT ENVIRONMENT
+                            </span>
+                            <span class="badge rounded-pill bg-success text-white px-3 py-2" style="font-size: 14px;" invisible="priority1_env != 'PROD'">
+                                <i class="fa fa-check-circle me-1"></i> PRODUCTION ENVIRONMENT (LIVE)
+                            </span>
+                            <field name="priority1_env" invisible="1"/>
+                        </div>
+                    </group>
                             <group class="oe_subtotal_footer oe_right" colspan="2" name="cargo_total_weight">
                                 <div class="oe_subtotal_footer_separator oe_inline o_td_label">
                                     <label for="biziship_total_weight" string="Total Weight"/>

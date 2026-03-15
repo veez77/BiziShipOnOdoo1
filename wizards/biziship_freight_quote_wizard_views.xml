@@ -58,6 +58,15 @@
                     .modal:has(button[name="action_get_quotes"].o_disabled) .biziship-freight-quote-form-content {
                         display: none;
                     }
+
+                    /* Highlight 0 weight/dimensions with light red background */
+                    .biziship-cargo-tree .text-danger {
+                        background-color: #f8d7da !important;
+                        color: #721c24 !important;
+                        font-weight: bold;
+                        padding: 2px 4px;
+                        border-radius: 3px;
+                    }
                 </style>
                 
                 <div class="biziship-freight-quote-form-content">
@@ -71,7 +80,7 @@
                             <span class="fw-bold">CARGO DETAILS</span>
                         </div>
                         <field name="cargo_line_ids" nolabel="1" colspan="2">
-                            <tree editable="bottom">
+                            <tree editable="bottom" class="biziship-cargo-tree">
                                 <field name="packaging_type" />
                                 <field name="pieces" />
                                 <field name="weight" decoration-danger="weight == 0" />
@@ -110,6 +119,7 @@
                         </group>
                         <group>
                             <field name="special_requirements" placeholder="liftgate, residential_delivery"/>
+                            <field name="special_instructions" placeholder="Pickup instructions..." style="font-size: 1.1em; text-align: left;"/>
                             <field name="additional_notes" placeholder="Any order notes..."/>
                         </group>
                     </group>

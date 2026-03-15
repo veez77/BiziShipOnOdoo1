@@ -1,4 +1,5 @@
 from odoo import models, fields, api
+from odoo.addons.BiziShip.api_utils import KG_TO_LBS, CM_TO_IN, M_TO_IN, FT_TO_IN, convert_to_lbs
 
 class BizishipQuoteCargoLine(models.TransientModel):
     _name = 'biziship.quote.cargo.line'
@@ -30,9 +31,9 @@ class BizishipQuoteCargoLine(models.TransientModel):
             if last != rec.weight_unit:
                 if rec.weight:
                     if rec.weight_unit == 'kg' and last == 'lbs':
-                        rec.weight = round(rec.weight / 2.20462, 2)
+                        rec.weight = round(rec.weight / KG_TO_LBS, 2)
                     elif rec.weight_unit == 'lbs' and last == 'kg':
-                        rec.weight = round(rec.weight * 2.20462, 2)
+                        rec.weight = round(rec.weight * KG_TO_LBS, 2)
             rec.last_weight_unit = rec.weight_unit
     
     length = fields.Float(string="Length", default=48.0, required=True)
@@ -53,15 +54,15 @@ class BizishipQuoteCargoLine(models.TransientModel):
                     if not val: return val
                     # Convert to base unit: inches
                     in_val = val
-                    if from_u == 'cm': in_val = val / 2.54
-                    elif from_u == 'm': in_val = val / 0.0254
-                    elif from_u == 'ft': in_val = val * 12.0
+                    if from_u == 'cm': in_val = val * CM_TO_IN
+                    elif from_u == 'm': in_val = val * M_TO_IN
+                    elif from_u == 'ft': in_val = val * FT_TO_IN
                     
                     # Convert from inches to target unit
                     out_val = in_val
-                    if to_u == 'cm': out_val = in_val * 2.54
-                    elif to_u == 'm': out_val = in_val * 0.0254
-                    elif to_u == 'ft': out_val = in_val / 12.0
+                    if to_u == 'cm': out_val = in_val / CM_TO_IN
+                    elif to_u == 'm': out_val = in_val / M_TO_IN
+                    elif to_u == 'ft': out_val = in_val / FT_TO_IN
                     
                     return round(out_val, 2)
                     
@@ -87,15 +88,15 @@ class BizishipQuoteCargoLine(models.TransientModel):
             if rec.length and rec.width and rec.height and rec.weight and rec.pieces:
                 l, w, h = rec.length, rec.width, rec.height
                 if rec.dim_unit == 'cm':
-                    l, w, h = l * 0.393701, w * 0.393701, h * 0.393701
+                    l, w, h = l * CM_TO_IN, w * CM_TO_IN, h * CM_TO_IN
                 elif rec.dim_unit == 'm':
-                    l, w, h = l * 39.3701, w * 39.3701, h * 39.3701
+                    l, w, h = l * M_TO_IN, w * M_TO_IN, h * M_TO_IN
                 elif rec.dim_unit == 'ft':
-                    l, w, h = l * 12.0, w * 12.0, h * 12.0
+                    l, w, h = l * FT_TO_IN, w * FT_TO_IN, h * FT_TO_IN
                     
                 volume_cf = (l * w * h * rec.pieces) / 1728.0
                 if volume_cf > 0:
-                    effective_weight = rec.weight * 2.20462 if rec.weight_unit == 'kg' else rec.weight
+                    effective_weight = convert_to_lbs(rec.weight, rec.weight_unit)
                     density = effective_weight / volume_cf
                     if density < 1: rec.freight_class = '500'
                     elif density < 2: rec.freight_class = '400'

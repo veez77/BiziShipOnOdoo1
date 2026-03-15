@@ -1,8 +1,12 @@
 from odoo import models, fields, api
+import base64
+import os
+from odoo.modules.module import get_module_resource
 
 class BizishipQuote(models.Model):
     _name = 'biziship.quote'
     _description = 'BiziShip Freight Quote'
+    _order = 'total_charge asc'
 
     sale_order_id = fields.Many2one('sale.order', string='Sales Order', required=True, ondelete='cascade')
     carrier_name = fields.Char(string='Carrier')
@@ -35,6 +39,61 @@ class BizishipQuote(models.Model):
 
     is_selected = fields.Boolean(string='Selected', default=False)
     quote_details = fields.Text(string='Quote Details')
+    carrier_logo = fields.Binary(string="Carrier Logo", compute="_compute_carrier_logo")
+
+    @api.depends('carrier_name', 'carrier_code')
+    def _compute_carrier_logo(self):
+        mapping = {
+            'fedex': 'fedex1.png',
+            'r&l': 'RLCarriers.jpg',
+            'rl': 'RLCarriers.jpg',
+            'r l': 'RLCarriers.jpg',
+            'r+l': 'RLCarriers.jpg',
+            'abf': 'abf.png',
+            'averitt': 'averitt.ico',
+            'dayton': 'dayton.png',
+            'estes': 'estes.png',
+            'old dominion': 'odfl.ico',
+            'odfl': 'odfl.ico',
+            'pitt': 'pittohio.png',
+            'saia': 'saia.ico',
+            'south': 'sefl.ico',
+            'sefl': 'sefl.ico',
+            'tforce': 'tforce.png',
+            't-force': 'tforce.png',
+            'xpo': 'xpo.ico',
+            'aaa': 'aaa.png',
+            'mountain valley': 'Mountain_Valley_Express.jpg',
+            'numark': 'Numark_Transportation.jpg',
+            'unis': 'UNIS.png',
+            'roadrunner': 'Roadrunner_Transportation_Systems.jpg',
+            'best overnite': 'Best_Overnight_Express.png',
+            'best overnight': 'Best_Overnight_Express.png',
+            'xpress global': 'Express_Global_Systems_Llc.jpg',
+            'warp': 'WARP.png'
+        }
+        
+        for rec in self:
+            logo_data = False
+            name_lower = (rec.carrier_name or '').lower()
+            code_lower = (rec.carrier_code or '').lower()
+            
+            best_match = None
+            for key, filename in mapping.items():
+                if key in name_lower or key in code_lower:
+                    best_match = filename
+                    break
+                    
+            if best_match:
+                img_path = get_module_resource('BiziShip', 'static', 'carriers', best_match)
+                if img_path and os.path.exists(img_path):
+                    try:
+                        with open(img_path, 'rb') as f:
+                            logo_data = base64.b64encode(f.read())
+                    except Exception:
+                        pass
+            
+            rec.carrier_logo = logo_data
 
     def action_select_quote_toggle(self):
         for record in self:

@@ -8,7 +8,15 @@ import logging
 
 _logger = logging.getLogger(__name__)
 
-from odoo.addons.BiziShip.api_utils import get_biziship_api_url, get_email2quote_api_key, BIZISHIP_MODULE_VERSION, BIZISHIP_APP_NAME
+from odoo.addons.BiziShip.api_utils import (
+    get_biziship_api_url, 
+    get_email2quote_api_key, 
+    BIZISHIP_MODULE_VERSION, 
+    BIZISHIP_APP_NAME,
+    KG_TO_LBS,
+    convert_to_lbs,
+    convert_to_inches
+)
 
 class BizishipFreightQuoteWizard(models.TransientModel):
     _name = 'biziship.freight.quote.wizard'
@@ -62,6 +70,7 @@ class BizishipFreightQuoteWizard(models.TransientModel):
     special_requirements = fields.Char(string="Special Requirements", help="Comma-separated. e.g. liftgate,residential_delivery")
     pickup_date = fields.Date(string="Pickup Date", required=True)
     additional_notes = fields.Text(string="Additional Notes")
+    special_instructions = fields.Text(string="Special Instructions")
 
     @api.onchange('biziship_dest_residential')
     def _onchange_biziship_dest_residential(self):
@@ -92,13 +101,10 @@ class BizishipFreightQuoteWizard(models.TransientModel):
         for rec in self:
             total_lbs = 0.0
             for line in rec.cargo_line_ids:
-                if line.weight_unit == 'kg':
-                    total_lbs += line.weight * 2.20462
-                else:
-                    total_lbs += line.weight
+                total_lbs += convert_to_lbs(line.weight, line.weight_unit)
                     
             if rec.total_weight_unit == 'kg':
-                rec.total_weight = round(total_lbs / 2.20462, 2)
+                rec.total_weight = round(total_lbs / KG_TO_LBS, 2)
             else:
                 rec.total_weight = round(total_lbs, 2)
 
@@ -117,7 +123,7 @@ class BizishipFreightQuoteWizard(models.TransientModel):
         
         # Origin mapping (Company warehouse)
         company = self.env.company
-        res['origin_company'] = company.name or ''
+        res['origin_company'] = order.biziship_origin_company or company.name or ''
         res['origin_address'] = company.street or ''
         res['origin_address2'] = company.street2 or ''
         res['origin_city'] = company.city or ''
@@ -128,7 +134,7 @@ class BizishipFreightQuoteWizard(models.TransientModel):
         
         # Destination mapping (Customer)
         partner = order.partner_shipping_id or order.partner_id
-        res['destination_company'] = partner.name or ''
+        res['destination_company'] = order.biziship_dest_company or partner.name or ''
         res['destination_address'] = partner.street or ''
         res['destination_address2'] = partner.street2 or ''
         res['destination_city'] = partner.city or ''
@@ -143,6 +149,7 @@ class BizishipFreightQuoteWizard(models.TransientModel):
         # We enforce a minimum of 800.0 lbs for LTL quoting.
         res['total_weight'] = max(total_weight, 800.0)
         res['total_weight_unit'] = order.biziship_total_weight_unit or 'lbs'
+        res['special_instructions'] = order.biziship_special_instructions or ''
             
         # Default Pickup Date to Tomorrow
         from datetime import timedelta
@@ -238,20 +245,14 @@ class BizishipFreightQuoteWizard(models.TransientModel):
             return d[-10:] if len(d) >= 10 else "5555555555"
         
         # Base weights sum
-        payload_weight = self.total_weight or 0.0
-        if self.total_weight_unit == 'kg':
-            payload_weight = payload_weight * 2.20462
+        payload_weight = convert_to_lbs(self.total_weight, self.total_weight_unit)
 
         payload_items = []
         for line in self.cargo_line_ids:
-            line_w = line.weight * 2.20462 if line.weight_unit == 'kg' else line.weight
-            payload_l, payload_w, payload_h = line.length, line.width, line.height
-            if line.dim_unit == 'cm':
-                payload_l, payload_w, payload_h = payload_l * 0.393701, payload_w * 0.393701, payload_h * 0.393701
-            elif line.dim_unit == 'm':
-                payload_l, payload_w, payload_h = payload_l * 39.3701, payload_w * 39.3701, payload_h * 39.3701
-            elif line.dim_unit == 'ft':
-                payload_l, payload_w, payload_h = payload_l * 12.0, payload_w * 12.0, payload_h * 12.0
+            line_w = convert_to_lbs(line.weight, line.weight_unit)
+            payload_l = convert_to_inches(line.length, line.dim_unit)
+            payload_w = convert_to_inches(line.width, line.dim_unit)
+            payload_h = convert_to_inches(line.height, line.dim_unit)
                 
             payload_items.append({
                 "weight": round(line_w, 2),
@@ -284,6 +285,7 @@ class BizishipFreightQuoteWizard(models.TransientModel):
             "destination_country": self.destination_country_id.code if self.destination_country_id else "US",
             "destination_phone": self._format_phone(self.destination_phone),
             "cargo_description": self.cargo_description or "",
+            "special_instructions": self.special_instructions or "",
             "weight": round(payload_weight, 2),
             "weight_unit": "lbs",
             "line_items": payload_items,
@@ -300,6 +302,10 @@ class BizishipFreightQuoteWizard(models.TransientModel):
             
             response_json = response.json()
             quotes = response_json.get('quotes', [])
+            
+            # Capture environment from top level
+            p1_env = response_json.get('priority1_env', 'DEV')
+            self.order_id.biziship_priority1_env = p1_env
             
             if not quotes:
                 raise UserError(_("No carrier quotes available for this lane. Check origin/destination zip codes or freight details."))

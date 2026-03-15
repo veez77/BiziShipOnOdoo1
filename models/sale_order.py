@@ -8,7 +8,15 @@ import logging
 
 _logger = logging.getLogger(__name__)
 
-from odoo.addons.BiziShip.api_utils import get_biziship_api_url, get_email2quote_api_key, BIZISHIP_MODULE_VERSION, BIZISHIP_APP_NAME
+from odoo.addons.BiziShip.api_utils import (
+    get_biziship_api_url, 
+    get_email2quote_api_key, 
+    BIZISHIP_MODULE_VERSION, 
+    BIZISHIP_APP_NAME,
+    KG_TO_LBS,
+    convert_to_lbs,
+    convert_to_inches
+)
 class SaleOrder(models.Model):
     _inherit = 'sale.order'
 
@@ -61,6 +69,7 @@ class SaleOrder(models.Model):
     # --- LTL Freight Fields ---
     # Origin & Pickup
     biziship_pickup_date = fields.Date(string="Pickup Date", default=lambda self: fields.Date.context_today(self))
+    biziship_origin_company = fields.Char(string="Origin Company", default=lambda self: self.env.company.name or '')
     biziship_origin_address = fields.Char(string="Pickup Address Line 1", default=lambda self: self.env.company.street or '')
     biziship_origin_address2 = fields.Char(string="Pickup Address Line 2", default=lambda self: self.env.company.street2 or '')
     biziship_origin_zip = fields.Char(string="Pickup Zip Code", default=lambda self: self.env.company.zip or '')
@@ -78,6 +87,9 @@ class SaleOrder(models.Model):
     )
 
     # Destination
+    biziship_dest_company = fields.Char(string="Destination Company", related="partner_shipping_id.name", readonly=False, store=True)
+
+    biziship_priority1_env = fields.Char(string="Priority1 Environment", help="DEV or PROD", readonly=True)
     biziship_dest_address = fields.Char(string="Destination Address Line 1", related="partner_shipping_id.street", readonly=False, store=True)
     biziship_dest_address2 = fields.Char(string="Destination Address Line 2", related="partner_shipping_id.street2", readonly=False, store=True)
     biziship_dest_zip = fields.Char(string="Destination Zip Code", related="partner_shipping_id.zip", readonly=False, store=True)
@@ -118,19 +130,17 @@ class SaleOrder(models.Model):
     biziship_total_weight_unit = fields.Selection([('lbs', 'lbs'), ('kg', 'kg')], string="Weight Unit", default='lbs', required=True)
     
     biziship_cargo_desc = fields.Char(string="Cargo Description", default="General Freight")
+    biziship_special_instructions = fields.Text(string="Special Instructions")
 
     @api.depends('biziship_cargo_line_ids', 'biziship_cargo_line_ids.weight', 'biziship_cargo_line_ids.weight_unit', 'biziship_total_weight_unit')
     def _compute_biziship_totals(self):
         for order in self:
             total_lbs = 0.0
             for line in order.biziship_cargo_line_ids:
-                if line.weight_unit == 'kg':
-                    total_lbs += line.weight * 2.20462
-                else:
-                    total_lbs += line.weight
+                total_lbs += convert_to_lbs(line.weight, line.weight_unit)
                     
             if order.biziship_total_weight_unit == 'kg':
-                order.biziship_total_weight = round(total_lbs / 2.20462, 2)
+                order.biziship_total_weight = round(total_lbs / KG_TO_LBS, 2)
             else:
                 order.biziship_total_weight = round(total_lbs, 2)
 
@@ -145,6 +155,18 @@ class SaleOrder(models.Model):
         if not selected_quote:
             raise models.ValidationError("Please select a quote from the LTL Freight Quotes list first.")
         
+        if self.biziship_priority1_env == 'PROD':
+            return {
+                'name': 'Live Freight Booking',
+                'type': 'ir.actions.act_window',
+                'res_model': 'biziship.booking.warning.wizard',
+                'view_mode': 'form',
+                'target': 'new',
+                'context': {
+                    'default_quote_id': selected_quote[0].id,
+                }
+            }
+
         return {
             'name': 'Confirm Quote Selection',
             'type': 'ir.actions.act_window',
@@ -301,21 +323,15 @@ class SaleOrder(models.Model):
         dest_phone = self.partner_shipping_id.phone or self.partner_id.phone or ''
         
         # Build generic payload weights
-        payload_weight = self.biziship_total_weight or 0.0
-        if self.biziship_total_weight_unit == 'kg':
-            payload_weight = payload_weight * 2.20462
+        payload_weight = convert_to_lbs(self.biziship_total_weight, self.biziship_total_weight_unit)
 
         payload_items = []
         for line in self.biziship_cargo_line_ids:
-            line_w = line.weight * 2.20462 if line.weight_unit == 'kg' else line.weight
+            line_w = convert_to_lbs(line.weight, line.weight_unit)
             
-            payload_l, payload_w, payload_h = line.length, line.width, line.height
-            if line.dim_unit == 'cm':
-                payload_l, payload_w, payload_h = payload_l * 0.393701, payload_w * 0.393701, payload_h * 0.393701
-            elif line.dim_unit == 'm':
-                payload_l, payload_w, payload_h = payload_l * 39.3701, payload_w * 39.3701, payload_h * 39.3701
-            elif line.dim_unit == 'ft':
-                payload_l, payload_w, payload_h = payload_l * 12.0, payload_w * 12.0, payload_h * 12.0
+            payload_l = convert_to_inches(line.length, line.dim_unit)
+            payload_w = convert_to_inches(line.width, line.dim_unit)
+            payload_h = convert_to_inches(line.height, line.dim_unit)
                 
             payload_items.append({
                 "weight": round(line_w, 2),
@@ -332,7 +348,7 @@ class SaleOrder(models.Model):
 
         # Base payload properties
         payload = {
-            "origin_company": self.company_id.name or self.env.company.name or "",
+            "origin_company": self.biziship_origin_company or self.company_id.name or self.env.company.name or "",
             "origin_address": self.biziship_origin_address or "",
             "origin_address2": self.biziship_origin_address2 or "",
             "origin_city": self.company_id.city or self.env.company.city or "",
@@ -340,7 +356,7 @@ class SaleOrder(models.Model):
             "origin_zip": self.biziship_origin_zip,
             "origin_country": self.biziship_origin_country_id.code if self.biziship_origin_country_id else "US",
             "origin_phone": self._format_phone(origin_phone),
-            "destination_company": self.partner_shipping_id.name or self.partner_id.name or "",
+            "destination_company": self.biziship_dest_company or self.partner_shipping_id.name or self.partner_id.name or "",
             "destination_address": self.biziship_dest_address or "",
             "destination_address2": self.biziship_dest_address2 or "",
             "destination_city": self.partner_shipping_id.city or self.partner_id.city or "",
@@ -354,6 +370,7 @@ class SaleOrder(models.Model):
             "line_items": payload_items,
             "accessorial_codes": accessorials_list,
             "pickup_date": str(self.biziship_pickup_date) if self.biziship_pickup_date else "",
+            "special_instructions": self.biziship_special_instructions or "",
             "is_biziship": True
         }
         
@@ -366,6 +383,10 @@ class SaleOrder(models.Model):
             
             response_json = response.json()
             quotes = response_json.get('quotes', [])
+            
+            # Capture environment from top level
+            p1_env = response_json.get('priority1_env', 'DEV')
+            self.biziship_priority1_env = p1_env
             
             if not quotes:
                 raise UserError(_("No carrier quotes available for this lane. Check origin/destination zip codes or freight details."))

@@ -5,11 +5,10 @@ from odoo import models, fields, api, _
 from odoo.exceptions import UserError
 import os
 import logging
-import odoo.release as release
 
 _logger = logging.getLogger(__name__)
 
-from odoo.addons.BiziShip.api_utils import get_biziship_api_url, get_email2quote_api_key
+from odoo.addons.BiziShip.api_utils import get_biziship_api_url, get_email2quote_api_key, BIZISHIP_MODULE_VERSION
 
 class BizishipFreightQuoteWizard(models.TransientModel):
     _name = 'biziship.freight.quote.wizard'
@@ -209,8 +208,8 @@ class BizishipFreightQuoteWizard(models.TransientModel):
             "X-API-Key": email2quote_api_key,
             "Content-Type": "application/json",
             "X-User-Email": self.env.user.email or "",
-            "X-Client-App": "Odoo",
-            "X-Client-Version": release.version,
+            "X-Client-App": "BiziShip Odoo",
+            "X-Client-Version": BIZISHIP_MODULE_VERSION,
         }
         
         # Compile accessorials starting with tags

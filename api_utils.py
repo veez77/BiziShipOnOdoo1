@@ -7,6 +7,7 @@ import json
 # Set to 'DEV' to connect to local backend
 # ==========================================
 BIZISHIP_ENV = 'PROD'
+BIZISHIP_MODULE_VERSION = '2.0.0'
 
 def get_secrets():
     secrets_path = os.path.join(os.path.dirname(__file__), 'secrets.json')

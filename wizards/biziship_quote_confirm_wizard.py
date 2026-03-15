@@ -2,7 +2,6 @@ import json
 import requests
 import os
 import logging
-import odoo.release as release
 from odoo import models, fields, api, _
 from odoo.exceptions import UserError
 
@@ -29,7 +28,7 @@ ACCESSORIAL_MAPPING = {
     "CNVPU": "Trade Show Pickup"
 }
 
-from odoo.addons.BiziShip.api_utils import get_biziship_api_url, get_email2quote_api_key
+from odoo.addons.BiziShip.api_utils import get_biziship_api_url, get_email2quote_api_key, BIZISHIP_MODULE_VERSION
 
 
 class BizishipQuoteConfirmWizard(models.TransientModel):
@@ -189,8 +188,8 @@ class BizishipQuoteConfirmWizard(models.TransientModel):
             "X-API-Key": email2quote_api_key,
             "Content-Type": "application/json",
             "X-User-Email": self.env.user.email or "",
-            "X-Client-App": "Odoo",
-            "X-Client-Version": release.version,
+            "X-Client-App": "BiziShip Odoo",
+            "X-Client-Version": BIZISHIP_MODULE_VERSION,
         }
         
         sale_order = self.quote_id.sale_order_id

@@ -5,6 +5,10 @@ import io
 import os
 from odoo import models, fields, api, _
 from odoo.exceptions import UserError
+import logging
+import odoo.release as release
+
+_logger = logging.getLogger(__name__)
 
 from odoo.addons.BiziShip.api_utils import get_biziship_api_url, get_email2quote_api_key, get_groq_api_key
 
@@ -153,10 +157,17 @@ class BizishipBolImportWizard(models.TransientModel):
         email2quote_api_url = get_biziship_api_url()
         local_api_bol_url = f"{email2quote_api_url.rstrip('/')}/quote/bol"
         email2quote_api_key = get_email2quote_api_key()
-        api_key_header = {"X-API-Key": email2quote_api_key}
+        api_key_header = {
+            "X-API-Key": email2quote_api_key,
+            "X-User-Email": self.env.user.email or "",
+            "X-Client-App": "Odoo",
+            "X-Client-Version": release.version,
+        }
 
         # Decode base64 PDF/Image bytes from Odoo
         file_bytes = base64.b64decode(self.bol_file)
+
+        _logger.info("BiziShip BOL API Request Headers: %s", api_key_header)
 
         try:
             # Send BOL Document (PDF or Image)

@@ -4,6 +4,10 @@ import re
 from odoo import models, fields, api, _
 from odoo.exceptions import UserError
 import os
+import logging
+import odoo.release as release
+
+_logger = logging.getLogger(__name__)
 
 from odoo.addons.BiziShip.api_utils import get_biziship_api_url, get_email2quote_api_key
 
@@ -203,7 +207,10 @@ class BizishipFreightQuoteWizard(models.TransientModel):
         api_url = f"{email2quote_api_url.rstrip('/')}/quote/details"
         headers = {
             "X-API-Key": email2quote_api_key,
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
+            "X-User-Email": self.env.user.email or "",
+            "X-Client-App": "Odoo",
+            "X-Client-Version": release.version,
         }
         
         # Compile accessorials starting with tags
@@ -285,9 +292,8 @@ class BizishipFreightQuoteWizard(models.TransientModel):
             "pickup_date": str(self.pickup_date) if self.pickup_date else "",
             "additional_notes": self.additional_notes or ""
         }
-        import logging
-        _logger = logging.getLogger(__name__)
-        _logger.info("Email2Quote API Payload (Wizard): %s", json.dumps(payload, indent=2))
+        _logger.info("BiziShip Quote API Request Headers: %s", headers)
+        _logger.info("BiziShip Quote API Request Payload: %s", json.dumps(payload, indent=2))
         
         try:
             response = requests.post(api_url, headers=headers, json=payload, timeout=45)

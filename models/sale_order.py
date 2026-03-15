@@ -4,6 +4,10 @@ import re
 import os
 from odoo import models, fields, api, _
 from odoo.exceptions import UserError
+import logging
+import odoo.release as release
+
+_logger = logging.getLogger(__name__)
 
 from odoo.addons.BiziShip.api_utils import get_biziship_api_url, get_email2quote_api_key
 class SaleOrder(models.Model):
@@ -269,7 +273,10 @@ class SaleOrder(models.Model):
         api_url = f"{email2quote_api_url.rstrip('/')}/quote/details"
         headers = {
             "X-API-Key": email2quote_api_key,
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
+            "X-User-Email": self.env.user.email or "",
+            "X-Client-App": "Odoo",
+            "X-Client-Version": release.version,
         }
         
         # Compile accessorials starting with tags
@@ -351,9 +358,8 @@ class SaleOrder(models.Model):
             "is_biziship": True
         }
         
-        import logging
-        _logger = logging.getLogger(__name__)
-        _logger.info("Email2Quote API Payload (Sale Order): %s", json.dumps(payload, indent=2))
+        _logger.info("BiziShip Quote API Request Headers (Sale Order): %s", headers)
+        _logger.info("BiziShip Quote API Request Payload (Sale Order): %s", json.dumps(payload, indent=2))
         
         try:
             response = requests.post(api_url, headers=headers, json=payload, timeout=45)

@@ -1,8 +1,12 @@
 import json
 import requests
 import os
+import logging
+import odoo.release as release
 from odoo import models, fields, api, _
 from odoo.exceptions import UserError
+
+_logger = logging.getLogger(__name__)
 
 ACCESSORIAL_MAPPING = {
     "APPT": "Delivery Appointment",
@@ -183,7 +187,10 @@ class BizishipQuoteConfirmWizard(models.TransientModel):
         local_api_book_url = f"{email2quote_api_url.rstrip('/')}/book"
         headers = {
             "X-API-Key": email2quote_api_key,
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
+            "X-User-Email": self.env.user.email or "",
+            "X-Client-App": "Odoo",
+            "X-Client-Version": release.version,
         }
         
         sale_order = self.quote_id.sale_order_id
@@ -248,6 +255,9 @@ class BizishipQuoteConfirmWizard(models.TransientModel):
             "consignee": consignee,
             "pickup_date": pickup_date
         }
+
+        _logger.info("BiziShip Booking API Request Headers: %s", headers)
+        _logger.info("BiziShip Booking API Request Payload: %s", json.dumps(payload, indent=2))
 
         try:
             response = requests.post(

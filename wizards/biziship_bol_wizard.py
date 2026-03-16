@@ -3,6 +3,12 @@ import base64
 import requests
 import io
 import os
+from datetime import datetime
+try:
+    from dateutil.parser import parse as date_parse
+except ImportError:
+    date_parse = None
+
 from odoo import models, fields, api, _
 from odoo.exceptions import UserError
 import logging
@@ -154,7 +160,7 @@ class BizishipBolImportWizard(models.TransientModel):
 
         # 3. Send to Local API (Email2Quote)
         email2quote_api_url = get_biziship_api_url()
-        local_api_bol_url = f"{email2quote_api_url.rstrip('/')}/quote/bol"
+        local_api_bol_url = f"{email2quote_api_url.rstrip('/')}/quote/bol/extract"
         email2quote_api_key = get_email2quote_api_key()
         api_key_header = {
             "X-API-Key": email2quote_api_key,
@@ -166,7 +172,7 @@ class BizishipBolImportWizard(models.TransientModel):
         # Decode base64 PDF/Image bytes from Odoo
         file_bytes = base64.b64decode(self.bol_file)
 
-        _logger.info("BiziShip BOL API Request Headers: %s", api_key_header)
+        _logger.info("BiziShip BOL Extraction API Request Headers: %s", api_key_header)
 
         try:
             # Send BOL Document (PDF or Image)
@@ -179,9 +185,8 @@ class BizishipBolImportWizard(models.TransientModel):
             )
             local_response_bol.raise_for_status()
 
-            # Process JSON response and create quotes
+            # Process JSON response
             response_json = local_response_bol.json()
-            quotes = response_json.get('quotes', [])
             
             # Check context to see if we were launched from a sale order
             active_id = self.env.context.get('active_id')
@@ -189,56 +194,123 @@ class BizishipBolImportWizard(models.TransientModel):
             
             if active_id and active_model == 'sale.order':
                 # Save the JSON dict string directly to the sales order
-                extracted_details = response_json.get('extracted_details', parsed_json)
+                extracted_details = response_json.get('extracted_details', response_json)
                 sale_order_record = self.env['sale.order'].browse(active_id)
-                sale_order_record.write({'biziship_extracted_json': json.dumps(extracted_details)})
-
-                for q in quotes:
-                    delivery_date_raw = q.get('delivery_date')
-                    if delivery_date_raw and 'T' in delivery_date_raw:
-                        delivery_date_raw = delivery_date_raw.replace('T', ' ')[:19]
-
-                    # Parse charges array into text
-                    charges = q.get('charges', [])
-                    details_lines = []
-                    for c in charges:
-                        c_code = c.get('code') or ''
-                        c_desc = c.get('description') or ''
-                        c_amount = c.get('amount')
-                        if c_amount is None:
-                            c_amount = 0.0
-                        
-                        # Format string to align description and amount
-                        # Example: Gross Freight Charge                $3,187.72
-                        format_str = f"{str(c_desc):<40} ${c_amount:,.2f}"
-                        details_lines.append(format_str)
+                
+                # --- AUTO-POPULATION LOGIC ---
+                vals = {
+                    'biziship_extracted_json': json.dumps(extracted_details),
+                    'biziship_po_number': extracted_details.get('po_number'),
+                    # Addresses
+                    'biziship_origin_company': extracted_details.get('origin_company'),
+                    'biziship_origin_address': extracted_details.get('origin_address'),
+                    'biziship_origin_address2': extracted_details.get('origin_address2'),
+                    'biziship_origin_zip': extracted_details.get('origin_zip'),
                     
-                    details_text = "\n".join(details_lines) if details_lines else "No detailed charges provided."
-
-                    self.env['biziship.quote'].sudo().create({
-                        'sale_order_id': active_id,
-                        'carrier_name': q.get('carrier_name'),
-                        'carrier_code': q.get('carrier_code'),
-                        'service_level': q.get('service_level'),
-                        'transit_days': q.get('transit_days'),
-                        'delivery_date': delivery_date_raw,
-                        'total_charge': q.get('total_charge'),
-                        'currency': q.get('currency', 'USD'),
-                        'quote_id_ref': q.get('quote_id'),
-                        'carrier_liability_new': q.get('carrier_liability_new'),
-                        'carrier_liability_used': q.get('carrier_liability_used'),
-                        'origin_address': extracted_details.get('origin_address'),
-                        'origin_address2': extracted_details.get('origin_address2'),
-                        'destination_address': extracted_details.get('destination_address'),
-                        'destination_address2': extracted_details.get('destination_address2'),
-                        'origin_terminal_city': extracted_details.get('origin_terminal_city'),
-                        'origin_terminal_state': extracted_details.get('origin_terminal_state'),
-                        'origin_terminal_phone': extracted_details.get('origin_terminal_phone'),
-                        'destination_terminal_city': extracted_details.get('destination_terminal_city'),
-                        'destination_terminal_state': extracted_details.get('destination_terminal_state'),
-                        'destination_terminal_phone': extracted_details.get('destination_terminal_phone'),
-                        'quote_details': details_text,
+                    'biziship_dest_company': extracted_details.get('destination_company'),
+                    'biziship_dest_address': extracted_details.get('destination_address'),
+                    'biziship_dest_address2': extracted_details.get('destination_address2'),
+                    'biziship_dest_zip': extracted_details.get('destination_zip'),
+                    'biziship_cargo_desc': extracted_details.get('cargo_description', 'General Freight'),
+                    'biziship_special_instructions': extracted_details.get('special_instructions'),
+                }
+                
+                # Pickup Date
+                pdate_raw = extracted_details.get('pickup_date')
+                if pdate_raw:
+                    try:
+                        if date_parse:
+                            parsed_date = date_parse(str(pdate_raw)).date()
+                            vals['biziship_pickup_date'] = fields.Date.to_string(parsed_date)
+                        else:
+                            # Fallback if dateutil not available
+                            for fmt in ('%Y-%m-%d', '%m-%d-%Y', '%d-%m-%Y', '%m/%d/%Y', '%d/%m/%Y'):
+                                try:
+                                    parsed_date = datetime.strptime(str(pdate_raw), fmt).date()
+                                    vals['biziship_pickup_date'] = fields.Date.to_string(parsed_date)
+                                    break
+                                except ValueError:
+                                    continue
+                    except Exception as e:
+                        _logger.warning("Failed to parse BOL Pickup Date '%s': %s", pdate_raw, str(e))
+                    
+                # Accessorials Mapping
+                acc_codes = extracted_details.get('accessorial_codes', [])
+                if isinstance(acc_codes, list):
+                    vals.update({
+                        'biziship_origin_residential': 'RESPU' in acc_codes,
+                        'biziship_origin_liftgate': 'LGPU' in acc_codes,
+                        'biziship_origin_limited_access': 'LTDPU' in acc_codes,
+                        'biziship_dest_residential': 'RESDEL' in acc_codes,
+                        'biziship_dest_liftgate': 'LGDEL' in acc_codes,
+                        'biziship_dest_limited_access': 'LTDDEL' in acc_codes,
+                        'biziship_dest_appointment': 'APPT' in acc_codes,
+                        'biziship_dest_notify': 'NOTIFY' in acc_codes,
+                        'biziship_dest_hazmat': 'HAZM' in acc_codes,
                     })
+                    
+                    # Handle Many2many accessorials (clearing is handled by Odoo standard if list is provided)
+                    # We match codes from the registry
+                    origin_acc_ids = self.env['biziship.accessorial'].search([('type', '=', 'origin'), ('code', 'in', acc_codes)]).ids
+                    dest_acc_ids = self.env['biziship.accessorial'].search([('type', '=', 'destination'), ('code', 'in', acc_codes)]).ids
+                    if origin_acc_ids:
+                        vals['biziship_origin_accessorial_ids'] = [(6, 0, origin_acc_ids)]
+                    if dest_acc_ids:
+                        vals['biziship_dest_accessorial_ids'] = [(6, 0, dest_acc_ids)]
+
+                # Cargo Lines Mapping
+                # 1. Clear existing lines
+                vals['biziship_cargo_line_ids'] = [(5, 0, 0)]
+                
+                # 2. Add new lines from line_items
+                items = extracted_details.get('line_items', [])
+                if not items:
+                    # Fallback if no line_items but top-level weight exists
+                    w = extracted_details.get('weight', 0.0)
+                    if w > 0:
+                        items = [{
+                            "weight": w,
+                            "weight_unit": extracted_details.get("weight_unit", "lbs"),
+                            "num_pieces": 1,
+                            "packaging_type": "pallet",
+                            "cargo_description": extracted_details.get("cargo_description", "General Freight")
+                        }]
+
+                for item in items:
+                    # Map packaging type
+                    pkg = str(item.get('packaging_type', 'pallet')).lower()
+                    if 'crate' in pkg: pkg = 'crate'
+                    elif 'box' in pkg: pkg = 'box'
+                    elif 'drum' in pkg: pkg = 'drum'
+                    else: pkg = 'pallet'
+                    
+                    # Map units
+                    w_unit = str(item.get('weight_unit', 'lbs')).lower()
+                    if 'kg' in w_unit: w_unit = 'kg'
+                    else: w_unit = 'lbs'
+                    
+                    d_unit = str(item.get('dimension_unit', item.get('dim_unit', 'in'))).lower()
+                    if 'cm' in d_unit: d_unit = 'cm'
+                    elif 'm' in d_unit: d_unit = 'm'
+                    elif 'ft' in d_unit: d_unit = 'ft'
+                    else: d_unit = 'in'
+
+                    vals['biziship_cargo_line_ids'].append((0, 0, {
+                        'packaging_type': pkg,
+                        'pieces': item.get('num_pieces', item.get('pieces', 1)),
+                        'weight': item.get('weight', 0.0),
+                        'weight_unit': w_unit,
+                        'length': item.get('length', 48.0),
+                        'width': item.get('width', 40.0),
+                        'height': item.get('height', 48.0),
+                        'dim_unit': d_unit,
+                        'freight_class': str(item.get('freight_class', '50')),
+                        'nmfc': item.get('nmfc', ''),
+                        'cargo_desc': item.get('cargo_description', item.get('cargo_desc', 'General Freight')),
+                    }))
+                
+                sale_order_record.write(vals)
+                # --- END AUTO-POPULATION LOGIC ---
 
         except requests.exceptions.RequestException as e:
             error_details = e.response.text if hasattr(e, 'response') and e.response is not None else str(e)

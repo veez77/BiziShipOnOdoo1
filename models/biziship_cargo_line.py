@@ -92,6 +92,12 @@ class BizishipSaleCargoLine(models.Model):
     nmfc = fields.Char(string="NMFC")
     cargo_desc = fields.Char(string="Cargo Description", default="General Freight")
 
+    @api.constrains('pieces')
+    def _check_pieces(self):
+        for rec in self:
+            if rec.pieces <= 0:
+                raise models.ValidationError("Pieces must be greater than 0.")
+
     @api.depends('weight', 'weight_unit', 'length', 'width', 'height', 'dim_unit', 'pieces')
     def _compute_computed_class(self):
         for rec in self:

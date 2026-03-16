@@ -285,8 +285,8 @@ class SaleOrder(models.Model):
             raise UserError(_("At least one cargo line is required to fetch LTL quotes."))
             
         for idx, line in enumerate(self.biziship_cargo_line_ids, start=1):
-            if line.weight <= 0 or line.length <= 0 or line.width <= 0 or line.height <= 0:
-                raise UserError(_("Cargo Line #%s has a missing or zero value. All cargo lines must have a Weight, Length, Width, and Height greater than 0.") % idx)
+            if line.pieces <= 0 or line.weight <= 0 or line.length <= 0 or line.width <= 0 or line.height <= 0:
+                raise UserError(_("Cargo Line #%s has a missing or zero value. All cargo lines must have Pieces, Weight, Length, Width, and Height greater than 0.") % idx)
 
         email2quote_api_url = get_biziship_api_url()
         email2quote_api_key = get_email2quote_api_key()

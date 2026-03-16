@@ -99,11 +99,127 @@
 
 /* Notebook name alignment for better tab switching */
 .o_notebook .nav-link[name="biziship_freight_quotes"] {
-    background-color: rgba(113, 75, 103, 0.05); /* Slight theme tint */
+    background-color: rgba(113, 75, 103, 0.05);
+    /* Slight theme tint */
     font-weight: 600;
 }
 
 .o_notebook .nav-link.active[name="biziship_freight_quotes"] {
     background-color: white !important;
     border-bottom: 3px solid #714B67 !important;
+}
+
+/* Save Freight Wizard Redesign */
+.biziship-save-wizard-container {
+    padding: 24px;
+    background: #ffffff;
+}
+
+.biziship-save-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #0f172a;
+    margin-bottom: 8px;
+}
+
+.biziship-save-subtitle {
+    font-size: 1rem;
+    color: #64748b;
+    margin-bottom: 24px;
+}
+
+.biziship-modern-input .o_input {
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 10px !important;
+    padding: 12px 16px !important;
+    font-size: 1rem !important;
+    height: auto !important;
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.05) !important;
+    background-color: #ffffff !important;
+}
+
+.biziship-modern-input .o_input:focus {
+    border-color: #94a3b8 !important;
+    box-shadow: 0 0 0 4px rgba(148, 163, 184, 0.1) !important;
+}
+
+.biziship-btn-cancel {
+    background: #ffffff !important;
+    color: #475569 !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 10px !important;
+    padding: 10px 24px !important;
+    font-weight: 600 !important;
+    transition: all 0.2s !important;
+}
+
+.biziship-btn-cancel:hover {
+    background: #f8fafc !important;
+    border-color: #cbd5e1 !important;
+}
+
+.biziship-btn-save {
+    background: #94a3b8 !important;
+    /* Muted primary from screenshot */
+    color: #ffffff !important;
+    border: none !important;
+    border-radius: 10px !important;
+    padding: 10px 24px !important;
+    font-weight: 600 !important;
+    transition: all 0.2s !important;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important;
+}
+
+.biziship-btn-save:hover {
+    background: #64748b !important;
+}
+
+/* Sale Order Main Buttons */
+.biziship-btn-get-quotes {
+    background-color: #0f172a !important;
+    color: #ffffff !important;
+    border-radius: 12px !important;
+    padding: 14px 32px !important;
+    font-weight: 700 !important;
+    font-size: 1.1rem !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    margin: 20px auto !important;
+    transition: all 0.2s ease !important;
+    border: none !important;
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15) !important;
+    width: fit-content !important;
+}
+
+.biziship-btn-get-quotes:hover {
+    background-color: #1e293b !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 6px 16px rgba(15, 23, 42, 0.2) !important;
+}
+
+.biziship-btn-get-quotes i {
+    margin-right: 10px;
+    font-size: 1.2rem;
+}
+
+.biziship-btn-pool-action {
+    background: #ffffff !important;
+    color: #1e293b !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 10px !important;
+    padding: 8px 16px !important;
+    font-weight: 600 !important;
+    transition: all 0.2s !important;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important;
+}
+
+.biziship-btn-pool-action:hover {
+    background: #f8fafc !important;
+    border-color: #cbd5e1 !important;
+}
+
+.biziship-btn-pool-action i {
+    margin-right: 6px;
+    color: #64748b;
 }

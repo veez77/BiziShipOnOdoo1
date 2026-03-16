@@ -109,6 +109,7 @@ class BizishipLoadFreightWizard(models.TransientModel):
                 'biziship_origin_company': get_val('origin_company'),
                 'biziship_origin_address': get_val('origin_address'),
                 'biziship_origin_address2': get_val('origin_address2'),
+                'biziship_origin_city': get_val('origin_city'),
                 'biziship_origin_zip': get_val('origin_zip'),
                 'biziship_cargo_desc': get_val('cargo_description', 'General Freight'),
                 'biziship_special_instructions': get_val('special_instructions'),
@@ -127,33 +128,95 @@ class BizishipLoadFreightWizard(models.TransientModel):
                 'biziship_dest_limited_access': details.get('dest_limited_access', False),
                 'biziship_dest_liftgate': details.get('dest_liftgate', False),
                 'biziship_dest_hazmat': details.get('dest_hazmat', False),
+                
+                # New individual Destination fields or fallback to old names
+                'biziship_dest_city': details.get('destination_city') or details.get('dest_city') or '',
             }
             
-            # Destination Address Info (Related fields write through)
-            if 'dest_company' in details: vals['biziship_dest_company'] = details['dest_company']
-            if 'dest_address' in details: vals['biziship_dest_address'] = details['dest_address']
-            if 'dest_address2' in details: vals['biziship_dest_address2'] = details['dest_address2']
-            if 'dest_zip' in details: vals['biziship_dest_zip'] = details['dest_zip']
+            # 1. Update Country IDs first (needed for state lookup)
+            origin_country = self.env['res.country'].search([('code', '=', details.get('origin_country', 'US'))], limit=1)
+            dest_country_code = details.get('destination_country') or details.get('dest_country') or 'US'
+            dest_country = self.env['res.country'].search([('code', '=', dest_country_code)], limit=1)
             
-            # Country Mapping
-            if 'origin_country' in details:
-                country = self.env['res.country'].search([('code', '=', details['origin_country'])], limit=1)
-                if country: vals['biziship_origin_country_id'] = country.id
-            if 'dest_country' in details:
-                country = self.env['res.country'].search([('code', '=', details['dest_country'])], limit=1)
-                if country: vals['biziship_dest_country_id'] = country.id
+            vals = {
+                'biziship_pickup_date': pickup_date,
+                'biziship_origin_company': get_val('origin_company'),
+                'biziship_origin_address': get_val('origin_address'),
+                'biziship_origin_address2': get_val('origin_address2'),
+                'biziship_origin_city': get_val('origin_city'),
+                'biziship_origin_zip': get_val('origin_zip'),
+                'biziship_origin_country_id': origin_country.id if origin_country else False,
+                
+                'biziship_cargo_desc': get_val('cargo_description', 'General Freight'),
+                'biziship_special_instructions': get_val('special_instructions'),
+                'biziship_po_number': get_val('po_number'),
+                'biziship_total_weight_unit': (get_val('weight_unit', 'lbs')).lower()[:3],
+                
+                # Boolean Flags - Pickup
+                'biziship_origin_residential': details.get('origin_residential', False),
+                'biziship_origin_liftgate': details.get('origin_liftgate', False),
+                'biziship_origin_limited_access': details.get('origin_limited_access', False),
+                
+                # Boolean Flags - Delivery
+                'biziship_dest_appointment': details.get('dest_appointment', False),
+                'biziship_dest_residential': details.get('dest_residential', False),
+                'biziship_dest_notify': details.get('dest_notify', False),
+                'biziship_dest_limited_access': details.get('dest_limited_access', False),
+                'biziship_dest_liftgate': details.get('dest_liftgate', False),
+                'biziship_dest_hazmat': details.get('dest_hazmat', False),
+                
+                'biziship_dest_city': details.get('destination_city') or details.get('dest_city') or '',
+                'biziship_dest_country_id': dest_country.id if dest_country else False,
+            }
+            
+            # 2. State Mapping (Scoped by Country ID to avoid 'GA' -> Goa issues)
+            origin_state_code = details.get('origin_state')
+            if origin_state_code and origin_country:
+                state = self.env['res.country.state'].search([
+                    ('code', '=', origin_state_code), 
+                    ('country_id', '=', origin_country.id)
+                ], limit=1)
+                if state: vals['biziship_origin_state_id'] = state.id
+
+            dest_state_code = details.get('destination_state') or details.get('dest_state')
+            if dest_state_code and dest_country:
+                state = self.env['res.country.state'].search([
+                    ('code', '=', dest_state_code), 
+                    ('country_id', '=', dest_country.id)
+                ], limit=1)
+                if state: vals['biziship_dest_state_id'] = state.id
+
+            # Destination Address Info (Handling both 'destination_' and 'dest_' prefixes)
+            if 'destination_company' in details: vals['biziship_dest_company'] = details['destination_company']
+            elif 'dest_company' in details: vals['biziship_dest_company'] = details['dest_company']
+            
+            if 'destination_address' in details: vals['biziship_dest_address'] = details['destination_address']
+            elif 'dest_address' in details: vals['biziship_dest_address'] = details['dest_address']
+            
+            if 'destination_address2' in details: vals['biziship_dest_address2'] = details['destination_address2']
+            elif 'dest_address2' in details: vals['biziship_dest_address2'] = details['dest_address2']
+            
+            if 'destination_zip' in details: vals['biziship_dest_zip'] = details['destination_zip']
+            elif 'dest_zip' in details: vals['biziship_dest_zip'] = details['dest_zip']
 
             # Extended Accessorials Mapping
+            # We handle 'accessorial_codes' (new spec) or 'origin_more'/'dest_more' (old spec/parallel)
+            all_codes = details.get('accessorial_codes', [])
+            if not isinstance(all_codes, list): all_codes = []
+            
             origin_more = details.get('origin_more', [])
-            if not isinstance(origin_more, list):
-                origin_more = []
-            accs_origin = self.env['biziship.accessorial'].search([('code', 'in', origin_more), ('type', '=', 'origin')])
+            if not isinstance(origin_more, list): origin_more = []
+            
+            dest_more = details.get('dest_more', [])
+            if not isinstance(dest_more, list): dest_more = []
+            
+            # Combine all for selection from DB
+            lookup_codes = list(set(all_codes + origin_more + dest_more))
+            
+            accs_origin = self.env['biziship.accessorial'].search([('code', 'in', lookup_codes), ('type', '=', 'origin')])
             vals['biziship_origin_accessorial_ids'] = [(6, 0, accs_origin.ids)]
 
-            dest_more = details.get('dest_more', [])
-            if not isinstance(dest_more, list):
-                dest_more = []
-            accs_dest = self.env['biziship.accessorial'].search([('code', 'in', dest_more), ('type', '=', 'destination')])
+            accs_dest = self.env['biziship.accessorial'].search([('code', 'in', lookup_codes), ('type', '=', 'destination')])
             vals['biziship_dest_accessorial_ids'] = [(6, 0, accs_dest.ids)]
 
             _logger.info("BiziShip: Values to write to Order: %s", json.dumps(vals, indent=2))

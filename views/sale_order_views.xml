@@ -31,8 +31,8 @@
                     </div>
                     <group string="Logistics Details">
                             <div class="d-flex align-items-center mb-2" colspan="2">
-                                <button name="action_biziship_load_from_pool" string="Load Saved Freight" type="object" class="btn btn-sm btn-secondary me-2" icon="fa-folder-open-o"/>
-                                <button name="action_biziship_save_to_pool" string="Save to My Pool" type="object" class="btn btn-sm btn-outline-primary" icon="fa-save"/>
+                                <button name="action_biziship_load_from_pool" string="Load Saved Freight" type="object" class="biziship-btn-pool-action me-2" icon="fa-folder-open-o"/>
+                                <button name="action_biziship_save_to_pool" string="Save to My Pool" type="object" class="biziship-btn-pool-action" icon="fa-save"/>
                             </div>
                             <field name="biziship_po_number"/>
                             <field name="biziship_pickup_date"/>
@@ -45,6 +45,10 @@
                             <field name="biziship_origin_company" nolabel="1" colspan="2" placeholder="Origin Company Name"/>
                             <field name="biziship_origin_address" nolabel="1" colspan="2" placeholder="Address Line 1"/>
                             <field name="biziship_origin_address2" nolabel="1" colspan="2" placeholder="Address Line 2 (optional)"/>
+                            <div class="d-flex w-100" colspan="2">
+                                <field name="biziship_origin_city" placeholder="City" style="flex: 2; margin-right: 8px;"/>
+                                <field name="biziship_origin_state_id" nolabel="1" placeholder="State" options="{'no_open': True, 'no_create': True}" style="flex: 1;" domain="[('country_id', '=?', biziship_origin_country_id)]"/>
+                            </div>
                             <div class="d-flex w-100" colspan="2">
                                 <field name="biziship_origin_zip" placeholder="Zip Code" style="flex: 2; margin-right: 8px;"/>
                                 <field name="biziship_origin_country_id" nolabel="1" placeholder="Country" options="{'no_open': True, 'no_create': True}" domain="[('code', 'in', ('US', 'CA', 'MX'))]" style="flex: 1;"/>
@@ -67,6 +71,10 @@
                             <field name="biziship_dest_company" nolabel="1" colspan="2" placeholder="Destination Company Name"/>
                             <field name="biziship_dest_address" nolabel="1" colspan="2" placeholder="Address Line 1"/>
                             <field name="biziship_dest_address2" nolabel="1" colspan="2" placeholder="Address Line 2 (optional)"/>
+                            <div class="d-flex w-100" colspan="2">
+                                <field name="biziship_dest_city" placeholder="City" style="flex: 2; margin-right: 8px;"/>
+                                <field name="biziship_dest_state_id" nolabel="1" placeholder="State" options="{'no_open': True, 'no_create': True}" style="flex: 1;" domain="[('country_id', '=?', biziship_dest_country_id)]"/>
+                            </div>
                             <div class="d-flex w-100" colspan="2">
                                 <field name="biziship_dest_zip" placeholder="Zip Code" style="flex: 2; margin-right: 8px;"/>
                                 <field name="biziship_dest_country_id" nolabel="1" placeholder="Country" options="{'no_open': True, 'no_create': True}" domain="[('code', 'in', ('US', 'CA', 'MX'))]" style="flex: 1;"/>
@@ -199,7 +207,7 @@
                         </group>
                         
 
-                        <button name="action_biziship_fetch_live_quotes" string="Fetch Live Quotes" type="object" class="btn-primary" invisible="state not in ['draft', 'sent', 'sale']"/>
+                        <button name="action_biziship_fetch_live_quotes" string="Get Live Quotes" type="object" class="biziship-btn-get-quotes" icon="fa-bolt" invisible="state not in ['draft', 'sent', 'sale']"/>
                     </div>
                 </page>
                 <page string="LTL Freight Quotes" name="biziship_freight_quotes">

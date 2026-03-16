@@ -4,14 +4,20 @@
         <field name="name">biziship.save.freight.wizard.form</field>
         <field name="model">biziship.save.freight.wizard</field>
         <field name="arch" type="xml">
-            <form string="Save Freight to My Pool">
-                <group>
-                    <field name="name" placeholder="e.g. Weekly Kitchen Supply"/>
+            <form string="Save to My Pool">
+                <div class="biziship-save-wizard-container">
+                    <div class="biziship-save-title">Save to My Pool</div>
+                    <div class="biziship-save-subtitle">Give this freight a name you'll recognise later.</div>
+                    
+                    <div class="biziship-modern-input mt-3">
+                        <field name="name" nolabel="1" placeholder="e.g. Chicago to Atlanta — Dry Food"/>
+                    </div>
+                    
                     <field name="sale_order_id" invisible="1"/>
-                </group>
+                </div>
                 <footer>
-                    <button name="action_save_freight" string="Save to My Pool" type="object" class="btn-primary"/>
-                    <button string="Cancel" class="btn-secondary" special="cancel"/>
+                    <button string="Cancel" class="biziship-btn-cancel" special="cancel"/>
+                    <button name="action_save_freight" string="Save Freight" type="object" class="biziship-btn-save"/>
                 </footer>
             </form>
         </field>

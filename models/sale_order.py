@@ -86,6 +86,8 @@ class SaleOrder(models.Model):
     biziship_origin_company = fields.Char(string="Origin Company", default=lambda self: self.env.company.name or '')
     biziship_origin_address = fields.Char(string="Pickup Address Line 1", default=lambda self: self.env.company.street or '')
     biziship_origin_address2 = fields.Char(string="Pickup Address Line 2", default=lambda self: self.env.company.street2 or '')
+    biziship_origin_city = fields.Char(string="Pickup City", default=lambda self: self.env.company.city or '')
+    biziship_origin_state_id = fields.Many2one('res.country.state', string="Pickup State", default=lambda self: self.env.company.state_id.id if self.env.company.state_id else False)
     biziship_origin_zip = fields.Char(string="Pickup Zip Code", default=lambda self: self.env.company.zip or '')
     biziship_origin_country_id = fields.Many2one('res.country', string="Origin Country", default=lambda self: self.env.company.country_id.id if self.env.company.country_id else False)
     
@@ -106,6 +108,8 @@ class SaleOrder(models.Model):
     biziship_priority1_env = fields.Char(string="Priority1 Environment", help="DEV or PROD", readonly=True)
     biziship_dest_address = fields.Char(string="Destination Address Line 1", related="partner_shipping_id.street", readonly=False, store=True)
     biziship_dest_address2 = fields.Char(string="Destination Address Line 2", related="partner_shipping_id.street2", readonly=False, store=True)
+    biziship_dest_city = fields.Char(string="Destination City", related="partner_shipping_id.city", readonly=False, store=True)
+    biziship_dest_state_id = fields.Many2one('res.country.state', string="Destination State", related="partner_shipping_id.state_id", readonly=False, store=True)
     biziship_dest_zip = fields.Char(string="Destination Zip Code", related="partner_shipping_id.zip", readonly=False, store=True)
     biziship_dest_country_id = fields.Many2one('res.country', string="Destination Country", compute='_compute_biziship_dest_country_id', readonly=False, store=True)
     
@@ -222,6 +226,8 @@ class SaleOrder(models.Model):
                 'biziship_dest_company': self.partner_id.name,
                 'biziship_dest_address': self.partner_id.street,
                 'biziship_dest_address2': self.partner_id.street2,
+                'biziship_dest_city': self.partner_id.city,
+                'biziship_dest_state_id': self.partner_id.state_id.id if self.partner_id.state_id else False,
                 'biziship_dest_zip': self.partner_id.zip,
                 'biziship_dest_country_id': self.partner_id.country_id.id if self.partner_id.country_id else False,
             })

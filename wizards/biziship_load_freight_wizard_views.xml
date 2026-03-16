@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_biziship_load_freight_wizard_form" model="ir.ui.view">
+        <field name="name">biziship.load.freight.wizard.form</field>
+        <field name="model">biziship.load.freight.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Load Saved Freight">
+                <group>
+                    <field name="freight_id" placeholder="Select from your pool..."/>
+                    <field name="sale_order_id" invisible="1"/>
+                </group>
+                <p class="text-muted" invisible="freight_id">
+                    Select a previously saved freight template to pre-fill the order details.
+                </p>
+                <footer>
+                    <button name="action_load_freight" string="Launch" type="object" class="btn-primary" invisible="not freight_id"/>
+                    <button string="Cancel" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+</odoo>

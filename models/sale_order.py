@@ -213,6 +213,28 @@ class SaleOrder(models.Model):
             })
         return True
 
+    def action_biziship_save_to_pool(self):
+        self.ensure_one()
+        return {
+            'type': 'ir.actions.act_window',
+            'name': _('Save Freight to My Pool'),
+            'res_model': 'biziship.save.freight.wizard',
+            'view_mode': 'form',
+            'target': 'new',
+            'context': {'default_sale_order_id': self.id}
+        }
+
+    def action_biziship_load_from_pool(self):
+        self.ensure_one()
+        return {
+            'type': 'ir.actions.act_window',
+            'name': _('Load Saved Freight'),
+            'res_model': 'biziship.load.freight.wizard',
+            'view_mode': 'form',
+            'target': 'new',
+            'context': {'default_sale_order_id': self.id}
+        }
+
     def action_demo_vinegar_order(self):
         self.ensure_one()
         

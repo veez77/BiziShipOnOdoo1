@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_users_form_biziship_inherit" model="ir.ui.view">
+        <field name="name">res.users.form.biziship.inherit</field>
+        <field name="model">res.users</field>
+        <field name="inherit_id" ref="base.view_users_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//header" position="inside">
+                <button name="%(action_biziship_auth_wizard)d" 
+                        string="Connect BiziShip Account" 
+                        type="action" 
+                        class="oe_highlight"
+                        invisible="biziship_token != False"/>
+                <button name="%(action_biziship_auth_wizard)d" 
+                        string="Reconnect BiziShip" 
+                        type="action" 
+                        invisible="biziship_token == False"/>
+            </xpath>
+            <xpath expr="//page[@name='preferences']" position="inside">
+                <group string="BiziShip Integration" name="biziship_integration">
+                    <field name="biziship_token" password="True" readonly="1"/>
+                    <field name="biziship_p1_env" readonly="1"/>
+                </group>
+            </xpath>
+        </field>
+    </record>
+</odoo>

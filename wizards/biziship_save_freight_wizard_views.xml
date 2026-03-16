@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_biziship_save_freight_wizard_form" model="ir.ui.view">
+        <field name="name">biziship.save.freight.wizard.form</field>
+        <field name="model">biziship.save.freight.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Save Freight to My Pool">
+                <group>
+                    <field name="name" placeholder="e.g. Weekly Kitchen Supply"/>
+                    <field name="sale_order_id" invisible="1"/>
+                </group>
+                <footer>
+                    <button name="action_save_freight" string="Save to My Pool" type="object" class="btn-primary"/>
+                    <button string="Cancel" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+</odoo>

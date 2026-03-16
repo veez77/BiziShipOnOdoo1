@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_biziship_auth_wizard_form" model="ir.ui.view">
+        <field name="name">biziship.auth.wizard.form</field>
+        <field name="model">biziship.auth.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Connect BiziShip Account">
+                <field name="state" invisible="1"/>
+                <div invisible="state != 'request'">
+                    <p>Enter your BiziShip account email to receive a login PIN.</p>
+                    <group>
+                        <field name="email" placeholder="email@company.com"/>
+                    </group>
+                </div>
+                <div invisible="state != 'verify'">
+                    <p>A PIN has been sent to <strong><field name="email" readonly="1" nolabel="1"/></strong>.</p>
+                    <p>Please enter it below to complete the connection.</p>
+                    <group>
+                        <field name="pin" placeholder="Enter 6-digit PIN"/>
+                    </group>
+                </div>
+                <footer>
+                    <button name="action_request_pin" string="Send PIN" type="object" class="btn-primary" invisible="state != 'request'"/>
+                    <button name="action_verify_pin" string="Verify PIN" type="object" class="btn-primary" invisible="state != 'verify'"/>
+                    <button string="Cancel" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_biziship_auth_wizard" model="ir.actions.act_window">
+        <field name="name">Connect BiziShip Account</field>
+        <field name="res_model">biziship.auth.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+</odoo>

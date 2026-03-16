@@ -23,6 +23,12 @@
         'views/sale_order_views.xml',
         'views/res_users_views.xml',
     ],
+    'assets': {
+        'web.assets_backend': [
+            'BiziShip/static/src/js/biziship_tab_handler.js',
+            'BiziShip/static/src/css/biziship_modern.css',
+        ],
+    },
     'installable': True,
     'application': True,
     'license': 'LGPL-3',

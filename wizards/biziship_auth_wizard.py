@@ -1,7 +1,12 @@
 import requests
 import json
+import logging
 from odoo import models, fields, api, _
 from odoo.exceptions import UserError
+
+_logger = logging.getLogger(__name__)
+
+from .. import api_utils
 
 class BizishipAuthWizard(models.TransientModel):
     _name = 'biziship.auth.wizard'
@@ -22,9 +27,19 @@ class BizishipAuthWizard(models.TransientModel):
         return res
 
     def action_request_pin(self):
-        url = "https://api.biziship.ai/auth/request-pin"
+        base_url = api_utils.get_biziship_api_url()
+        url = f"{base_url}/auth/login"
+        payload = {'email': self.email}
+        headers = {
+            "Content-Type": "application/json",
+            "X-Client-App": api_utils.BIZISHIP_APP_NAME,
+            "X-Client-Version": api_utils.BIZISHIP_MODULE_VERSION,
+        }
+        
+        _logger.info("BiziShip Login Request URL: %s", url)
+        
         try:
-            response = requests.post(url, json={'email': self.email}, timeout=10)
+            response = requests.post(url, json=payload, headers=headers, timeout=10)
             if response.status_code == 200:
                 self.state = 'verify'
                 return {
@@ -35,25 +50,46 @@ class BizishipAuthWizard(models.TransientModel):
                     'target': 'new',
                 }
             else:
-                raise UserError(_("Failed to request PIN. Please check your email and try again."))
+                error_msg = response.text
+                try:
+                    error_json = response.json()
+                    error_msg = error_json.get('message', error_msg)
+                except:
+                    pass
+                raise UserError(_("Failed to request PIN (Status %s): %s") % (response.status_code, error_msg))
+        except UserError:
+            raise
         except Exception as e:
-            raise UserError(_("Error connecting to BiziShip: %s") % str(e))
+            _logger.error("BiziShip PIN Request Error: %s", str(e), exc_info=True)
+            raise UserError(_("Error connecting to BiziShip (%s): %s") % (type(e).__name__, str(e)))
 
     def action_verify_pin(self):
-        url = "https://api.biziship.ai/auth/verify-pin"
+        base_url = api_utils.get_biziship_api_url()
+        url = f"{base_url}/auth/verify-pin"
+        payload = {
+            'email': self.email,
+            'pin': self.pin
+        }
+        headers = {
+            "Content-Type": "application/json",
+            "X-Client-App": api_utils.BIZISHIP_APP_NAME,
+            "X-Client-Version": api_utils.BIZISHIP_MODULE_VERSION,
+        }
+        
+        _logger.info("BiziShip PIN Verify URL: %s", url)
+        
         try:
-            response = requests.post(url, json={
-                'email': self.email,
-                'pin': self.pin
-            }, timeout=10)
+            response = requests.post(url, json=payload, headers=headers, timeout=10)
             if response.status_code == 200:
                 data = response.json()
                 token = data.get('token')
                 user_data = data.get('user', {})
                 env = user_data.get('priority1Env', 'DEV')
+                user_name = user_data.get('name') or user_data.get('email', 'Connected User')
                 
                 self.env.user.write({
                     'biziship_token': token,
+                    'biziship_user_name': user_name,
                     'biziship_p1_env': env
                 })
                 
@@ -65,9 +101,19 @@ class BizishipAuthWizard(models.TransientModel):
                         'message': _('Successfully connected to BiziShip!'),
                         'type': 'success',
                         'sticky': False,
+                        'next': {'type': 'ir.actions.act_window_close'},
                     }
                 }
             else:
-                raise UserError(_("Invalid PIN. Please try again."))
+                error_msg = response.text
+                try:
+                    error_json = response.json()
+                    error_msg = error_json.get('message', error_msg)
+                except:
+                    pass
+                raise UserError(_("Invalid PIN (Status %s): %s") % (response.status_code, error_msg))
+        except UserError:
+            raise
         except Exception as e:
-            raise UserError(_("Error connecting to BiziShip: %s") % str(e))
+            _logger.error("BiziShip PIN Verify Error: %s", str(e), exc_info=True)
+            raise UserError(_("Error connecting to BiziShip (%s): %s") % (type(e).__name__, str(e)))

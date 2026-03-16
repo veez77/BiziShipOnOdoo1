@@ -4,17 +4,62 @@
         <field name="name">biziship.load.freight.wizard.form</field>
         <field name="model">biziship.load.freight.wizard</field>
         <field name="arch" type="xml">
-            <form string="Load Saved Freight">
-                <group>
-                    <field name="freight_id" placeholder="Select from your pool..."/>
+            <form string="Load Saved Freight" class="biziship-modern-wizard">
+                <div class="biziship-freight-pool-container">
+                    <div class="mb-4 d-flex justify-content-between align-items-center">
+                        <div>
+                            <h2 class="mb-1" style="font-weight: 800; color: #0f172a;">My Freight Pool</h2>
+                            <p class="text-muted mb-0">Saved freights for your company — launch one to get quotes instantly.</p>
+                        </div>
+                        <div class="text-muted">
+                            <i class="fa fa-info-circle me-1"/> Select a template to pre-fill the form
+                        </div>
+                    </div>
+                    
                     <field name="sale_order_id" invisible="1"/>
-                </group>
-                <p class="text-muted" invisible="freight_id">
-                    Select a previously saved freight template to pre-fill the order details.
-                </p>
+                    <field name="freight_line_ids" mode="kanban" nolabel="1">
+                        <kanban create="false" edit="false" delete="false">
+                            <field name="name"/>
+                            <field name="origin_info"/>
+                            <field name="summary_info"/>
+                            <field name="creator_info"/>
+                            <field name="freight_id"/>
+                            <templates>
+                                <t t-name="kanban-box">
+                                    <div class="biziship-freight-card">
+                                        <div class="biziship-card-icon">
+                                            <i class="fa fa-file-text-o fa-2x"/>
+                                        </div>
+                                        <div class="biziship-card-content">
+                                            <div class="biziship-card-title">
+                                                <t t-esc="record.name.value"/>
+                                            </div>
+                                            <div class="biziship-card-summary">
+                                                <i class="fa fa-truck me-2"/> 
+                                                <t t-esc="record.origin_info.value"/>
+                                            </div>
+                                            <div class="biziship-card-summary" style="font-weight: 500;">
+                                                <i class="fa fa-cube me-2"/>
+                                                <t t-esc="record.summary_info.value"/>
+                                            </div>
+                                            <div class="biziship-card-creator mt-1">
+                                                <i class="fa fa-user-circle-o me-2"/>
+                                                <t t-esc="record.creator_info.value"/>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <button name="action_launch" type="object" class="btn biziship-launch-btn">
+                                                <i class="fa fa-rocket"/> Launch
+                                            </button>
+                                        </div>
+                                    </div>
+                                </t>
+                            </templates>
+                        </kanban>
+                    </field>
+                </div>
                 <footer>
-                    <button name="action_load_freight" string="Launch" type="object" class="btn-primary" invisible="not freight_id"/>
-                    <button string="Cancel" class="btn-secondary" special="cancel"/>
+                    <button string="Close" class="btn-secondary" special="cancel"/>
                 </footer>
             </form>
         </field>

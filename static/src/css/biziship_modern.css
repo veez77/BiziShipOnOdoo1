@@ -1,0 +1,109 @@
+/* Modern BiziShip Freight Pool Styling */
+
+.biziship-freight-pool-container {
+    background-color: #f1f5f9;
+    padding: 20px;
+    border-radius: 12px;
+}
+
+.biziship-freight-card {
+    background: #ffffff !important;
+    border-radius: 16px !important;
+    padding: 20px !important;
+    margin-bottom: 20px !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    transition: all 0.2s ease-in-out !important;
+    border: 1px solid #e2e8f0 !important;
+    cursor: auto !important;
+    width: 100% !important;
+    min-width: 0 !important;
+}
+
+.biziship-freight-card:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.08) !important;
+    border-color: #cbd5e1 !important;
+}
+
+.biziship-card-icon {
+    background: #f8fafc;
+    border-radius: 12px;
+    width: 56px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 20px;
+    color: #475569;
+    flex-shrink: 0;
+    border: 1px solid #f1f5f9;
+}
+
+.biziship-card-content {
+    flex-grow: 1;
+    min-width: 0;
+}
+
+.biziship-card-title {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #0f172a;
+    margin-bottom: 6px;
+    display: block;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.biziship-card-summary {
+    font-size: 0.95rem;
+    color: #475569;
+    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+}
+
+.biziship-card-creator {
+    font-size: 0.85rem;
+    color: #94a3b8;
+    display: flex;
+    align-items: center;
+}
+
+.biziship-launch-btn {
+    background-color: #1e293b !important;
+    color: #ffffff !important;
+    border-radius: 10px !important;
+    padding: 10px 20px !important;
+    font-weight: 600 !important;
+    display: flex !important;
+    align-items: center !important;
+    border: none !important;
+    transition: background-color 0.2s !important;
+    margin-left: 20px !important;
+    text-transform: none !important;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important;
+}
+
+.biziship-launch-btn:hover {
+    background-color: #0f172a !important;
+}
+
+.biziship-launch-btn i {
+    font-size: 1rem;
+    margin-right: 8px;
+}
+
+/* Notebook name alignment for better tab switching */
+.o_notebook .nav-link[name="biziship_freight_quotes"] {
+    background-color: rgba(113, 75, 103, 0.05); /* Slight theme tint */
+    font-weight: 600;
+}
+
+.o_notebook .nav-link.active[name="biziship_freight_quotes"] {
+    background-color: white !important;
+    border-bottom: 3px solid #714B67 !important;
+}

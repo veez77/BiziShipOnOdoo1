@@ -2,6 +2,7 @@ import json
 import requests
 import re
 import os
+import uuid
 from odoo import models, fields, api, _
 from odoo.exceptions import UserError
 import logging
@@ -27,9 +28,22 @@ class SaleOrder(models.Model):
     biziship_bol_url = fields.Char(string='BiziShip BOL Document URL', readonly=True, copy=False)
     biziship_has_selected_quote = fields.Boolean(compute='_compute_biziship_has_selected_quote')
 
+    biziship_is_connected = fields.Boolean(compute='_compute_biziship_connection_status')
+    biziship_connected_user_name = fields.Char(compute='_compute_biziship_connection_status')
+
     biziship_documents_json = fields.Text(string='Shipment Documents JSON', readonly=True, copy=False)
     biziship_documents_html = fields.Html(string='Shipment Documents', compute='_compute_biziship_documents_html', readonly=True)
     biziship_po_number = fields.Char(string="PO Number")
+    biziship_last_fetch_nonce = fields.Char(string='Last Fetch Nonce', readonly=True, copy=False)
+
+    def _compute_biziship_connection_status(self):
+        for order in self:
+            user = self.env.user
+            order.biziship_is_connected = bool(user.biziship_token)
+            if order.biziship_is_connected:
+                order.biziship_connected_user_name = user.biziship_user_name or user.login or "Connected User"
+            else:
+                order.biziship_connected_user_name = ""
 
     @api.depends('biziship_documents_json', 'biziship_bol_url')
     def _compute_biziship_documents_html(self):
@@ -226,13 +240,17 @@ class SaleOrder(models.Model):
 
     def action_biziship_load_from_pool(self):
         self.ensure_one()
+        wizard = self.env['biziship.load.freight.wizard'].create({
+            'sale_order_id': self.id
+        })
+        wizard._populate_freights()
         return {
             'type': 'ir.actions.act_window',
             'name': _('Load Saved Freight'),
             'res_model': 'biziship.load.freight.wizard',
+            'res_id': wizard.id,
             'view_mode': 'form',
             'target': 'new',
-            'context': {'default_sale_order_id': self.id}
         }
 
     def action_demo_vinegar_order(self):
@@ -421,6 +439,7 @@ class SaleOrder(models.Model):
             # Capture environment from top level
             p1_env = response_json.get('priority1_env', 'DEV')
             self.biziship_priority1_env = p1_env
+            self.biziship_last_fetch_nonce = str(uuid.uuid4())
             
             if not quotes:
                 raise UserError(_("No carrier quotes available for this lane. Check origin/destination zip codes or freight details."))
@@ -490,4 +509,11 @@ class SaleOrder(models.Model):
         except requests.exceptions.RequestException as e:
             raise UserError(_("Failed to connect to local Email2Quote API.\nEnsure server is running.\nDetails: %s") % str(e))
 
-        return True
+        return {
+            'type': 'ir.actions.act_window',
+            'res_model': 'sale.order',
+            'res_id': self.id,
+            'view_mode': 'form',
+            'target': 'current',
+            'context': dict(self.env.context, biziship_switch_tab=True),
+        }

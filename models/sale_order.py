@@ -201,6 +201,18 @@ class SaleOrder(models.Model):
             })
         return True
 
+    def action_biziship_copy_customer_to_dest(self):
+        self.ensure_one()
+        if self.partner_id:
+            self.write({
+                'biziship_dest_company': self.partner_id.name,
+                'biziship_dest_address': self.partner_id.street,
+                'biziship_dest_address2': self.partner_id.street2,
+                'biziship_dest_zip': self.partner_id.zip,
+                'biziship_dest_country_id': self.partner_id.country_id.id if self.partner_id.country_id else False,
+            })
+        return True
+
     def action_demo_vinegar_order(self):
         self.ensure_one()
         

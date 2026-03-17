@@ -35,25 +35,36 @@ class BizishipLoadFreightWizard(models.TransientModel):
                     details = f.get('freightDetails', {})
                     origin_zip = details.get('origin_zip', '-----')
                     dest_zip = details.get('dest_zip', '-----')
-                    weight = details.get('weight', 0)
-                    weight_unit = details.get('weight_unit', 'lbs')
                     
-                    # Count cargo lines
+                    # 1. Total Weight & Cargo Count
                     cargo_lines = details.get('line_items', [])
                     if not cargo_lines and details.get('cargo_lines_json'):
                         try:
                             cargo_lines = json.loads(details['cargo_lines_json'])
                         except:
                             cargo_lines = []
+                    
+                    weight = details.get('weight', 0)
+                    if (not weight or weight == 0) and cargo_lines:
+                        # Calculate total weight from lines if top-level is missing
+                        weight = sum(item.get('weight', 0) for item in cargo_lines) or 0
+                    
+                    weight_unit = details.get('weight_unit', 'lbs')
                     cargo_count = len(cargo_lines) or 1
                     
                     # Formatting strings as per web app
                     origin_info = f"{origin_zip} → {dest_zip}"
-                    summary_info = f"{weight} {weight_unit} • {cargo_count} cargo line{'s' if cargo_count > 1 else ''}"
+                    summary_info = f"{int(weight)} {weight_unit} • {cargo_count} cargo line{'s' if cargo_count > 1 else ''}"
                     
+                    # 2. Creator & Timestamp (Including Time)
                     created_by = f.get('createdBy', {}).get('fullName', 'Unknown User')
                     created_at_raw = f.get('createdAt', '')
-                    date_str = created_at_raw[:10] if created_at_raw else "Recent"
+                    # Format: 2026-03-17 11:15
+                    if created_at_raw:
+                        date_str = created_at_raw.replace('T', ' ')[:16]
+                    else:
+                        date_str = "Recently"
+                    
                     creator_info = f"{created_by} • Saved {date_str}"
 
                     lines.append({

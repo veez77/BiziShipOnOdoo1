@@ -58,6 +58,11 @@ class BizishipSaveFreightWizard(models.TransientModel):
             "po_number": order.biziship_po_number or "",
             "pickup_date": order.biziship_pickup_date.isoformat() if order.biziship_pickup_date else None,
             
+            # Summary Fields (Added back for backend completeness)
+            "weight": order.biziship_total_weight,
+            "weight_unit": order.biziship_total_weight_unit or "lbs",
+            "num_pieces": sum(order.biziship_cargo_line_ids.mapped('pieces')),
+            
             # Boolean Flags - Pickup
             "origin_residential": order.biziship_origin_residential,
             "origin_liftgate": order.biziship_origin_liftgate,

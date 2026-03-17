@@ -18,25 +18,24 @@ class BizishipSaveFreightWizard(models.TransientModel):
 
         order = self.sale_order_id
         
-        # Compile accessorial codes (Priority1 codes)
-        accessorial_codes = order.biziship_origin_accessorial_ids.mapped('code') + order.biziship_dest_accessorial_ids.mapped('code')
-        
-        # Origin Checkboxes -> Priority1 Codes
-        if order.biziship_origin_residential: accessorial_codes.append("RESPU")
-        if order.biziship_origin_liftgate: accessorial_codes.append("LGPU")
-        if order.biziship_origin_limited_access: accessorial_codes.append("LTDPU")
-        
-        # Destination Checkboxes -> Priority1 Codes
-        if order.biziship_dest_residential: accessorial_codes.append("RESDEL")
-        if order.biziship_dest_liftgate: accessorial_codes.append("LGDEL")
-        if order.biziship_dest_limited_access: accessorial_codes.append("LTDDEL")
-        if order.biziship_dest_appointment: accessorial_codes.append("APPT")
-        if order.biziship_dest_notify: accessorial_codes.append("NOTIFY")
-        if order.biziship_dest_hazmat: accessorial_codes.append("HAZM")
-        
-        accessorial_codes = list(set(accessorial_codes))
+        # Prepare line items for JSON stringified field
+        cargo_lines = []
+        for line in order.biziship_cargo_line_ids:
+            cargo_lines.append({
+                "packaging_type": line.packaging_type,
+                "num_pieces": line.pieces,
+                "weight": line.weight,
+                "weight_unit": (line.weight_unit or order.biziship_total_weight_unit or "lbs").lower()[:3],
+                "length": line.length,
+                "width": line.width,
+                "height": line.height,
+                "dim_unit": line.dim_unit or "in",
+                "freight_class": line.computed_freight_class or line.freight_class,
+                "cargo_description": line.cargo_desc,
+                "nmfc": line.nmfc or "",
+            })
 
-        # Prepare freight details according to backend spec
+        # Prepare freight details mirroring the web app structure precisely
         freight_details = {
             "origin_company": order.biziship_origin_company,
             "origin_address": order.biziship_origin_address,
@@ -44,19 +43,19 @@ class BizishipSaveFreightWizard(models.TransientModel):
             "origin_city": order.biziship_origin_city,
             "origin_state": order.biziship_origin_state_id.code if order.biziship_origin_state_id else None,
             "origin_zip": order.biziship_origin_zip,
-            "origin_country": order.biziship_origin_country_id.code if order.biziship_origin_country_id else None,
+            "origin_country": order.biziship_origin_country_id.code if order.biziship_origin_country_id else "US",
             
-            "destination_company": order.biziship_dest_company,
-            "destination_address": order.biziship_dest_address,
-            "destination_address2": order.biziship_dest_address2,
-            "destination_city": order.biziship_dest_city,
-            "destination_state": order.biziship_dest_state_id.code if order.biziship_dest_state_id else None,
-            "destination_zip": order.biziship_dest_zip,
-            "destination_country": order.biziship_dest_country_id.code if order.biziship_dest_country_id else None,
+            "dest_company": order.biziship_dest_company,
+            "dest_address": order.biziship_dest_address,
+            "dest_address2": order.biziship_dest_address2,
+            "dest_city": order.biziship_dest_city,
+            "dest_state": order.biziship_dest_state_id.code if order.biziship_dest_state_id else None,
+            "dest_zip": order.biziship_dest_zip,
+            "dest_country": order.biziship_dest_country_id.code if order.biziship_dest_country_id else "US",
             
-            "cargo_description": order.biziship_cargo_desc,
-            "special_instructions": order.biziship_special_instructions,
-            "po_number": order.biziship_po_number,
+            "cargo_description": order.biziship_cargo_desc or "",
+            "special_instructions": order.biziship_special_instructions or "",
+            "po_number": order.biziship_po_number or "",
             "pickup_date": order.biziship_pickup_date.isoformat() if order.biziship_pickup_date else None,
             
             # Boolean Flags - Pickup
@@ -72,28 +71,13 @@ class BizishipSaveFreightWizard(models.TransientModel):
             "dest_liftgate": order.biziship_dest_liftgate,
             "dest_hazmat": order.biziship_dest_hazmat,
 
-            # Top-level summary fields as requested by spec
-            "weight": order.biziship_total_weight,
-            "weight_unit": order.biziship_total_weight_unit or "lbs",
-            "num_pieces": sum(order.biziship_cargo_line_ids.mapped('pieces')),
-            "packaging_type": order.biziship_cargo_line_ids[0].packaging_type if order.biziship_cargo_line_ids else "",
-            "freight_class": order.biziship_cargo_line_ids[0].computed_freight_class or order.biziship_cargo_line_ids[0].freight_class if order.biziship_cargo_line_ids else "",
+            # Accessorial Arrays
+            "origin_more": order.biziship_origin_accessorial_ids.mapped('code'),
+            "dest_more": order.biziship_dest_accessorial_ids.mapped('code'),
             
-            "accessorial_codes": accessorial_codes,
-            "line_items": []
+            # Stringified Cargo JSON - This is critical for web app compatibility
+            "cargo_lines_json": json.dumps(cargo_lines)
         }
-
-        for line in order.biziship_cargo_line_ids:
-            freight_details["line_items"].append({
-                "packaging_type": line.packaging_type,
-                "num_pieces": line.pieces,
-                "weight": line.weight,
-                "length": line.length,
-                "width": line.width,
-                "height": line.height,
-                "freight_class": line.computed_freight_class or line.freight_class,
-                "cargo_description": line.cargo_desc,
-            })
 
         url = "https://api.biziship.ai/saved-freights"
         headers = {

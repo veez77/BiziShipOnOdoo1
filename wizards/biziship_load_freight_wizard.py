@@ -6,12 +6,25 @@ import logging
 
 _logger = logging.getLogger(__name__)
 
+class BizishipLoadFreightFilterUser(models.TransientModel):
+    _name = 'biziship.load.freight.filter.user'
+    _description = 'Load Saved Freight Filter User'
+    wizard_id = fields.Many2one('biziship.load.freight.wizard')
+    name = fields.Char()
+
 class BizishipLoadFreightWizard(models.TransientModel):
     _name = 'biziship.load.freight.wizard'
     _description = 'Load Saved Freight'
 
     freight_line_ids = fields.One2many('biziship.load.freight.line', 'wizard_id', string='Saved Freights')
     sale_order_id = fields.Many2one('sale.order', string='Sale Order')
+    
+    # Search & Filter Fields
+    search_name = fields.Char(string='Search freight name...')
+    filter_user_ids = fields.One2many('biziship.load.freight.filter.user', 'wizard_id')
+    filter_user_id = fields.Many2one('biziship.load.freight.filter.user', string='Filter by person', domain="[('wizard_id', '=', id)]")
+    raw_freights_json = fields.Text(string='Raw Data Cache', invisible=True)
+    status_message = fields.Char(string='Status', readonly=True)
 
     @api.model
     def default_get(self, fields_list):
@@ -22,63 +35,127 @@ class BizishipLoadFreightWizard(models.TransientModel):
         self.ensure_one()
         token = self.env.user.biziship_token
         if not token:
+            self.status_message = "Please connect your BiziShip account in the User settings."
             return
         
-        url = "https://api.biziship.ai/saved-freights"
+        url = f"https://api.biziship.ai/saved-freights"
         headers = {"Authorization": f"Bearer {token}"}
         try:
             response = requests.get(url, headers=headers, timeout=10)
             if response.status_code == 200:
                 freights = response.json()
-                lines = []
-                for f in freights:
-                    details = f.get('freightDetails', {})
-                    origin_zip = details.get('origin_zip', '-----')
-                    dest_zip = details.get('dest_zip', '-----')
-                    
-                    # 1. Total Weight & Cargo Count
-                    cargo_lines = details.get('line_items', [])
-                    if not cargo_lines and details.get('cargo_lines_json'):
-                        try:
-                            cargo_lines = json.loads(details['cargo_lines_json'])
-                        except:
-                            cargo_lines = []
-                    
-                    weight = details.get('weight', 0)
-                    if (not weight or weight == 0) and cargo_lines:
-                        # Calculate total weight from lines if top-level is missing
-                        weight = sum(item.get('weight', 0) for item in cargo_lines) or 0
-                    
-                    weight_unit = details.get('weight_unit', 'lbs')
-                    cargo_count = len(cargo_lines) or 1
-                    
-                    # Formatting strings as per web app
-                    origin_info = f"{origin_zip} → {dest_zip}"
-                    summary_info = f"{int(weight)} {weight_unit} • {cargo_count} cargo line{'s' if cargo_count > 1 else ''}"
-                    
-                    # 2. Creator & Timestamp (Including Time)
-                    created_by = f.get('createdBy', {}).get('fullName', 'Unknown User')
-                    created_at_raw = f.get('createdAt', '')
-                    # Format: 2026-03-17 11:15
-                    if created_at_raw:
-                        date_str = created_at_raw.replace('T', ' ')[:16]
-                    else:
-                        date_str = "Recently"
-                    
-                    creator_info = f"{created_by} • Saved {date_str}"
-
-                    lines.append({
-                        'wizard_id': self.id,
-                        'freight_id': f['id'],
-                        'name': f['name'],
-                        'origin_info': origin_info,
-                        'summary_info': summary_info,
-                        'creator_info': creator_info,
-                    })
-                if lines:
-                    self.env['biziship.load.freight.line'].create(lines)
+                _logger.info("BiziShip: Fetched %d freights for wizard", len(freights))
+                
+                if not freights:
+                    self.status_message = "Your freight pool is currently empty. Save a freight first!"
+                    self.raw_freights_json = json.dumps([])
+                else:
+                    self.status_message = ""
+                    self.raw_freights_json = json.dumps(freights)
+                
+                # Extract unique users for the filter dropdown
+                user_names = list(set([f.get('createdBy', {}).get('fullName', 'Unknown User') for f in freights if f.get('createdBy', {}).get('fullName')]))
+                user_names.sort()
+                
+                # Clean old filter users and create new ones for this wizard instance
+                self.filter_user_ids.unlink()
+                self.env['biziship.load.freight.filter.user'].create([{'name': name, 'wizard_id': self.id} for name in user_names])
+                
+                self._apply_filters()
+            else:
+                self.status_message = f"Failed to fetch freights (Error {response.status_code})"
         except Exception as e:
             _logger.error("BiziShip: Error fetching freights for wizard: %s", str(e))
+            self.status_message = f"Unable to connect to BiziShip: {str(e)}"
+
+    @api.onchange('search_name', 'filter_user_id')
+    def _onchange_filters(self):
+        self._apply_filters()
+
+    def _apply_filters(self):
+        self.ensure_one()
+        json_data = self.raw_freights_json
+        if not json_data:
+            return
+            
+        try:
+            freights = json.loads(json_data)
+        except Exception as e:
+            _logger.error("BiziShip: Error parsing freight JSON: %s", str(e))
+            return
+
+        search = (self.search_name or '').lower()
+        user_name_filter = self.filter_user_id.name if self.filter_user_id else None
+        
+        lines = []
+        for f in freights:
+            name = f.get('name', '') or 'Unnamed Freight'
+            created_by = f.get('createdBy', {}).get('fullName', 'Unknown User')
+            
+            # Apply Filter 1: Name Search
+            if search and search not in name.lower():
+                continue
+                
+            # Apply Filter 2: User Filter
+            if user_name_filter and user_name_filter != created_by:
+                continue
+
+            details = f.get('freightDetails', {})
+            origin_zip = details.get('origin_zip', '-----')
+            dest_zip = details.get('dest_zip', '-----')
+            
+            # 1. Total Weight & Cargo Count
+            cargo_lines = details.get('line_items', [])
+            if not cargo_lines and details.get('cargo_lines_json'):
+                try:
+                    cargo_lines = json.loads(details['cargo_lines_json'])
+                except:
+                    cargo_lines = []
+            
+            weight = details.get('weight', 0)
+            if (not weight or weight == 0) and cargo_lines:
+                weight = sum(item.get('weight', 0) for item in cargo_lines) or 0
+            
+            weight_unit = (details.get('weight_unit') or 'lbs').lower()
+            cargo_count = len(cargo_lines) or 1
+            
+            origin_info = f"{origin_zip} → {dest_zip}"
+            summary_info = f"{int(weight)} {weight_unit} • {cargo_count} cargo line{'s' if cargo_count > 1 else ''}"
+            
+            created_at_raw = f.get('createdAt', '')
+            date_str = created_at_raw.replace('T', ' ')[:16] if created_at_raw else "Recently"
+            creator_info = f"{created_by} • Saved {date_str}"
+
+            lines.append((0, 0, {
+                'freight_id': str(f.get('id', '')),
+                'name': name,
+                'origin_info': origin_info,
+                'summary_info': summary_info,
+                'creator_info': creator_info,
+            }))
+        
+        _logger.info("BiziShip: Filter applied. Results: %d", len(lines))
+        
+        # In Odoo 17 onchange, 'self' is virtual. To make 'Launch' buttons work (standard Odoo actions),
+        # we need REAL database records with REAL IDs. We force this by writing to self._origin.
+        target = self._origin if self._origin else self
+        
+        # 1. Clear existing real lines from DB
+        if target.id:
+            self.env['biziship.load.freight.line'].sudo().search([('wizard_id', '=', target.id)]).unlink()
+        
+        # 2. Create new real lines in DB
+        new_lines = []
+        for line_vals in lines:
+            # line_vals[2] contains the dictionary of values
+            res = self.env['biziship.load.freight.line'].sudo().create({
+                **line_vals[2],
+                'wizard_id': target.id
+            })
+            new_lines.append(res.id)
+            
+        # 3. Synchronize the virtual field so the UI refreshes
+        self.freight_line_ids = [(6, 0, new_lines)]
 
     def action_load_freight_from_id(self, freight_id):
         """Helper to load a specific freight ID into the order"""

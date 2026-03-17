@@ -11,10 +11,29 @@ patch(FormController.prototype, {
 
         onMounted(() => {
             this._checkBiziShipTabSwitch();
+            this._setupBiziShipHandlers();
         });
         onPatched(() => {
             this._checkBiziShipTabSwitch();
         });
+    },
+
+    _setupBiziShipHandlers() {
+        if (this.bizishipHandlersInitialized) return;
+        this.bizishipHandlersInitialized = true;
+
+        // 1. Autofilter Logic (Debounced)
+        // This triggers a 'change' event on the input field as the user types,
+        // which Odoo's ORM listens to to execute 'onchange' methods immediately.
+        document.addEventListener('input', (ev) => {
+            const input = ev.target;
+            if (input && input.classList && input.classList.contains('biziship-autofilter')) {
+                if (this.autoFilterTimeout) clearTimeout(this.autoFilterTimeout);
+                this.autoFilterTimeout = setTimeout(() => {
+                    input.dispatchEvent(new Event('change', { bubbles: true }));
+                }, 300);
+            }
+        }, true);
     },
 
     _checkBiziShipTabSwitch() {
@@ -24,11 +43,8 @@ patch(FormController.prototype, {
         const nonce = record.data.biziship_last_fetch_nonce;
         const hasSwitchFlag = this.props.context && this.props.context.biziship_switch_tab;
 
-        // Only switch if we have the flag AND a new nonce we haven't handled yet
         if (hasSwitchFlag && nonce && nonce !== this.lastHandledNonce) {
             this.lastHandledNonce = nonce;
-
-            // Use a slight delay to ensure the notebook has rendered
             setTimeout(() => {
                 const quotesTab = document.querySelector('.o_notebook a[name="biziship_freight_quotes"]');
                 if (quotesTab && !quotesTab.classList.contains('active')) {

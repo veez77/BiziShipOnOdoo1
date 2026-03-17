@@ -223,3 +223,68 @@
     margin-right: 6px;
     color: #64748b;
 }
+
+/* Filter Bar Styling - Matching Web App */
+.biziship-filter-bar {
+    display: flex;
+    align-items: center;
+    background: transparent;
+}
+
+.biziship-search-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.biziship-search-icon {
+    position: absolute;
+    left: 14px;
+    color: #94a3b8;
+    z-index: 10;
+    pointer-events: none;
+}
+
+.biziship-search-input .o_input {
+    padding-left: 40px !important;
+    border: 1.5px solid #e2e8f0 !important;
+    border-radius: 12px !important;
+    background-color: #ffffff !important;
+    height: 44px !important;
+    font-size: 0.95rem !important;
+    transition: all 0.2s ease !important;
+}
+
+.biziship-search-input .o_input:focus {
+    border-color: #cbd5e1 !important;
+    box-shadow: 0 0 0 4px rgba(226, 232, 240, 0.4) !important;
+}
+
+.biziship-filter-container {
+    min-width: 180px;
+}
+
+.biziship-filter-select .o_input {
+    border: 1.5px solid #e2e8f0 !important;
+    border-radius: 12px !important;
+    background-color: #ffffff !important;
+    height: 44px !important;
+    font-size: 0.95rem !important;
+    padding: 0 16px !important;
+    color: #475569 !important;
+    cursor: pointer !important;
+    appearance: none !important;
+    -webkit-appearance: none !important;
+}
+
+.biziship-filter-select .o_input:focus {
+    border-color: #cbd5e1 !important;
+    box-shadow: 0 0 0 4px rgba(226, 232, 240, 0.4) !important;
+}
+
+.biziship-filter-label {
+    white-space: nowrap !important;
+    color: #64748b !important;
+    font-weight: 600 !important;
+    font-size: 0.85rem !important;
+}

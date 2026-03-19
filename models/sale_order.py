@@ -228,14 +228,19 @@ class SaleOrder(models.Model):
     def action_biziship_copy_customer_to_dest(self):
         self.ensure_one()
         if self.partner_id:
+            partner = self.partner_id
             self.write({
-                'biziship_dest_company': self.partner_id.name,
-                'biziship_dest_address': self.partner_id.street,
-                'biziship_dest_address2': self.partner_id.street2,
-                'biziship_dest_city': self.partner_id.city,
-                'biziship_dest_state_id': self.partner_id.state_id.id if self.partner_id.state_id else False,
-                'biziship_dest_zip': self.partner_id.zip,
-                'biziship_dest_country_id': self.partner_id.country_id.id if self.partner_id.country_id else False,
+                'biziship_dest_company': partner.name,
+                'biziship_dest_address': partner.street,
+                'biziship_dest_address2': partner.street2,
+                'biziship_dest_city': partner.city,
+                'biziship_dest_state_id': partner.state_id.id if partner.state_id else False,
+                'biziship_dest_zip': partner.zip,
+                'biziship_dest_country_id': partner.country_id.id if partner.country_id else False,
+                # Contact fields: use partner data if available, otherwise clear whatever was there
+                'biziship_dest_contact_name': partner.name or False,
+                'biziship_dest_contact_phone': partner.phone or partner.mobile or False,
+                'biziship_dest_contact_email': partner.email or False,
             })
         return True
 

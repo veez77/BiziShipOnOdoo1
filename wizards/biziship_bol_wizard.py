@@ -201,18 +201,21 @@ class BizishipBolImportWizard(models.TransientModel):
                 vals = {
                     'biziship_extracted_json': json.dumps(extracted_details),
                     'biziship_po_number': extracted_details.get('po_number'),
-                    # Addresses
+                    # Addresses - Origin
                     'biziship_origin_company': extracted_details.get('origin_company'),
                     'biziship_origin_address': extracted_details.get('origin_address'),
                     'biziship_origin_address2': extracted_details.get('origin_address2'),
+                    'biziship_origin_city': extracted_details.get('origin_city'),
                     'biziship_origin_zip': extracted_details.get('origin_zip'),
                     'biziship_origin_contact_name': extracted_details.get('origin_contact_name'),
                     'biziship_origin_contact_phone': extracted_details.get('origin_phone'),
                     'biziship_origin_contact_email': extracted_details.get('origin_email'),
                     
+                    # Addresses - Destination
                     'biziship_dest_company': extracted_details.get('destination_company'),
                     'biziship_dest_address': extracted_details.get('destination_address'),
                     'biziship_dest_address2': extracted_details.get('destination_address2'),
+                    'biziship_dest_city': extracted_details.get('destination_city'),
                     'biziship_dest_zip': extracted_details.get('destination_zip'),
                     'biziship_dest_contact_name': extracted_details.get('destination_contact_name'),
                     'biziship_dest_contact_phone': extracted_details.get('destination_phone'),
@@ -220,6 +223,33 @@ class BizishipBolImportWizard(models.TransientModel):
                     'biziship_cargo_desc': extracted_details.get('cargo_description', 'General Freight'),
                     'biziship_special_instructions': extracted_details.get('special_instructions'),
                 }
+                
+                # State and Country resolution (scoped by country to avoid 'GA' -> Goa)
+                origin_country_code = extracted_details.get('origin_country', 'US') or 'US'
+                origin_country = self.env['res.country'].search([('code', '=', origin_country_code)], limit=1)
+                if origin_country:
+                    vals['biziship_origin_country_id'] = origin_country.id
+                    origin_state_code = extracted_details.get('origin_state')
+                    if origin_state_code:
+                        state = self.env['res.country.state'].search([
+                            ('code', '=', origin_state_code),
+                            ('country_id', '=', origin_country.id)
+                        ], limit=1)
+                        if state:
+                            vals['biziship_origin_state_id'] = state.id
+
+                dest_country_code = extracted_details.get('destination_country', 'US') or 'US'
+                dest_country = self.env['res.country'].search([('code', '=', dest_country_code)], limit=1)
+                if dest_country:
+                    vals['biziship_dest_country_id'] = dest_country.id
+                    dest_state_code = extracted_details.get('destination_state')
+                    if dest_state_code:
+                        state = self.env['res.country.state'].search([
+                            ('code', '=', dest_state_code),
+                            ('country_id', '=', dest_country.id)
+                        ], limit=1)
+                        if state:
+                            vals['biziship_dest_state_id'] = state.id
                 
                 # Pickup Date
                 pdate_raw = extracted_details.get('pickup_date')

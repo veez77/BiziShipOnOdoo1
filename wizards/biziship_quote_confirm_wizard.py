@@ -56,19 +56,25 @@ class BizishipQuoteConfirmWizard(models.TransientModel):
     origin_company = fields.Char(related="sale_order_id.biziship_origin_company", readonly=True)
     origin_address = fields.Char(related="quote_id.origin_address", string="Origin Address", readonly=True)
     origin_address2 = fields.Char(related="quote_id.origin_address2", string="Origin Address 2", readonly=True)
-    origin_city = fields.Char(related="sale_order_id.company_id.city", string="Origin City", readonly=True)
-    origin_state = fields.Char(related="sale_order_id.company_id.state_id.code", string="Origin State", readonly=True)
+    origin_city = fields.Char(related="sale_order_id.biziship_origin_city", string="Origin City", readonly=True)
+    origin_state = fields.Char(related="sale_order_id.biziship_origin_state_id.code", string="Origin State", readonly=True)
     origin_zip = fields.Char(related="sale_order_id.biziship_origin_zip", string="Origin Zip", readonly=True)
     origin_phone = fields.Char(related="sale_order_id.company_id.phone", string="Origin Phone", readonly=True)
+    origin_contact_name = fields.Char(related="sale_order_id.biziship_origin_contact_name", readonly=True)
+    origin_contact_phone = fields.Char(related="sale_order_id.biziship_origin_contact_phone", readonly=True)
+    origin_contact_email = fields.Char(related="sale_order_id.biziship_origin_contact_email", readonly=True)
     
     # Destination Details
     destination_company = fields.Char(related="sale_order_id.biziship_dest_company", readonly=True)
     destination_address = fields.Char(related="quote_id.destination_address", string="Dest Address", readonly=True)
     destination_address2 = fields.Char(related="quote_id.destination_address2", string="Dest Address 2", readonly=True)
-    destination_city = fields.Char(related="sale_order_id.partner_shipping_id.city", string="Dest City", readonly=True)
-    destination_state = fields.Char(related="sale_order_id.partner_shipping_id.state_id.code", string="Dest State", readonly=True)
+    destination_city = fields.Char(related="sale_order_id.biziship_dest_city", string="Dest City", readonly=True)
+    destination_state = fields.Char(related="sale_order_id.biziship_dest_state_id.code", string="Dest State", readonly=True)
     destination_zip = fields.Char(related="sale_order_id.biziship_dest_zip", string="Dest Zip", readonly=True)
     destination_phone = fields.Char(related="sale_order_id.partner_shipping_id.phone", string="Dest Phone", readonly=True)
+    destination_contact_name = fields.Char(related="sale_order_id.biziship_dest_contact_name", readonly=True)
+    destination_contact_phone = fields.Char(related="sale_order_id.biziship_dest_contact_phone", readonly=True)
+    destination_contact_email = fields.Char(related="sale_order_id.biziship_dest_contact_email", readonly=True)
 
     # Quote Detailed Charges
     quote_details = fields.Text(related="quote_id.quote_details", readonly=True)
@@ -162,35 +168,49 @@ class BizishipQuoteConfirmWizard(models.TransientModel):
         import re
         def format_phone(phone_str):
             if not phone_str:
-                return "5555555555"
+                return None
             digits = re.sub(r'\D', '', phone_str)
             if len(digits) >= 10:
                 return digits[-10:]
-            return "5555555555"
+            return None
 
         company = self.env.company
         shipper = {
             "company_name": sale_order.biziship_origin_company or extracted_data.get("origin_company") or company.name,
-            "address_line1": extracted_data.get("origin_address") or company.street or "",
-            "address_line2": extracted_data.get("origin_address2") or company.street2 or "",
-            "city": extracted_data.get("origin_city") or company.city or "",
-            "state": extracted_data.get("origin_state") or (company.state_id.code if company.state_id else ""),
-            "zip": extracted_data.get("origin_zip") or company.zip or "",
-            "contact": company.name or "Contact",
-            "phone": format_phone(extracted_data.get("origin_phone") or company.phone)
+            "address_line1": sale_order.biziship_origin_address or extracted_data.get("origin_address") or company.street or "",
+            "address_line2": sale_order.biziship_origin_address2 or extracted_data.get("origin_address2") or company.street2 or "",
+            "city": sale_order.biziship_origin_city or extracted_data.get("origin_city") or company.city or "",
+            "state": sale_order.biziship_origin_state_id.code if sale_order.biziship_origin_state_id else (extracted_data.get("origin_state") or (company.state_id.code if company.state_id else "")),
+            "zip": sale_order.biziship_origin_zip or extracted_data.get("origin_zip") or company.zip or "",
         }
-        
+        # Only add contact fields if explicitly set by the user
+        if sale_order.biziship_origin_contact_name:
+            shipper["contact_name"] = sale_order.biziship_origin_contact_name
+            shipper["contact"] = sale_order.biziship_origin_contact_name
+        origin_phone = format_phone(sale_order.biziship_origin_contact_phone)
+        if origin_phone:
+            shipper["phone"] = origin_phone
+        if sale_order.biziship_origin_contact_email:
+            shipper["email"] = sale_order.biziship_origin_contact_email
+
         partner = sale_order.partner_shipping_id or sale_order.partner_id
         consignee = {
             "company_name": sale_order.biziship_dest_company or extracted_data.get("destination_company") or partner.name,
-            "address_line1": extracted_data.get("destination_address") or partner.street or "",
-            "address_line2": extracted_data.get("destination_address2") or partner.street2 or "",
-            "city": extracted_data.get("destination_city") or partner.city or "",
-            "state": extracted_data.get("destination_state") or (partner.state_id.code if partner.state_id else ""),
-            "zip": extracted_data.get("destination_zip") or partner.zip or "",
-            "contact": partner.name or "Contact",
-            "phone": format_phone(extracted_data.get("destination_phone") or partner.phone)
+            "address_line1": sale_order.biziship_dest_address or extracted_data.get("destination_address") or partner.street or "",
+            "address_line2": sale_order.biziship_dest_address2 or extracted_data.get("destination_address2") or partner.street2 or "",
+            "city": sale_order.biziship_dest_city or extracted_data.get("destination_city") or partner.city or "",
+            "state": sale_order.biziship_dest_state_id.code if sale_order.biziship_dest_state_id else (extracted_data.get("destination_state") or (partner.state_id.code if partner.state_id else "")),
+            "zip": sale_order.biziship_dest_zip or extracted_data.get("destination_zip") or partner.zip or "",
         }
+        # Only add contact fields if explicitly set by the user
+        if sale_order.biziship_dest_contact_name:
+            consignee["contact_name"] = sale_order.biziship_dest_contact_name
+            consignee["contact"] = sale_order.biziship_dest_contact_name
+        dest_phone = format_phone(sale_order.biziship_dest_contact_phone)
+        if dest_phone:
+            consignee["phone"] = dest_phone
+        if sale_order.biziship_dest_contact_email:
+            consignee["email"] = sale_order.biziship_dest_contact_email
         
         from datetime import timedelta
         

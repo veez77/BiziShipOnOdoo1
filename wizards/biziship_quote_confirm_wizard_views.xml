@@ -101,6 +101,9 @@
                             <field name="origin_zip" class="o_address_zip"/>
                         </div>
                         <field name="origin_phone" widget="phone" nolabel="1" colspan="2" style="display: block; white-space: nowrap;"/>
+                        <field name="origin_contact_name" nolabel="1" colspan="2" readonly="1" invisible="not origin_contact_name" style="display: block;"/>
+                        <field name="origin_contact_phone" nolabel="1" colspan="2" readonly="1" invisible="not origin_contact_phone" widget="phone" style="display: block; white-space: nowrap;"/>
+                        <field name="origin_contact_email" nolabel="1" colspan="2" readonly="1" invisible="not origin_contact_email" style="display: block;"/>
                     </group>
                     <group string="Destination">
                         <field name="destination_company" nolabel="1" class="fw-bold mb-0" style="font-size: 1.1em; display: block;" colspan="2"/>
@@ -112,6 +115,9 @@
                             <field name="destination_zip" class="o_address_zip"/>
                         </div>
                         <field name="destination_phone" widget="phone" nolabel="1" colspan="2" style="display: block; white-space: nowrap;"/>
+                        <field name="destination_contact_name" nolabel="1" colspan="2" readonly="1" invisible="not destination_contact_name" style="display: block;"/>
+                        <field name="destination_contact_phone" nolabel="1" colspan="2" readonly="1" invisible="not destination_contact_phone" widget="phone" style="display: block; white-space: nowrap;"/>
+                        <field name="destination_contact_email" nolabel="1" colspan="2" readonly="1" invisible="not destination_contact_email" style="display: block;"/>
                     </group>
                 </group>
 
@@ -154,6 +160,7 @@
                                 <field name="last_dim_unit" column_invisible="True"/>
                                 <field name="cargo_desc" string="DESCRIPTION"/>
                                 <field name="computed_freight_class" string="CLASS"/>
+                                <field name="nmfc" string="NMFC" optional="show"/>
                             </tree>
                         </field>
                         <group name="cargo_footer" col="6" class="mt-2 mt-md-0">

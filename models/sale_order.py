@@ -94,6 +94,9 @@ class SaleOrder(models.Model):
     biziship_origin_residential = fields.Boolean(string="Residential Pickup")
     biziship_origin_liftgate = fields.Boolean(string="Lift Gate Pickup")
     biziship_origin_limited_access = fields.Boolean(string="Limited Access Pickup")
+    biziship_origin_contact_name = fields.Char(string="Origin Contact Name")
+    biziship_origin_contact_phone = fields.Char(string="Origin Contact Phone")
+    biziship_origin_contact_email = fields.Char(string="Origin Contact Email")
     biziship_origin_accessorial_ids = fields.Many2many(
         'biziship.accessorial',
         'sale_order_origin_accessorial_rel',
@@ -119,6 +122,9 @@ class SaleOrder(models.Model):
     biziship_dest_limited_access = fields.Boolean(string="Limited Access Delivery")
     biziship_dest_liftgate = fields.Boolean(string="Lift Gate Delivery")
     biziship_dest_hazmat = fields.Boolean(string="Hazardous Material")
+    biziship_dest_contact_name = fields.Char(string="Destination Contact Name")
+    biziship_dest_contact_phone = fields.Char(string="Destination Contact Phone")
+    biziship_dest_contact_email = fields.Char(string="Destination Contact Email")
     biziship_dest_accessorial_ids = fields.Many2many(
         'biziship.accessorial',
         'sale_order_dest_accessorial_rel',
@@ -401,7 +407,8 @@ class SaleOrder(models.Model):
                 "num_pieces": line.pieces or 1,
                 "packaging_type": line.packaging_type or "",
                 "freight_class": line.computed_freight_class or line.freight_class or "",
-                "cargo_description": line.cargo_desc or ""
+                "cargo_description": line.cargo_desc or "",
+                "nmfc_code": line.nmfc or "",
             })
 
         # Base payload properties
@@ -409,16 +416,16 @@ class SaleOrder(models.Model):
             "origin_company": self.biziship_origin_company or self.company_id.name or self.env.company.name or "",
             "origin_address": self.biziship_origin_address or "",
             "origin_address2": self.biziship_origin_address2 or "",
-            "origin_city": self.company_id.city or self.env.company.city or "",
-            "origin_state": self.company_id.state_id.code if self.company_id.state_id else "",
+            "origin_city": self.biziship_origin_city or self.company_id.city or self.env.company.city or "",
+            "origin_state": self.biziship_origin_state_id.code if self.biziship_origin_state_id else (self.company_id.state_id.code if self.company_id.state_id else ""),
             "origin_zip": self.biziship_origin_zip,
             "origin_country": self.biziship_origin_country_id.code if self.biziship_origin_country_id else "US",
             "origin_phone": self._format_phone(origin_phone),
             "destination_company": self.biziship_dest_company or self.partner_shipping_id.name or self.partner_id.name or "",
             "destination_address": self.biziship_dest_address or "",
             "destination_address2": self.biziship_dest_address2 or "",
-            "destination_city": self.partner_shipping_id.city or self.partner_id.city or "",
-            "destination_state": self.partner_shipping_id.state_id.code if self.partner_shipping_id.state_id else "",
+            "destination_city": self.biziship_dest_city or self.partner_shipping_id.city or self.partner_id.city or "",
+            "destination_state": self.biziship_dest_state_id.code if self.biziship_dest_state_id else (self.partner_shipping_id.state_id.code if self.partner_shipping_id.state_id else ""),
             "destination_zip": self.biziship_dest_zip,
             "destination_country": self.biziship_dest_country_id.code if self.biziship_dest_country_id else "US",
             "destination_phone": self._format_phone(dest_phone),

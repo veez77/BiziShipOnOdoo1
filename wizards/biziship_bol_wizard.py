@@ -206,11 +206,17 @@ class BizishipBolImportWizard(models.TransientModel):
                     'biziship_origin_address': extracted_details.get('origin_address'),
                     'biziship_origin_address2': extracted_details.get('origin_address2'),
                     'biziship_origin_zip': extracted_details.get('origin_zip'),
+                    'biziship_origin_contact_name': extracted_details.get('origin_contact_name'),
+                    'biziship_origin_contact_phone': extracted_details.get('origin_phone'),
+                    'biziship_origin_contact_email': extracted_details.get('origin_email'),
                     
                     'biziship_dest_company': extracted_details.get('destination_company'),
                     'biziship_dest_address': extracted_details.get('destination_address'),
                     'biziship_dest_address2': extracted_details.get('destination_address2'),
                     'biziship_dest_zip': extracted_details.get('destination_zip'),
+                    'biziship_dest_contact_name': extracted_details.get('destination_contact_name'),
+                    'biziship_dest_contact_phone': extracted_details.get('destination_phone'),
+                    'biziship_dest_contact_email': extracted_details.get('destination_email'),
                     'biziship_cargo_desc': extracted_details.get('cargo_description', 'General Freight'),
                     'biziship_special_instructions': extracted_details.get('special_instructions'),
                 }

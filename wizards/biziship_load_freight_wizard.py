@@ -204,6 +204,14 @@ class BizishipLoadFreightWizard(models.TransientModel):
                 'biziship_po_number': get_val('po_number'),
                 'biziship_total_weight_unit': (get_val('weight_unit', 'lbs')).lower()[:3],
                 
+                # Contact fields — check new names first, then legacy
+                'biziship_origin_contact_name': details.get('origin_contact_name') or '',
+                'biziship_origin_contact_phone': details.get('origin_contact_phone') or details.get('origin_phone') or '',
+                'biziship_origin_contact_email': details.get('origin_contact_email') or details.get('origin_email') or '',
+                'biziship_dest_contact_name': details.get('dest_contact_name') or details.get('destination_contact_name') or '',
+                'biziship_dest_contact_phone': details.get('dest_contact_phone') or details.get('destination_phone') or '',
+                'biziship_dest_contact_email': details.get('dest_contact_email') or details.get('destination_email') or '',
+                
                 # Boolean Flags - Pickup
                 'biziship_origin_residential': details.get('origin_residential', False),
                 'biziship_origin_liftgate': details.get('origin_liftgate', False),
@@ -240,6 +248,14 @@ class BizishipLoadFreightWizard(models.TransientModel):
                 'biziship_po_number': get_val('po_number'),
                 'biziship_total_weight_unit': (get_val('weight_unit', 'lbs')).lower()[:3],
                 
+                # Contact fields — check new names first, then legacy
+                'biziship_origin_contact_name': details.get('origin_contact_name') or '',
+                'biziship_origin_contact_phone': details.get('origin_contact_phone') or details.get('origin_phone') or '',
+                'biziship_origin_contact_email': details.get('origin_contact_email') or details.get('origin_email') or '',
+                'biziship_dest_contact_name': details.get('dest_contact_name') or details.get('destination_contact_name') or '',
+                'biziship_dest_contact_phone': details.get('dest_contact_phone') or details.get('destination_phone') or '',
+                'biziship_dest_contact_email': details.get('dest_contact_email') or details.get('destination_email') or '',
+
                 # Boolean Flags - Pickup
                 'biziship_origin_residential': details.get('origin_residential', False),
                 'biziship_origin_liftgate': details.get('origin_liftgate', False),
@@ -365,6 +381,7 @@ class BizishipLoadFreightWizard(models.TransientModel):
                     'packaging_type': normalize_pkg(item.get('packaging_type')),
                     'freight_class': str(item.get('freight_class', '70')),
                     'cargo_desc': item.get('cargo_description') or item.get('description') or '',
+                    'nmfc': item.get('nmfc_code') or item.get('nmfc') or '',
                 }
                 _logger.info("BiziShip: Creating Cargo Line: %s", json.dumps(payload, indent=2))
                 order.biziship_cargo_line_ids.create(payload)

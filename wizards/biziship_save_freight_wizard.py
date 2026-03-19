@@ -36,53 +36,70 @@ class BizishipSaveFreightWizard(models.TransientModel):
             })
 
         # Prepare freight details mirroring the web app structure precisely
+        # IMPORTANT: use web app's ManualFormState key names so the freight loads correctly
+        from datetime import date as date_type
+        today_str = date_type.today().isoformat()
+        pickup_date_str = order.biziship_pickup_date.isoformat() if order.biziship_pickup_date else today_str
+        # Advance past dates to today (web app does the same)
+        if pickup_date_str < today_str:
+            pickup_date_str = today_str
+
         freight_details = {
-            "origin_company": order.biziship_origin_company,
-            "origin_address": order.biziship_origin_address,
-            "origin_address2": order.biziship_origin_address2,
-            "origin_city": order.biziship_origin_city,
-            "origin_state": order.biziship_origin_state_id.code if order.biziship_origin_state_id else None,
-            "origin_zip": order.biziship_origin_zip,
-            "origin_country": order.biziship_origin_country_id.code if order.biziship_origin_country_id else "US",
-            
-            "dest_company": order.biziship_dest_company,
-            "dest_address": order.biziship_dest_address,
-            "dest_address2": order.biziship_dest_address2,
-            "dest_city": order.biziship_dest_city,
-            "dest_state": order.biziship_dest_state_id.code if order.biziship_dest_state_id else None,
-            "dest_zip": order.biziship_dest_zip,
-            "dest_country": order.biziship_dest_country_id.code if order.biziship_dest_country_id else "US",
-            
-            "cargo_description": order.biziship_cargo_desc or "",
+            "origin_company":       order.biziship_origin_company or None,
+            "origin_address":       order.biziship_origin_address or None,
+            "origin_address2":      order.biziship_origin_address2 or None,
+            "origin_city":          order.biziship_origin_city or None,
+            "origin_state":         order.biziship_origin_state_id.code if order.biziship_origin_state_id else None,
+            "origin_zip":           order.biziship_origin_zip or None,
+            "origin_country":       order.biziship_origin_country_id.code if order.biziship_origin_country_id else "US",
+            # Contact fields — use web app ManualFormState field names
+            "origin_contact_name":  order.biziship_origin_contact_name or None,
+            "origin_contact_phone": order.biziship_origin_contact_phone or None,
+            "origin_contact_email": order.biziship_origin_contact_email or None,
+
+            "dest_company":         order.biziship_dest_company or None,
+            "dest_address":         order.biziship_dest_address or None,
+            "dest_address2":        order.biziship_dest_address2 or None,
+            "dest_city":            order.biziship_dest_city or None,
+            "dest_state":           order.biziship_dest_state_id.code if order.biziship_dest_state_id else None,
+            "dest_zip":             order.biziship_dest_zip or None,
+            "dest_country":         order.biziship_dest_country_id.code if order.biziship_dest_country_id else "US",
+            # Contact fields — use web app ManualFormState field names
+            "dest_contact_name":    order.biziship_dest_contact_name or None,
+            "dest_contact_phone":   order.biziship_dest_contact_phone or None,
+            "dest_contact_email":   order.biziship_dest_contact_email or None,
+
+            "cargo_description":    order.biziship_cargo_desc or "",
             "special_instructions": order.biziship_special_instructions or "",
-            "po_number": order.biziship_po_number or "",
-            "pickup_date": order.biziship_pickup_date.isoformat() if order.biziship_pickup_date else None,
-            
-            # Summary Fields (Added back for backend completeness)
-            "weight": order.biziship_total_weight,
+            "po_number":            order.biziship_po_number or "",
+            "pickup_date":          pickup_date_str,
+
+            # Summary Fields
+            "weight":     order.biziship_total_weight,
             "weight_unit": order.biziship_total_weight_unit or "lbs",
             "num_pieces": sum(order.biziship_cargo_line_ids.mapped('pieces')),
-            
+
             # Boolean Flags - Pickup
-            "origin_residential": order.biziship_origin_residential,
-            "origin_liftgate": order.biziship_origin_liftgate,
+            "origin_residential":   order.biziship_origin_residential,
+            "origin_liftgate":      order.biziship_origin_liftgate,
             "origin_limited_access": order.biziship_origin_limited_access,
-            
+
             # Boolean Flags - Delivery
-            "dest_appointment": order.biziship_dest_appointment,
-            "dest_residential": order.biziship_dest_residential,
-            "dest_notify": order.biziship_dest_notify,
-            "dest_limited_access": order.biziship_dest_limited_access,
-            "dest_liftgate": order.biziship_dest_liftgate,
-            "dest_hazmat": order.biziship_dest_hazmat,
+            "dest_appointment":     order.biziship_dest_appointment,
+            "dest_residential":     order.biziship_dest_residential,
+            "dest_notify":          order.biziship_dest_notify,
+            "dest_limited_access":  order.biziship_dest_limited_access,
+            "dest_liftgate":        order.biziship_dest_liftgate,
+            "dest_hazmat":          order.biziship_dest_hazmat,
 
             # Accessorial Arrays
             "origin_more": order.biziship_origin_accessorial_ids.mapped('code'),
-            "dest_more": order.biziship_dest_accessorial_ids.mapped('code'),
-            
-            # Stringified Cargo JSON - This is critical for web app compatibility
+            "dest_more":   order.biziship_dest_accessorial_ids.mapped('code'),
+
+            # Stringified Cargo JSON - critical for web app compatibility
             "cargo_lines_json": json.dumps(cargo_lines)
         }
+
 
         url = "https://api.biziship.ai/saved-freights"
         headers = {

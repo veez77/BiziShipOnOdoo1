@@ -53,6 +53,9 @@
                                 <field name="biziship_origin_zip" placeholder="Zip Code" style="flex: 2; margin-right: 8px;"/>
                                 <field name="biziship_origin_country_id" nolabel="1" placeholder="Country" options="{'no_open': True, 'no_create': True}" domain="[('code', 'in', ('US', 'CA', 'MX'))]" style="flex: 1;"/>
                             </div>
+                            <field name="biziship_origin_contact_name" nolabel="1" colspan="2" placeholder="Contact Name (optional)"/>
+                            <field name="biziship_origin_contact_phone" nolabel="1" colspan="2" placeholder="Contact Phone (optional)"/>
+                            <field name="biziship_origin_contact_email" nolabel="1" colspan="2" placeholder="Contact Email (optional)"/>
                             <group colspan="2" class="mt-2">
                                 <field name="biziship_origin_residential"/>
                                 <field name="biziship_origin_liftgate"/>
@@ -79,6 +82,9 @@
                                 <field name="biziship_dest_zip" placeholder="Zip Code" style="flex: 2; margin-right: 8px;"/>
                                 <field name="biziship_dest_country_id" nolabel="1" placeholder="Country" options="{'no_open': True, 'no_create': True}" domain="[('code', 'in', ('US', 'CA', 'MX'))]" style="flex: 1;"/>
                             </div>
+                            <field name="biziship_dest_contact_name" nolabel="1" colspan="2" placeholder="Contact Name (optional)"/>
+                            <field name="biziship_dest_contact_phone" nolabel="1" colspan="2" placeholder="Contact Phone (optional)"/>
+                            <field name="biziship_dest_contact_email" nolabel="1" colspan="2" placeholder="Contact Email (optional)"/>
                             <group col="4" colspan="2" class="mt-2">
                                 <field name="biziship_dest_appointment" colspan="2"/>
                                 <field name="biziship_dest_residential" colspan="2"/>
@@ -112,6 +118,7 @@
                                 <field name="last_dim_unit" column_invisible="True" />
                                 <field name="computed_freight_class" string="Class" />
                                 <field name="cargo_desc" />
+                                <field name="nmfc" string="NMFC" optional="show" placeholder="NMFC (optional)"/>
                             </tree>
                         </field>
                         

@@ -98,6 +98,53 @@ class BizishipQuoteConfirmWizard(models.TransientModel):
     accessorial_services_text = fields.Text(string="Accessorial Services", compute='_compute_accessorial_services')
     has_accessorials = fields.Boolean(compute='_compute_accessorial_services')
 
+    is_hazmat = fields.Boolean(compute='_compute_is_hazmat')
+    hazmat_contact_name = fields.Char(string='Contact Name')
+    hazmat_contact_phone = fields.Char(string='Contact Phone')
+    hazmat_un_number = fields.Char(string='UN Number')
+    hazmat_proper_shipping_name = fields.Char(string='Proper Shipping Name')
+    hazmat_hazard_class = fields.Selection([
+        ('1', '1'), ('1.1', '1.1'), ('1.2', '1.2'), ('1.3', '1.3'), ('1.3C', '1.3C'), ('1.4', '1.4'), ('1.4C', '1.4C'), ('1.4G', '1.4G'), ('1.4S', '1.4S'), ('1.5', '1.5'), ('1.6', '1.6'), ('2', '2'), ('2.1', '2.1'), ('2.2', '2.2'), ('2.2(5.1)', '2.2(5.1)'), ('2.2(6.1)', '2.2(6.1)'), ('2.3', '2.3'), ('2.3(8)', '2.3(8)'), ('3', '3'), ('3(6.1)', '3(6.1)'), ('3(6.1;8)', '3(6.1;8)'), ('3(8)', '3(8)'), ('4', '4'), ('4.1', '4.1'), ('4.2', '4.2'), ('4.3', '4.3'), ('4.3(6.1)', '4.3(6.1)'), ('5', '5'), ('5.1', '5.1'), ('5.1(6.1,8)', '5.1(6.1,8)'), ('5.1(6.1)', '5.1(6.1)'), ('5.1(8)', '5.1(8)'), ('5.2', '5.2'), ('5.2(8)', '5.2(8)'), ('6', '6'), ('6.1', '6.1'), ('6.1(3)', '6.1(3)'), ('6.1(8,3)', '6.1(8,3)'), ('6.1(8)', '6.1(8)'), ('6.2', '6.2'), ('7', '7'), ('7(2.2)', '7(2.2)'), ('8', '8'), ('8(3)', '8(3)'), ('8(5.1)', '8(5.1)'), ('8(6.1)', '8(6.1)'), ('9', '9'), ('NA', 'NA')
+    ], string='Hazard Class')
+    hazmat_packing_group = fields.Selection([
+        ('I', 'I'), ('II', 'II'), ('III', 'III'), ('NA', 'NA')
+    ], string='Packing Group')
+    hazmat_pieces_packaging = fields.Selection([
+        ('Bag', 'Bag'), ('Bale', 'Bale'), ('Box', 'Box'), ('Bucket', 'Bucket'), ('Bundle', 'Bundle'), ('Can', 'Can'), ('Carton', 'Carton'), ('Case', 'Case'), ('Coil', 'Coil'), ('Crate', 'Crate'), ('Cylinder', 'Cylinder'), ('Drums', 'Drums'), ('Pail', 'Pail'), ('Pieces', 'Pieces'), ('Pallet', 'Pallet'), ('Reel', 'Reel'), ('Roll', 'Roll'), ('Skid', 'Skid'), ('Tube', 'Tube'), ('Tote', 'Tote')
+    ], string='Pieces Packaging')
+
+    is_hazmat_valid = fields.Boolean(compute='_compute_is_hazmat_valid')
+
+    @api.depends('is_hazmat', 'hazmat_contact_name', 'hazmat_contact_phone', 'hazmat_un_number', 'hazmat_proper_shipping_name', 'hazmat_hazard_class', 'hazmat_packing_group', 'hazmat_pieces_packaging')
+    def _compute_is_hazmat_valid(self):
+        for rec in self:
+            if not rec.is_hazmat:
+                rec.is_hazmat_valid = True
+            else:
+                rec.is_hazmat_valid = bool(
+                    rec.hazmat_contact_name and
+                    rec.hazmat_contact_phone and
+                    rec.hazmat_un_number and
+                    rec.hazmat_proper_shipping_name and
+                    rec.hazmat_hazard_class and
+                    rec.hazmat_packing_group and
+                    rec.hazmat_pieces_packaging
+                )
+
+    @api.depends('quote_id.sale_order_id.biziship_extracted_json')
+    def _compute_is_hazmat(self):
+        for rec in self:
+            is_hazmat = False
+            if rec.quote_id and rec.quote_id.sale_order_id and rec.quote_id.sale_order_id.biziship_extracted_json:
+                try:
+                    data = json.loads(rec.quote_id.sale_order_id.biziship_extracted_json)
+                    codes = data.get('accessorial_codes', [])
+                    if 'HAZM' in codes:
+                        is_hazmat = True
+                except Exception:
+                    pass
+            rec.is_hazmat = is_hazmat
+
     @api.depends('quote_id.sale_order_id.biziship_po_number', 'quote_id.sale_order_id.biziship_extracted_json')
     def _compute_po_number(self):
         for rec in self:
@@ -228,6 +275,20 @@ class BizishipQuoteConfirmWizard(models.TransientModel):
             "pickup_date": pickup_date,
             "pickup_note": sale_order.biziship_special_instructions or ""
         }
+
+        if self.is_hazmat:
+            if not all([self.hazmat_contact_name, self.hazmat_contact_phone, self.hazmat_un_number, self.hazmat_proper_shipping_name, self.hazmat_hazard_class, self.hazmat_packing_group, self.hazmat_pieces_packaging]):
+                raise UserError(_("All Hazardous Material Details fields are required."))
+                
+            payload["hazmat_contact_name"] = self.hazmat_contact_name
+            payload["hazmat_contact_phone"] = self.hazmat_contact_phone
+            payload["hazmat_detail"] = {
+                "identificationNumber": self.hazmat_un_number,
+                "properShippingName": self.hazmat_proper_shipping_name,
+                "hazardClass": self.hazmat_hazard_class,
+                "packingGroup": self.hazmat_packing_group,
+                "piecesPackagingType": self.hazmat_pieces_packaging
+            }
 
         _logger.info("BiziShip Booking API Request Headers: %s", headers)
         _logger.info("BiziShip Booking API Request Payload: %s", json.dumps(payload, indent=2))

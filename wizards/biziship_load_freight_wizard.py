@@ -62,6 +62,9 @@ class BizishipLoadFreightWizard(models.TransientModel):
                 self.env['biziship.load.freight.filter.user'].create([{'name': name, 'wizard_id': self.id} for name in user_names])
                 
                 self._apply_filters()
+            elif response.status_code == 401:
+                self.env.user.biziship_token = False
+                self.status_message = "Your BiziShip session has expired. Please reconnect in your User Profile."
             else:
                 self.status_message = f"Failed to fetch freights (Error {response.status_code})"
         except Exception as e:
@@ -168,7 +171,10 @@ class BizishipLoadFreightWizard(models.TransientModel):
         
         try:
             response = requests.get(url, headers=headers, timeout=10)
-            if response.status_code != 200:
+            if response.status_code == 401:
+                self.env.user.biziship_token = False
+                raise UserError(_("Your BiziShip session has expired. Please reconnect in your User Profile."))
+            elif response.status_code != 200:
                 raise UserError(_("Failed to fetch freight details."))
             
             freights = response.json()

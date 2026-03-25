@@ -58,6 +58,11 @@
                     .modal:has(button[name="action_confirm_and_send"].o_disabled) .biziship-quote-help-group {
                         display: none;
                     }
+
+                    /* Force gray line on text inputs in Hazmat section */
+                    .biziship-hazmat-section .o_field_char input {
+                        border-bottom: 1px solid #ccc !important;
+                    }
                 </style>
                 <div class="alert alert-info text-center biziship-quote-help-group" role="alert" style="font-size: 14px;">
                     Please confirm the details below to <b>submit the chosen quote</b>.
@@ -142,6 +147,27 @@
                     </group>
                 </group>
 
+                <group class="biziship-quote-help-group biziship-hazmat-section" invisible="not is_hazmat" style="background-color: #fff3cd; border: 1px solid #ffe69c; border-radius: 4px; padding: 15px; margin-bottom: 15px;">
+                    <div colspan="2" class="mb-2">
+                        <h3 style="color: #856404; margin: 0; font-size: 1.1em; font-weight: bold;">
+                            <i class="fa fa-warning me-2"></i>HAZARDOUS MATERIAL DETAILS
+                        </h3>
+                    </div>
+                    <group string="EMERGENCY CONTACT">
+                        <field name="hazmat_contact_name" string="Contact Name *" required="is_hazmat"/>
+                        <field name="hazmat_contact_phone" string="Contact Phone *" required="is_hazmat"/>
+                    </group>
+                    <group string="CARGO DETAILS (APPLIED TO ALL HAZARDOUS ITEMS)">
+                        <field name="hazmat_un_number" string="UN Number *" placeholder="UN1234" required="is_hazmat"/>
+                        <field name="hazmat_proper_shipping_name" string="Proper Shipping Name *" placeholder="Flammable Liquid" required="is_hazmat"/>
+                        <field name="hazmat_hazard_class" string="Hazard Class *" required="is_hazmat"/>
+                        <field name="hazmat_packing_group" string="Packing Group *" required="is_hazmat"/>
+                        <field name="hazmat_pieces_packaging" string="Pieces Packaging *" required="is_hazmat"/>
+                    </group>
+                    <field name="is_hazmat" invisible="1"/>
+                    <field name="is_hazmat_valid" invisible="1"/>
+                </group>
+
                 <notebook class="biziship-quote-help-group">
                     <page string="Freight Details" name="freight_details">
                         <div class="mb-2 mt-2">
@@ -203,7 +229,9 @@
                     </div>
                 </div>
                 <footer>
-                    <button name="action_confirm_and_send" string="Submit the chosen quote" type="object" class="btn-primary" data-hotkey="q"/>
+                    <button name="action_confirm_and_send" string="Submit the chosen quote" type="object" class="btn-primary" invisible="is_hazmat and not is_hazmat_valid" data-hotkey="q"/>
+                    <!-- Disabled mock button identical to original -->
+                    <button string="Submit the chosen quote" class="btn-primary o_disabled pe-none opacity-50" invisible="not is_hazmat or is_hazmat_valid"/>
                     <button string="Cancel" class="btn-secondary" special="cancel" data-hotkey="z"/>
                 </footer>
             </form>

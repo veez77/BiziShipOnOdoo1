@@ -132,6 +132,103 @@ class SaleOrder(models.Model):
         domain="[('type', '=', 'destination')]"
     )
 
+    biziship_route_map_html = fields.Html(
+        string='Route Map', 
+        compute='_compute_route_map_html', 
+        sanitize=False
+    )
+
+    def _fetch_gateway_maps_key(self):
+        erp_api_key = self.env['ir.config_parameter'].sudo().get_param('biziship.erp_api_key', '')
+        if not erp_api_key: return None
+        import requests
+        from odoo.addons.BiziShip import api_utils
+        url = f"{api_utils.get_biziship_api_url()}/erp/config"
+        try:
+            r = requests.get(url, headers={'X-ERP-API-Key': erp_api_key}, timeout=5)
+            if r.status_code == 200:
+                return r.json().get('PUBLIC_GOOGLE_MAPS_KEY')
+        except Exception:
+            pass
+        return None
+
+    @api.model
+    def biziship_resolve_address(self, order_id, street, city, state_code, zip_code, country_code, prefix):
+        """Resolves raw JS string address components into Odoo database IDs."""
+        res = {}
+        if city:
+            res[f"{prefix}city"] = city
+        if zip_code:
+            res[f"{prefix}zip"] = zip_code
+            
+        country_id = False
+        if country_code:
+            country = self.env['res.country'].search([('code', '=ilike', country_code)], limit=1)
+            if country:
+                country_id = country.id
+                res[f"{prefix}country_id"] = [country.id, country.display_name]
+                
+        if state_code:
+            domain = [('code', '=ilike', state_code)]
+            if country_id:
+                domain.append(('country_id', '=', country_id))
+            state = self.env['res.country.state'].search(domain, limit=1)
+            if state:
+                res[f"{prefix}state_id"] = [state.id, state.display_name]
+                
+        # Call ERP Gateway for Smarty Residential Detection
+        try:
+            from odoo.addons.BiziShip import api_utils
+            import requests
+            import logging
+            _logger = logging.getLogger(__name__)
+            url = f"{api_utils.get_biziship_api_url()}/erp/validate-address"
+            erp_api_key = self.env['ir.config_parameter'].sudo().get_param('biziship.erp_api_key', '')
+            headers = {"X-ERP-API-Key": erp_api_key}
+            payload = {
+                "street": street or "",
+                "city": city or "",
+                "state": state_code or "",
+                "zip": zip_code or ""
+            }
+            _logger.warning("SMARTY PAYLOAD: %s", payload)
+            response = requests.post(url, headers=headers, json=payload, timeout=5)
+            _logger.warning("SMARTY STATUS: %s", response.status_code)
+            
+            if response.status_code == 200:
+                data = response.json()
+                _logger.warning("SMARTY RESPONSE DATA: %s", data)
+                if data.get("rdi") == "Residential":
+                    res[f"{prefix}residential_warning"] = True
+                else:
+                    res[f"{prefix}residential_warning"] = False
+            else:
+                _logger.warning("SMARTY TEXT: %s", response.text)
+        except Exception as e:
+            import logging
+            logging.getLogger(__name__).warning("SMARTY EXCEPTION: %s", e)
+            pass
+            
+        return res
+
+    # Maps JS integration: Smarty Residential validation warnings
+    biziship_origin_residential_warning = fields.Boolean("Origin Residential Warning", default=False)
+    biziship_dest_residential_warning = fields.Boolean("Dest Residential Warning", default=False)
+
+    @api.depends('biziship_origin_address', 'biziship_origin_city', 'biziship_origin_state_id', 'biziship_origin_zip', 'biziship_origin_country_id',
+                 'biziship_dest_address', 'biziship_dest_city', 'biziship_dest_state_id', 'biziship_dest_zip', 'biziship_dest_country_id')
+    def _compute_route_map_html(self):
+        for order in self:
+            # The actual HTML is now generated and served by controllers/main.py
+            # This ensures the browser sends the correct HTTP Referer to Google Maps.
+            iframe_html = f'''
+            <div style="width: 100%; height: 350px; border-radius: 8px; overflow: hidden; border: 1px solid #e0e0e0; display: block; margin-bottom: 20px;">
+                <iframe width="100%" height="100%" frameborder="0" style="border:0;" loading="lazy" src="/biziship/map/{order.id}"></iframe>
+            </div>
+            '''
+            order.biziship_route_map_html = iframe_html
+
+
     @api.onchange('biziship_dest_residential')
     def _onchange_biziship_dest_residential(self):
         if self.biziship_dest_residential:

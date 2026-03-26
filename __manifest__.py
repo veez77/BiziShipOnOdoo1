@@ -26,6 +26,7 @@
     'assets': {
         'web.assets_backend': [
             'BiziShip/static/src/js/biziship_tab_handler.js',
+            'BiziShip/static/src/js/biziship_places_autocomplete.js',
             'BiziShip/static/src/css/biziship_modern.css',
         ],
     },

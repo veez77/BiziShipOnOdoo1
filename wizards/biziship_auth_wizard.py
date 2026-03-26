@@ -27,10 +27,12 @@ class BizishipAuthWizard(models.TransientModel):
         return res
 
     def action_request_pin(self):
+        erp_api_key = self.env['ir.config_parameter'].sudo().get_param('biziship.erp_api_key', '')
         base_url = api_utils.get_biziship_api_url()
-        url = f"{base_url}/auth/login"
+        url = f"{base_url}/erp/auth/login"
         payload = {'email': self.email}
         headers = {
+            "X-ERP-API-Key": erp_api_key,
             "Content-Type": "application/json",
             "X-Client-App": api_utils.BIZISHIP_APP_NAME,
             "X-Client-Version": api_utils.BIZISHIP_MODULE_VERSION,
@@ -64,13 +66,15 @@ class BizishipAuthWizard(models.TransientModel):
             raise UserError(_("Error connecting to BiziShip (%s): %s") % (type(e).__name__, str(e)))
 
     def action_verify_pin(self):
+        erp_api_key = self.env['ir.config_parameter'].sudo().get_param('biziship.erp_api_key', '')
         base_url = api_utils.get_biziship_api_url()
-        url = f"{base_url}/auth/verify-pin"
+        url = f"{base_url}/erp/auth/verify-pin"
         payload = {
             'email': self.email,
             'pin': self.pin
         }
         headers = {
+            "X-ERP-API-Key": erp_api_key,
             "Content-Type": "application/json",
             "X-Client-App": api_utils.BIZISHIP_APP_NAME,
             "X-Client-Version": api_utils.BIZISHIP_MODULE_VERSION,

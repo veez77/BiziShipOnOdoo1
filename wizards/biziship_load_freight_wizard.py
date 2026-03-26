@@ -6,6 +6,8 @@ import logging
 
 _logger = logging.getLogger(__name__)
 
+from odoo.addons.BiziShip import api_utils
+
 class BizishipLoadFreightFilterUser(models.TransientModel):
     _name = 'biziship.load.freight.filter.user'
     _description = 'Load Saved Freight Filter User'
@@ -37,9 +39,13 @@ class BizishipLoadFreightWizard(models.TransientModel):
         if not token:
             self.status_message = "Please connect your BiziShip account in the User settings."
             return
-        
-        url = f"https://api.biziship.ai/saved-freights"
-        headers = {"Authorization": f"Bearer {token}"}
+        erp_api_key = self.env['ir.config_parameter'].sudo().get_param('biziship.erp_api_key', '')
+        base_url = api_utils.get_biziship_api_url()
+        url = f"{base_url}/erp/saved-freights"
+        headers = {
+            "Authorization": f"Bearer {token}",
+            "X-ERP-API-Key": erp_api_key
+        }
         try:
             response = requests.get(url, headers=headers, timeout=10)
             if response.status_code == 200:
@@ -165,9 +171,13 @@ class BizishipLoadFreightWizard(models.TransientModel):
         token = self.env.user.biziship_token
         if not token:
             raise UserError(_("Please connect your BiziShip account first."))
-
-        url = f"https://api.biziship.ai/saved-freights"
-        headers = {"Authorization": f"Bearer {token}"}
+        erp_api_key = self.env['ir.config_parameter'].sudo().get_param('biziship.erp_api_key', '')
+        base_url = api_utils.get_biziship_api_url()
+        url = f"{base_url}/erp/saved-freights"
+        headers = {
+            "Authorization": f"Bearer {token}",
+            "X-ERP-API-Key": erp_api_key
+        }
         
         try:
             response = requests.get(url, headers=headers, timeout=10)

@@ -46,11 +46,11 @@ def get_secrets():
 def get_biziship_api_url():
     """Returns the API URL based on the current environment."""
     if BIZISHIP_ENV == 'PROD':
-        return 'https://api.biziship.ai'
+        return 'https://6k90hxqjwe.execute-api.us-east-1.amazonaws.com/dev'
         
     # Development URL
     secrets = get_secrets()
-    return secrets.get("EMAIL2QUOTE_API_URL", "http://localhost:8000")
+    return secrets.get("EMAIL2QUOTE_API_URL", "https://6k90hxqjwe.execute-api.us-east-1.amazonaws.com/dev")
 
 def get_email2quote_api_key():
     return get_secrets().get("EMAIL2QUOTE_API_KEY", "")

@@ -10,7 +10,6 @@ _logger = logging.getLogger(__name__)
 
 from odoo.addons.BiziShip.api_utils import (
     get_biziship_api_url, 
-    get_email2quote_api_key, 
     BIZISHIP_MODULE_VERSION, 
     BIZISHIP_APP_NAME,
     KG_TO_LBS,
@@ -208,11 +207,11 @@ class BizishipFreightQuoteWizard(models.TransientModel):
                 raise UserError(_("Cargo Line #%s has a missing or zero value. All cargo lines must have a Weight, Length, Width, and Height greater than 0.") % idx)
         
         email2quote_api_url = get_biziship_api_url()
-        email2quote_api_key = get_email2quote_api_key()
+        erp_api_key = self.env['ir.config_parameter'].sudo().get_param('biziship.erp_api_key', '')
         
-        api_url = f"{email2quote_api_url.rstrip('/')}/quote/details"
+        api_url = f"{email2quote_api_url.rstrip('/')}/erp/quote"
         headers = {
-            "X-API-Key": email2quote_api_key,
+            "X-ERP-API-Key": erp_api_key,
             "Content-Type": "application/json",
             "X-User-Email": self.env.user.email or "",
             "X-Client-App": BIZISHIP_APP_NAME,

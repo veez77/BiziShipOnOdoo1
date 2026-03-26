@@ -3,6 +3,8 @@ import json
 from odoo import models, fields, api, _
 from odoo.exceptions import UserError
 
+from odoo.addons.BiziShip import api_utils
+
 class BizishipSaveFreightWizard(models.TransientModel):
     _name = 'biziship.save.freight.wizard'
     _description = 'Save Freight to My Pool'
@@ -101,9 +103,12 @@ class BizishipSaveFreightWizard(models.TransientModel):
         }
 
 
-        url = "https://api.biziship.ai/saved-freights"
+        erp_api_key = self.env['ir.config_parameter'].sudo().get_param('biziship.erp_api_key', '')
+        base_url = api_utils.get_biziship_api_url()
+        url = f"{base_url}/erp/saved-freights"
         headers = {
             "Authorization": f"Bearer {token}",
+            "X-ERP-API-Key": erp_api_key,
             "Content-Type": "application/json"
         }
         payload = {

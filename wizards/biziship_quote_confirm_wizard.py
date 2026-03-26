@@ -28,7 +28,7 @@ ACCESSORIAL_MAPPING = {
     "CNVPU": "Trade Show Pickup"
 }
 
-from odoo.addons.BiziShip.api_utils import get_biziship_api_url, get_email2quote_api_key, BIZISHIP_MODULE_VERSION, BIZISHIP_APP_NAME
+from odoo.addons.BiziShip.api_utils import get_biziship_api_url, BIZISHIP_MODULE_VERSION, BIZISHIP_APP_NAME
 
 
 class BizishipQuoteConfirmWizard(models.TransientModel):
@@ -187,11 +187,11 @@ class BizishipQuoteConfirmWizard(models.TransientModel):
             raise UserError(_("Please provide a PO Number before submitting the quote."))
             
         email2quote_api_url = get_biziship_api_url()
-        email2quote_api_key = get_email2quote_api_key()
+        erp_api_key = self.env['ir.config_parameter'].sudo().get_param('biziship.erp_api_key', '')
         
-        local_api_book_url = f"{email2quote_api_url.rstrip('/')}/book"
+        local_api_book_url = f"{email2quote_api_url.rstrip('/')}/erp/book"
         headers = {
-            "X-API-Key": email2quote_api_key,
+            "X-ERP-API-Key": erp_api_key,
             "Content-Type": "application/json",
             "X-User-Email": self.env.user.email or "",
             "X-Client-App": BIZISHIP_APP_NAME,

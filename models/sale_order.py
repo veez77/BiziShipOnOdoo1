@@ -152,8 +152,11 @@ class SaleOrder(models.Model):
             pass
         return None
 
+
+
     @api.model
     def biziship_resolve_address(self, order_id, street, city, state_code, zip_code, country_code, prefix):
+
         """Resolves raw JS string address components into Odoo database IDs."""
         res = {}
         if city:

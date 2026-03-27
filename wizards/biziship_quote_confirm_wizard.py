@@ -324,6 +324,14 @@ class BizishipQuoteConfirmWizard(models.TransientModel):
             raise UserError(_("Failed to contact Email2Quote booking API.\n\nDetails:\n%s") % error_details)
 
         return {
-            'type': 'ir.actions.client',
-            'tag': 'reload',
+            'type': 'ir.actions.act_window',
+            'res_model': 'sale.order',
+            'res_id': sale_order.id,
+            'views': [(False, 'form')],
+            'target': 'main',
+            'context': {
+                'active_id': sale_order.id,
+                'default_active_tab': 'ltl_freight_quotes',
+                'biziship_booking_success': True,
+            },
         }

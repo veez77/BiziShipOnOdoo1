@@ -402,6 +402,47 @@ class BizishipLoadFreightWizard(models.TransientModel):
                 _logger.info("BiziShip: Creating Cargo Line: %s", json.dumps(payload, indent=2))
                 order.biziship_cargo_line_ids.create(payload)
             
+            # ── Smarty Residential Detection (run automatically after load) ──
+            try:
+                smarty_url = f"{api_utils.get_biziship_api_url()}/erp/validate-address"
+                erp_api_key = self.env['ir.config_parameter'].sudo().get_param('biziship.erp_api_key', '')
+                smarty_headers = {"X-ERP-API-Key": erp_api_key}
+
+                # Origin check
+                origin_state_obj = order.biziship_origin_state_id
+                origin_payload = {
+                    "street": order.biziship_origin_address or "",
+                    "city":   order.biziship_origin_city or "",
+                    "state":  origin_state_obj.code if origin_state_obj else "",
+                    "zip":    order.biziship_origin_zip or "",
+                }
+                r_origin = requests.post(smarty_url, headers=smarty_headers, json=origin_payload, timeout=5)
+                if r_origin.status_code == 200:
+                    origin_rdi = r_origin.json().get("rdi")
+                    order.biziship_origin_residential_warning = (
+                        origin_rdi == "Residential" and not order.biziship_origin_residential
+                    )
+                    _logger.info("BiziShip Smarty Origin RDI: %s", origin_rdi)
+
+                # Destination check
+                dest_state_obj = order.biziship_dest_state_id
+                dest_payload = {
+                    "street": order.biziship_dest_address or "",
+                    "city":   order.biziship_dest_city or "",
+                    "state":  dest_state_obj.code if dest_state_obj else "",
+                    "zip":    order.biziship_dest_zip or "",
+                }
+                r_dest = requests.post(smarty_url, headers=smarty_headers, json=dest_payload, timeout=5)
+                if r_dest.status_code == 200:
+                    dest_rdi = r_dest.json().get("rdi")
+                    order.biziship_dest_residential_warning = (
+                        dest_rdi == "Residential" and not order.biziship_dest_residential
+                    )
+                    _logger.info("BiziShip Smarty Dest RDI: %s", dest_rdi)
+
+            except Exception as e:
+                _logger.warning("BiziShip: Smarty residential check failed after load: %s", e)
+
             return True
         except Exception as e:
             _logger.exception("BiziShip: Error loading freight")

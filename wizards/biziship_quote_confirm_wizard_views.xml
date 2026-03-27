@@ -65,7 +65,7 @@
                     }
                 </style>
                 <div class="alert alert-info text-center biziship-quote-help-group" role="alert" style="font-size: 14px;">
-                    Please confirm the details below to <b>submit the chosen quote</b>.
+                    Please confirm the details below to <b>confirm your booking</b>.
                 </div>
                 
                 <div class="d-flex align-items-center justify-content-between biziship-quote-help-group mb-3">
@@ -229,9 +229,9 @@
                     </div>
                 </div>
                 <footer>
-                    <button name="action_confirm_and_send" string="Submit the chosen quote" type="object" class="btn-primary" invisible="is_hazmat and not is_hazmat_valid" data-hotkey="q"/>
+                    <button name="action_confirm_and_send" string="Confirm Booking" type="object" class="btn-primary" invisible="is_hazmat and not is_hazmat_valid" data-hotkey="q"/>
                     <!-- Disabled mock button identical to original -->
-                    <button string="Submit the chosen quote" class="btn-primary o_disabled pe-none opacity-50" invisible="not is_hazmat or is_hazmat_valid"/>
+                    <button string="Confirm Booking" class="btn-primary o_disabled pe-none opacity-50" invisible="not is_hazmat or is_hazmat_valid"/>
                     <button string="Cancel" class="btn-secondary" special="cancel" data-hotkey="z"/>
                 </footer>
             </form>

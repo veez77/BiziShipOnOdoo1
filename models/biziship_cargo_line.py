@@ -4,9 +4,33 @@ from odoo.addons.BiziShip.api_utils import KG_TO_LBS, CM_TO_IN, M_TO_IN, FT_TO_I
 class BizishipSaleCargoLine(models.Model):
     _name = 'biziship.sale.cargo.line'
     _description = 'BiziShip Sale Cargo Line'
+    _order = 'sequence, id'
+    _rec_name = 'display_name'
 
     sale_order_id = fields.Many2one('sale.order', string='Sale Order', required=True, ondelete='cascade')
-    
+    sequence = fields.Integer(string="Sequence", default=10)
+    display_name = fields.Char(compute='_compute_display_name')
+
+    @api.depends('sale_order_id.biziship_cargo_line_ids', 'sequence')
+    def _compute_display_name(self):
+        for rec in self:
+            if not rec.sale_order_id:
+                rec.display_name = "New Item"
+                continue
+            # Find the position of this record among all lines of the same order
+            lines = rec.sale_order_id.biziship_cargo_line_ids.sorted('sequence')
+            try:
+                # Using list index to find the 1-based position
+                pos = list(lines._ids).index(rec.id) + 1 if rec.id in lines._ids else len(lines)
+                # If it's a new record in cache, it might not have an ID yet in some cases
+                if rec.id in lines._ids:
+                    rec.display_name = f"Item #{pos}"
+                else:
+                    # Fallback for new unsaved records
+                    rec.display_name = f"Item #{len(lines)}" 
+            except ValueError:
+                rec.display_name = "Item"
+
     packaging_type = fields.Selection([
         ('pallet', 'Pallet'),
         ('crate', 'Crate'),
@@ -18,58 +42,57 @@ class BizishipSaleCargoLine(models.Model):
     
     weight = fields.Float(string="Weight", default=0.0, required=True)
     weight_unit = fields.Selection([('lbs', 'lbs'), ('kg', 'kg')], string="Weight Unit", default='lbs', required=True)
-    last_weight_unit = fields.Selection([('lbs', 'lbs'), ('kg', 'kg')], default='lbs')
+    
+    # Technical trackers for immediate conversion (not stored in DB)
+    last_weight_unit = fields.Selection([('lbs', 'lbs'), ('kg', 'kg')], store=False)
+    last_dim_unit = fields.Selection([('in', 'in'), ('cm', 'cm'), ('m', 'm'), ('ft', 'ft')], store=False)
 
     @api.onchange('weight_unit')
     def _onchange_weight_unit(self):
         for rec in self:
-            # Fallback for existing records where last_weight_unit is False
-            last = rec.last_weight_unit
-            if not last:
-                last = rec._origin.weight_unit if getattr(rec, '_origin', False) and rec._origin.weight_unit else 'lbs'
+            # First-time initialization from saved state if tracker is empty
+            if not rec.last_weight_unit:
+                rec.last_weight_unit = rec._origin.weight_unit or 'lbs'
                 
-            if last != rec.weight_unit:
-                if rec.weight:
-                    if rec.weight_unit == 'kg' and last == 'lbs':
-                        rec.weight = round(rec.weight / KG_TO_LBS, 2)
-                    elif rec.weight_unit == 'lbs' and last == 'kg':
-                        rec.weight = round(rec.weight * KG_TO_LBS, 2)
+            if rec.last_weight_unit != rec.weight_unit and rec.weight:
+                if rec.weight_unit == 'kg' and rec.last_weight_unit == 'lbs':
+                    rec.weight = round(rec.weight / KG_TO_LBS, 2)
+                elif rec.weight_unit == 'lbs' and rec.last_weight_unit == 'kg':
+                    rec.weight = round(rec.weight * KG_TO_LBS, 2)
+            
+            # Update tracker for the NEXT change in the same session
             rec.last_weight_unit = rec.weight_unit
     
     length = fields.Float(string="Length", default=48.0, required=True)
     width = fields.Float(string="Width", default=40.0, required=True)
     height = fields.Float(string="Height", default=48.0, required=True)
     dim_unit = fields.Selection([('in', 'in'), ('cm', 'cm'), ('m', 'm'), ('ft', 'ft')], string="Dimension Unit", default='in', required=True)
-    last_dim_unit = fields.Selection([('in', 'in'), ('cm', 'cm'), ('m', 'm'), ('ft', 'ft')], default='in')
 
     @api.onchange('dim_unit')
     def _onchange_dim_unit(self):
         for rec in self:
-            last = rec.last_dim_unit
-            if not last:
-                last = rec._origin.dim_unit if getattr(rec, '_origin', False) and rec._origin.dim_unit else 'in'
+            # First-time initialization from saved state if tracker is empty
+            if not rec.last_dim_unit:
+                rec.last_dim_unit = rec._origin.dim_unit or 'in'
                 
-            if last != rec.dim_unit:
+            if rec.last_dim_unit != rec.dim_unit:
                 def convert_dim(val, from_u, to_u):
                     if not val: return val
-                    # Convert to base unit: inches
                     in_val = val
                     if from_u == 'cm': in_val = val * CM_TO_IN
                     elif from_u == 'm': in_val = val * M_TO_IN
                     elif from_u == 'ft': in_val = val * FT_TO_IN
-                    
-                    # Convert from inches to target unit
                     out_val = in_val
                     if to_u == 'cm': out_val = in_val / CM_TO_IN
                     elif to_u == 'm': out_val = in_val / M_TO_IN
                     elif to_u == 'ft': out_val = in_val / FT_TO_IN
-                    
                     return round(out_val, 2)
                     
-                rec.length = convert_dim(rec.length, last, rec.dim_unit)
-                rec.width = convert_dim(rec.width, last, rec.dim_unit)
-                rec.height = convert_dim(rec.height, last, rec.dim_unit)
-                
+                rec.length = convert_dim(rec.length, rec.last_dim_unit, rec.dim_unit)
+                rec.width = convert_dim(rec.width, rec.last_dim_unit, rec.dim_unit)
+                rec.height = convert_dim(rec.height, rec.last_dim_unit, rec.dim_unit)
+            
+            # Update tracker for the NEXT change in the same session
             rec.last_dim_unit = rec.dim_unit
     
     freight_class = fields.Selection([
@@ -90,13 +113,29 @@ class BizishipSaleCargoLine(models.Model):
     
     is_class_overridden = fields.Boolean(compute='_compute_is_class_overridden')
     nmfc = fields.Char(string="NMFC")
+    hazmat = fields.Boolean(string="Hazardous Material", default=False)
+    stackable = fields.Boolean(string="Stackable", default=False)
+    used = fields.Boolean(string="Used / Reconditioned", default=False)
+    machinery = fields.Boolean(string="Machinery", default=False)
+    nmfc_suggestion_data = fields.Text(string="NMFC Suggestion Data")
     cargo_desc = fields.Char(string="Cargo Description", default="General Freight")
+
+    def action_biziship_nmfc_search(self):
+        """Placeholder for NMFC Suggestion logic."""
+        return True
 
     @api.constrains('pieces')
     def _check_pieces(self):
         for rec in self:
             if rec.pieces <= 0:
                 raise models.ValidationError("Pieces must be greater than 0.")
+
+    @api.onchange('weight', 'weight_unit', 'length', 'width', 'height', 'dim_unit', 'pieces')
+    def _onchange_cargo_recompute_class(self):
+        """Standard density-based class re-calculation logic."""
+        self._compute_computed_class()
+        if self.computed_freight_class:
+            self.freight_class = self.computed_freight_class
 
     @api.depends('weight', 'weight_unit', 'length', 'width', 'height', 'dim_unit', 'pieces')
     def _compute_computed_class(self):

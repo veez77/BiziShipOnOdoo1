@@ -25,7 +25,7 @@ class BizishipLoadFreightWizard(models.TransientModel):
     search_name = fields.Char(string='Search freight name...')
     filter_user_ids = fields.One2many('biziship.load.freight.filter.user', 'wizard_id')
     filter_user_id = fields.Many2one('biziship.load.freight.filter.user', string='Filter by person', domain="[('wizard_id', '=', id)]")
-    raw_freights_json = fields.Text(string='Raw Data Cache', invisible=True)
+    raw_freights_json = fields.Text(string='Raw Data Cache')
     status_message = fields.Char(string='Status', readonly=True)
 
     @api.model

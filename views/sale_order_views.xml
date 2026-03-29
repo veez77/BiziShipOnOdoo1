@@ -39,15 +39,15 @@
                     <field name="biziship_is_connected" invisible="1"/>
                     <field name="biziship_connected_user_name" invisible="1"/>
                     <field name="biziship_last_fetch_nonce" invisible="1"/>
-                    <div class="alert alert-info py-1 mb-2 d-flex justify-content-between align-items-center" style="border-radius: 4px; border-left: 4px solid #00b14f;" invisible="not biziship_is_connected">
+                    <div class="alert alert-info py-1 mb-2 d-flex justify-content-between align-items-center" role="status" style="border-radius: 4px; border-left: 4px solid #00b14f;" invisible="not biziship_is_connected">
                         <div class="d-flex align-items-center">
-                            <i class="fa fa-user-circle text-primary me-2" style="font-size: 1.1rem;"/>
+                            <i class="fa fa-user-circle text-primary me-2" title="User" style="font-size: 1.1rem;"/>
                             <span>Logged in BiziShip as: <field name="biziship_connected_user_name" class="fw-bold ms-1"/></span>
                         </div>
                         <span class="badge rounded-pill bg-success-light text-success fw-bold px-3" style="font-size: 11px; border: 1px solid #00b14f;">ACCOUNT CONNECTED</span>
                     </div>
-                    <div class="alert alert-warning py-1 mb-2" invisible="biziship_is_connected">
-                        <i class="fa fa-exclamation-triangle me-1"/> 
+                    <div class="alert alert-warning py-1 mb-2" role="alert" invisible="biziship_is_connected">
+                        <i class="fa fa-exclamation-triangle me-1" title="Warning"/> 
                         <span>BiziShip account not connected. Please <button name="%(action_biziship_auth_wizard)d" string="Connect" type="action" class="btn btn-link p-0 align-baseline"/> to enable all features.</span>
                     </div>
                     <group string="Logistics Details">
@@ -83,8 +83,8 @@
                                 <field name="biziship_origin_liftgate"/>
                                 <field name="biziship_origin_limited_access"/>
                             </group>
-                            <div colspan="2" class="alert alert-warning py-1 mt-1 mb-2 d-flex align-items-center" invisible="not biziship_origin_residential_warning or biziship_origin_residential" style="font-size: 13px;">
-                                <i class="fa fa-exclamation-triangle me-2"></i>
+                            <div colspan="2" class="alert alert-warning py-1 mt-1 mb-2 d-flex align-items-center" role="alert" invisible="not biziship_origin_residential_warning or biziship_origin_residential" style="font-size: 13px;">
+                                <i class="fa fa-exclamation-triangle me-2" title="Warning"></i>
                                 <span>This address appears to be residential. Consider checking "Residential Pickup/Delivery".</span>
                             </div>
                             <div class="d-flex justify-content-between align-items-center mt-2 w-100" colspan="2">
@@ -120,8 +120,8 @@
                                 <field name="biziship_dest_liftgate" colspan="2"/>
                                 <field name="biziship_dest_hazmat" colspan="2"/>
                             </group>
-                            <div colspan="2" class="alert alert-warning py-1 mt-1 mb-2 d-flex align-items-center" invisible="not biziship_dest_residential_warning or biziship_dest_residential" style="font-size: 13px;">
-                                <i class="fa fa-exclamation-triangle me-2"></i>
+                            <div colspan="2" class="alert alert-warning py-1 mt-1 mb-2 d-flex align-items-center" role="alert" invisible="not biziship_dest_residential_warning or biziship_dest_residential" style="font-size: 13px;">
+                                <i class="fa fa-exclamation-triangle me-2" title="Warning"></i>
                                 <span>This address appears to be residential. Consider checking "Residential Pickup/Delivery".</span>
                             </div>
                             <div class="d-flex justify-content-between align-items-center mt-2 w-100" colspan="2">
@@ -130,28 +130,138 @@
                             </div>
                         </group>
                     </group>
-                    <group string="Cargo Details">
+                    <group>
                         <div colspan="2" class="d-flex align-items-center o_horizontal_separator mb-2 mt-0">
                             <span class="fw-bold">CARGO DETAILS</span>
                         </div>
                         
-                        <field name="biziship_cargo_line_ids" nolabel="1" colspan="2" context="{'default_sale_order_id': id}">
-                            <tree editable="bottom" class="biziship-cargo-tree">
-                                <field name="packaging_type" />
-                                <field name="pieces" decoration-danger="pieces == 0" />
-                                <field name="weight" decoration-danger="weight == 0" />
-                                <field name="weight_unit" />
-                                <field name="last_weight_unit" column_invisible="True" />
-                                <field name="length" decoration-danger="length == 0" />
-                                <field name="width" decoration-danger="width == 0" />
-                                <field name="height" decoration-danger="height == 0" />
-                                <field name="dim_unit" />
-                                <field name="last_dim_unit" column_invisible="True" />
-                                <field name="computed_freight_class" string="Class" />
-                                <field name="cargo_desc" />
-                                <field name="nmfc" string="NMFC" optional="show" placeholder="NMFC (optional)"/>
-                            </tree>
+                        <field name="biziship_cargo_line_ids" nolabel="1" colspan="2" context="{'default_sale_order_id': id}" mode="kanban">
+                            <kanban class="biziship-cargo-kanban">
+                                <templates>
+                                     <t t-name="kanban-box">
+                                        <div class="biziship-cargo-card oe_kanban_global_click">
+                                            <a t-if="!read_only_mode" type="delete" class="biziship-cargo-delete" title="Delete Cargo Item"><i class="fa fa-trash-o" title="Delete Icon"/></a>
+                                            
+                                            <div class="biziship-cargo-item-label">
+                                                <field name="display_name" class="fw-bold text-primary"/>
+                                            </div>
+
+                                            <!-- Row 1: Key Details -->
+                                            <div class="biziship-cargo-row-details">
+                                                <field name="packaging_type" class="fw-bold me-3" style="max-width: 100px;"/>
+                                                <span class="text-muted">Pcs:</span>
+                                                <field name="pieces" class="fw-bold me-3"/>
+                                                <span class="text-muted">Weight:</span>
+                                                <field name="weight" class="fw-bold"/>
+                                                <field name="weight_unit" class="me-3" style="max-width: 60px;"/>
+                                                <span class="text-muted">L</span>
+                                                <field name="length" style="max-width: 65px;"/>
+                                                <span class="text-muted ms-1">x W</span>
+                                                <field name="width" style="max-width: 65px;"/>
+                                                <span class="text-muted ms-1">x H</span>
+                                                <field name="height" style="max-width: 65px;"/>
+                                                <field name="dim_unit" class="ms-1" style="max-width: 55px;"/>
+                                            </div>
+
+                                            <!-- Row 2: Class -->
+                                            <div class="biziship-cargo-row-class">
+                                                <span>Class:</span>
+                                                <field name="freight_class" class="ms-1 fw-bold"/>
+                                                <field name="is_class_overridden" invisible="1"/>
+                                                <span invisible="not is_class_overridden" class="ms-3 text-muted fw-normal">
+                                                    Calculated: <field name="computed_freight_class"/>
+                                                </span>
+                                            </div>
+
+                                            <!-- Row 3: Flags -->
+                                            <div class="biziship-cargo-row-flags py-1 mt-1">
+                                                <div class="biziship-cargo-flag-group">
+                                                    <field name="hazmat" title="Hazardous Material"/><span>Hazmat</span>
+                                                </div>
+                                                <div class="biziship-cargo-flag-group">
+                                                    <field name="stackable" title="Stackable Cargo"/><span>Stackable</span>
+                                                </div>
+                                                <div class="biziship-cargo-flag-group">
+                                                    <field name="used" title="Used or Reconditioned"/><span>Used / Reconditioned</span>
+                                                </div>
+                                                <div class="biziship-cargo-flag-group">
+                                                    <field name="machinery" title="Machinery"/><span>Machinery</span>
+                                                </div>
+                                            </div>
+
+                                            <!-- Row 4: Description & NMFC -->
+                                            <div class="biziship-cargo-row-desc">
+                                                <div class="biziship-cargo-desc-input">
+                                                    <field name="cargo_desc" placeholder="Cargo Description"/>
+                                                </div>
+                                                <div class="biziship-cargo-nmfc-box">
+                                                    <field name="nmfc" placeholder="NMFC (optional)"/>
+                                                </div>
+                                                <button name="action_biziship_nmfc_search" type="object" class="btn btn-sm btn-link p-0" title="Suggest NMFC">
+                                                    <i class="fa fa-star text-primary" style="font-size: 1.2em;"/>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </t>
+                                </templates>
+                            </kanban>
+                                    <form delete="0" class="biziship-cargo-form">
+                                <sheet>
+                                    <div class="biziship-cargo-card">
+                                        <!-- Header for Item #X -->
+                                        <div class="biziship-cargo-item-label mb-3">
+                                            <field name="display_name" readonly="1" class="fw-bold text-primary" style="font-size: 1.4em;"/>
+                                            <field name="last_weight_unit" invisible="1"/>
+                                            <field name="last_dim_unit" invisible="1"/>
+                                        </div>
+                                        
+                                        <!-- Row 1: Key Details -->
+                                            <div class="biziship-cargo-row-details mb-4" style="white-space: nowrap; display: flex; align-items: baseline;">
+                                                <field name="packaging_type" class="me-3" style="width: 100px;"/>
+                                                <span class="me-1">Pcs:</span>
+                                                <field name="pieces" placeholder="Pcs" class="me-3" style="width: 65px;"/>
+                                                <span class="me-1">Weight:</span>
+                                                <field name="weight" placeholder="Weight" style="width: 110px;"/>
+                                                <field name="weight_unit" class="me-3" style="width: 60px;"/>
+                                                <span class="me-1">L</span><field name="length" style="width: 85px;"/>
+                                                <span class="ms-1 text-muted">x</span> <span class="ms-1">W</span><field name="width" style="width: 85px;"/>
+                                                <span class="ms-1 text-muted">x</span> <span class="ms-1">H</span><field name="height" style="width: 85px;"/>
+                                                <field name="dim_unit" class="ms-2" style="width: 70px;"/>
+                                            </div>
+                                        <div class="biziship-cargo-row-class mb-4">
+                                            <span>Class:</span>
+                                            <field name="freight_class" class="oe_inline fw-bold ms-1"/>
+                                            <field name="is_class_overridden" invisible="1"/>
+                                            <span class="text-muted ms-3" invisible="not is_class_overridden">
+                                                Calculated: <field name="computed_freight_class" readonly="1" class="oe_inline"/>
+                                            </span>
+                                        </div>
+                                        <div class="biziship-cargo-row-flags mb-4">
+                                            <div class="biziship-cargo-flag-group">
+                                                <field name="hazmat"/><span>Hazmat</span>
+                                            </div>
+                                            <div class="biziship-cargo-flag-group">
+                                                <field name="stackable"/><span>Stackable</span>
+                                            </div>
+                                            <div class="biziship-cargo-flag-group">
+                                                <field name="used"/><span>Used / Reconditioned</span>
+                                            </div>
+                                            <div class="biziship-cargo-flag-group">
+                                                <field name="machinery"/><span>Machinery</span>
+                                            </div>
+                                        </div>
+                                        <div class="biziship-cargo-row-desc">
+                                            <field name="cargo_desc" placeholder="Cargo Description" class="flex-grow-1"/>
+                                            <field name="nmfc" placeholder="NMFC (optional)" style="width: 200px;"/>
+                                        </div>
+                                    </div>
+                                </sheet>
+                            </form>
                         </field>
+
+                        <div colspan="2" class="mt-2 text-start">
+                            <button name="action_add_cargo_line" type="object" string="Add a line" class="btn btn-secondary biziship-btn-add-line"/>
+                        </div>
                         
                         <group name="cargo_footer" col="6" class="mt-2 mt-md-0">
                             <group colspan="4">
@@ -213,10 +323,20 @@
                             }
 
                             /* Trigger: When Odoo disables the form or button during RPC call */
+                            .biziship-fetch-progress-container {
+                                display: block;
+                                opacity: 0;
+                                visibility: hidden;
+                                transition: opacity 0.3s ease, visibility 0.3s ease;
+                                transition-delay: 0s;
+                            }
+
                             .o_form_view:has(button[name="action_biziship_fetch_live_quotes"]:disabled) .biziship-fetch-progress-container,
                             .o_form_view:has(button[name="action_biziship_fetch_live_quotes"].disabled) .biziship-fetch-progress-container,
                             .o_form_view:has(button[name="action_biziship_fetch_live_quotes"].o_disabled) .biziship-fetch-progress-container {
-                                display: block;
+                                opacity: 1;
+                                visibility: visible;
+                                transition-delay: 0.8s; /* Only show if disabled for more than 0.8s */
                             }
                             .o_form_view:has(button[name="action_biziship_fetch_live_quotes"]:disabled) .biziship-fetch-progress-bar,
                             .o_form_view:has(button[name="action_biziship_fetch_live_quotes"].disabled) .biziship-fetch-progress-bar,
@@ -271,7 +391,7 @@
                     </div>
                     <!-- End BiziShip Branded Header -->
 
-                    <div class="alert alert-info py-1 mb-2 d-flex justify-content-between align-items-center" style="border-radius: 4px; border-left: 4px solid #00b14f;" invisible="not biziship_is_connected">
+                    <div class="alert alert-info py-1 mb-2 d-flex justify-content-between align-items-center" role="status" style="border-radius: 4px; border-left: 4px solid #00b14f;" invisible="not biziship_is_connected">
                         <div class="d-flex align-items-center">
                             <i class="fa fa-user-circle text-primary me-2" style="font-size: 1.1rem;"/>
                             <span>Logged in BiziShip as: <field name="biziship_connected_user_name" class="fw-bold ms-1"/></span>

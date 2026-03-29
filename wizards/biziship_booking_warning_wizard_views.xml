@@ -59,7 +59,7 @@
                 <field name="quote_id" invisible="1"/>
                 <div class="p-0 m-0">
                     <div class="biziship-warning-header">
-                        <span class="fa fa-exclamation-triangle mr-3" style="font-size: 24px; margin-right: 15px;"></span>
+                        <span class="fa fa-exclamation-triangle mr-3" title="Warning Icon" style="font-size: 24px; margin-right: 15px;"></span>
                         <h2 style="margin: 0; color: white; font-weight: bold; font-size: 20px;">Live Freight Booking</h2>
                     </div>
                     

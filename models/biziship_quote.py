@@ -15,7 +15,7 @@ class BizishipQuote(models.Model):
     transit_days = fields.Integer(string='Transit Days')
     delivery_date = fields.Datetime(string='Delivery Date')
     total_charge = fields.Float(string='Total Charge')
-    currency = fields.Char(string='Currency', default='USD')
+    currency = fields.Char(string='Currency Code', default='USD')
     currency_id = fields.Many2one(related='sale_order_id.currency_id')
     quote_id_ref = fields.Char(string="Quote ID Ref") # Changed string from 'Quote ID' to 'Quote ID Ref'
 

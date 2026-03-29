@@ -35,6 +35,27 @@ class SaleOrder(models.Model):
     biziship_po_number = fields.Char(string="PO Number")
     biziship_last_fetch_nonce = fields.Char(string='Last Fetch Nonce', readonly=True, copy=False)
 
+    def action_add_cargo_line(self):
+        """Adds a blank cargo line to the current sale order."""
+        self.ensure_one()
+        # Find the next sequence number (max + 10)
+        max_seq = max(self.biziship_cargo_line_ids.mapped('sequence') or [0])
+        next_seq = max_seq + 10
+        self.env['biziship.sale.cargo.line'].create({
+            'sale_order_id': self.id,
+            'sequence': next_seq,
+            'packaging_type': 'pallet',
+            'pieces': 1,
+            'weight': 0.0,
+            'weight_unit': 'lbs',
+            'length': 48.0,
+            'width': 40.0,
+            'height': 48.0,
+            'dim_unit': 'in',
+            'cargo_desc': 'General Freight'
+        })
+        return True
+
     def _compute_biziship_connection_status(self):
         for order in self:
             user = self.env.user

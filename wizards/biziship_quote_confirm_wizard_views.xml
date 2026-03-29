@@ -183,7 +183,6 @@
                                 <field name="width" string="W"/>
                                 <field name="height" string="H"/>
                                 <field name="dim_unit" nolabel="1"/>
-                                <field name="last_dim_unit" column_invisible="True"/>
                                 <field name="cargo_desc" string="DESCRIPTION"/>
                                 <field name="computed_freight_class" string="CLASS"/>
                                 <field name="nmfc" string="NMFC" optional="show"/>

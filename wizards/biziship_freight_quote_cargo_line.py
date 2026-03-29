@@ -18,58 +18,50 @@ class BizishipQuoteCargoLine(models.TransientModel):
     
     weight = fields.Float(string="Weight", default=0.0, required=True)
     weight_unit = fields.Selection([('lbs', 'lbs'), ('kg', 'kg')], string="Weight Unit", default='lbs', required=True)
-    last_weight_unit = fields.Selection([('lbs', 'lbs'), ('kg', 'kg')], default='lbs')
+    
+    # Technical trackers for immediate conversion
+    last_weight_unit = fields.Selection([('lbs', 'lbs'), ('kg', 'kg')], store=False)
+    last_dim_unit = fields.Selection([('in', 'in'), ('cm', 'cm'), ('m', 'm'), ('ft', 'ft')], store=False)
 
     @api.onchange('weight_unit')
     def _onchange_weight_unit(self):
         for rec in self:
-            # Fallback for existing records where last_weight_unit is False
-            last = rec.last_weight_unit
-            if not last:
-                last = rec._origin.weight_unit if getattr(rec, '_origin', False) and rec._origin.weight_unit else 'lbs'
+            if not rec.last_weight_unit:
+                rec.last_weight_unit = rec._origin.weight_unit or 'lbs'
                 
-            if last != rec.weight_unit:
-                if rec.weight:
-                    if rec.weight_unit == 'kg' and last == 'lbs':
-                        rec.weight = round(rec.weight / KG_TO_LBS, 2)
-                    elif rec.weight_unit == 'lbs' and last == 'kg':
-                        rec.weight = round(rec.weight * KG_TO_LBS, 2)
+            if rec.last_weight_unit != rec.weight_unit and rec.weight:
+                if rec.weight_unit == 'kg' and rec.last_weight_unit == 'lbs':
+                    rec.weight = round(rec.weight / KG_TO_LBS, 2)
+                elif rec.weight_unit == 'lbs' and rec.last_weight_unit == 'kg':
+                    rec.weight = round(rec.weight * KG_TO_LBS, 2)
             rec.last_weight_unit = rec.weight_unit
     
     length = fields.Float(string="Length", default=48.0, required=True)
     width = fields.Float(string="Width", default=40.0, required=True)
     height = fields.Float(string="Height", default=48.0, required=True)
     dim_unit = fields.Selection([('in', 'in'), ('cm', 'cm'), ('m', 'm'), ('ft', 'ft')], string="Dimension Unit", default='in', required=True)
-    last_dim_unit = fields.Selection([('in', 'in'), ('cm', 'cm'), ('m', 'm'), ('ft', 'ft')], default='in')
-
     @api.onchange('dim_unit')
     def _onchange_dim_unit(self):
         for rec in self:
-            last = rec.last_dim_unit
-            if not last:
-                last = rec._origin.dim_unit if getattr(rec, '_origin', False) and rec._origin.dim_unit else 'in'
+            if not rec.last_dim_unit:
+                rec.last_dim_unit = rec._origin.dim_unit or 'in'
                 
-            if last != rec.dim_unit:
+            if rec.last_dim_unit != rec.dim_unit:
                 def convert_dim(val, from_u, to_u):
                     if not val: return val
-                    # Convert to base unit: inches
                     in_val = val
                     if from_u == 'cm': in_val = val * CM_TO_IN
                     elif from_u == 'm': in_val = val * M_TO_IN
                     elif from_u == 'ft': in_val = val * FT_TO_IN
-                    
-                    # Convert from inches to target unit
                     out_val = in_val
                     if to_u == 'cm': out_val = in_val / CM_TO_IN
                     elif to_u == 'm': out_val = in_val / M_TO_IN
                     elif to_u == 'ft': out_val = in_val / FT_TO_IN
-                    
                     return round(out_val, 2)
                     
-                rec.length = convert_dim(rec.length, last, rec.dim_unit)
-                rec.width = convert_dim(rec.width, last, rec.dim_unit)
-                rec.height = convert_dim(rec.height, last, rec.dim_unit)
-                
+                rec.length = convert_dim(rec.length, rec.last_dim_unit, rec.dim_unit)
+                rec.width = convert_dim(rec.width, rec.last_dim_unit, rec.dim_unit)
+                rec.height = convert_dim(rec.height, rec.last_dim_unit, rec.dim_unit)
             rec.last_dim_unit = rec.dim_unit
     
     freight_class = fields.Selection([

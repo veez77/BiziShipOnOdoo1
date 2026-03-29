@@ -1,4 +1,5 @@
 from odoo import models, fields, api
+import json
 from odoo.addons.BiziShip.api_utils import KG_TO_LBS, CM_TO_IN, M_TO_IN, FT_TO_IN, convert_to_lbs
 
 class BizishipSaleCargoLine(models.Model):
@@ -119,10 +120,97 @@ class BizishipSaleCargoLine(models.Model):
     machinery = fields.Boolean(string="Machinery", default=False)
     nmfc_suggestion_data = fields.Text(string="NMFC Suggestion Data")
     cargo_desc = fields.Char(string="Cargo Description", default="General Freight")
+    
+    # NMFC Suggestion Fields
+    nmfc_suggested_code = fields.Char(string="Suggested NMFC")
+    nmfc_suggestion_confidence = fields.Float(string="Suggestion Confidence")
+    nmfc_suggestion_label = fields.Selection([
+        ('high', 'High'),
+        ('medium', 'Medium'),
+        ('low', 'Low')
+    ], string="Suggestion Label")
+    nmfc_suggestion_rationale = fields.Text(string="Suggestion Rationale")
+    nmfc_applied_desc = fields.Char(string="Applied Description") # To detect staleness
+    nmfc_alternative_json = fields.Text(string="Alternative Suggestions JSON")
+    nmfc_is_stale = fields.Boolean(compute='_compute_nmfc_is_stale')
+    is_processing = fields.Boolean(string="Processing", default=False, store=False)
 
-    def action_biziship_nmfc_search(self):
-        """Placeholder for NMFC Suggestion logic."""
-        return True
+    @api.depends('nmfc', 'cargo_desc', 'nmfc_applied_desc')
+    def _compute_nmfc_is_stale(self):
+        for rec in self:
+            rec.nmfc_is_stale = bool(rec.nmfc and rec.nmfc_applied_desc and rec.cargo_desc != rec.nmfc_applied_desc)
+
+    def action_biziship_nmfc_suggest(self):
+        """Proxies call to ERP Gateway /erp/nmfc/suggest."""
+        self.ensure_one()
+        from odoo.addons.BiziShip import api_utils
+        import requests
+        import logging
+        _logger = logging.getLogger(__name__)
+
+        api_url = f"{api_utils.get_biziship_api_url().rstrip('/')}/erp/nmfc/suggest"
+        erp_api_key = self.env['ir.config_parameter'].sudo().get_param('biziship.erp_api_key', '')
+        
+        headers = {
+            "X-ERP-API-Key": erp_api_key,
+            "Content-Type": "application/json",
+        }
+
+        # Convert dimensions to inches for the API
+        dims = {
+            "length": round(api_utils.convert_to_inches(self.length, self.dim_unit), 2),
+            "width": round(api_utils.convert_to_inches(self.width, self.dim_unit), 2),
+            "height": round(api_utils.convert_to_inches(self.height, self.dim_unit), 2),
+        }
+
+        # Collect flags
+        flags = []
+        if self.hazmat: flags.append("hazmat")
+        if self.used: flags.append("used")
+        if self.machinery: flags.append("machinery")
+
+        payload = {
+            "commodityDescription": self.cargo_desc or "",
+            "handlingUnit": self.packaging_type or "pallet",
+            "pieces": self.pieces or 1,
+            "weight": round(api_utils.convert_to_lbs(self.weight, self.weight_unit), 2),
+            "dimensions": dims,
+            "calculatedClass": self.computed_freight_class or self.freight_class or "50",
+            "flags": flags
+        }
+
+        try:
+            _logger.info("NMFC Suggest Request: %s", json.dumps(payload))
+            response = requests.post(api_url, headers=headers, json=payload, timeout=10)
+            if response.status_code == 200:
+                data = response.json()
+                _logger.info("NMFC Suggest Response: %s", json.dumps(data))
+                
+                self.write({
+                    'nmfc_suggested_code': data.get('suggestedNmfc'),
+                    'nmfc_suggestion_confidence': data.get('confidence'),
+                    'nmfc_suggestion_label': data.get('confidenceLabel'),
+                    'nmfc_suggestion_rationale': data.get('rationale'),
+                    'nmfc_alternative_json': json.dumps(data.get('alternativeSuggestions', []))
+                })
+                
+                # If HIGH confidence, auto-apply unless user manually edited it? 
+                # Prompt says: "HIGH: Auto-fill NMFC silently (no user action needed)"
+                # "Do NOT re-suggest if the user has manually typed into the NMFC field."
+                # We'll handle the "manually typed" check in JS mostly, but for this proxy call:
+                if data.get('confidenceLabel') == 'high' and data.get('suggestedNmfc'):
+                    self.write({
+                        'nmfc': data.get('suggestedNmfc'),
+                        'nmfc_applied_desc': self.cargo_desc
+                    })
+                
+                return data
+            else:
+                _logger.warning("NMFC Suggest Error: %s - %s", response.status_code, response.text)
+        except Exception as e:
+            _logger.error("NMFC Suggest Exception: %s", str(e))
+            
+        return False
 
     @api.constrains('pieces')
     def _check_pieces(self):

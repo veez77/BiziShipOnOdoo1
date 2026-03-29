@@ -105,10 +105,9 @@
                             <field name="origin_state" class="o_address_state"/>
                             <field name="origin_zip" class="o_address_zip"/>
                         </div>
-                        <field name="origin_phone" widget="phone" nolabel="1" colspan="2" style="display: block; white-space: nowrap;"/>
-                        <field name="origin_contact_name" nolabel="1" colspan="2" readonly="1" invisible="not origin_contact_name" style="display: block;"/>
-                        <field name="origin_contact_phone" nolabel="1" colspan="2" readonly="1" invisible="not origin_contact_phone" widget="phone" style="display: block; white-space: nowrap;"/>
-                        <field name="origin_contact_email" nolabel="1" colspan="2" readonly="1" invisible="not origin_contact_email" style="display: block;"/>
+                        <field name="origin_contact_name" string="Contact Name (optional)"/>
+                        <field name="origin_contact_phone" widget="phone" string="Contact Phone *" required="1" class="biziship-mandatory-field"/>
+                        <field name="origin_contact_email" string="Contact Email (optional)"/>
                     </group>
                     <group string="Destination">
                         <field name="destination_company" nolabel="1" class="fw-bold mb-0" style="font-size: 1.1em; display: block;" colspan="2"/>
@@ -119,10 +118,9 @@
                             <field name="destination_state" class="o_address_state"/>
                             <field name="destination_zip" class="o_address_zip"/>
                         </div>
-                        <field name="destination_phone" widget="phone" nolabel="1" colspan="2" style="display: block; white-space: nowrap;"/>
-                        <field name="destination_contact_name" nolabel="1" colspan="2" readonly="1" invisible="not destination_contact_name" style="display: block;"/>
-                        <field name="destination_contact_phone" nolabel="1" colspan="2" readonly="1" invisible="not destination_contact_phone" widget="phone" style="display: block; white-space: nowrap;"/>
-                        <field name="destination_contact_email" nolabel="1" colspan="2" readonly="1" invisible="not destination_contact_email" style="display: block;"/>
+                        <field name="destination_contact_name" string="Contact Name (optional)"/>
+                        <field name="destination_contact_phone" widget="phone" string="Contact Phone *" required="1" class="biziship-mandatory-field"/>
+                        <field name="destination_contact_email" string="Contact Email (optional)"/>
                     </group>
                 </group>
 
@@ -173,18 +171,18 @@
                         <div class="mb-2 mt-2">
                             <strong>Requested Pickup: </strong> <field name="biziship_pickup_date" readonly="1" class="oe_inline"/>
                         </div>
-                        <field name="biziship_cargo_line_ids" nolabel="1" create="false" edit="false" delete="false">
-                            <tree>
-                                <field name="pieces" string="UNITS"/>
-                                <field name="packaging_type" string="TYPE"/>
-                                <field name="weight" string="WEIGHT"/>
-                                <field name="weight_unit" nolabel="1" class="oe_inline"/>
-                                <field name="length" string="L"/>
-                                <field name="width" string="W"/>
-                                <field name="height" string="H"/>
-                                <field name="dim_unit" nolabel="1"/>
-                                <field name="cargo_desc" string="DESCRIPTION"/>
-                                <field name="computed_freight_class" string="CLASS"/>
+                        <field name="biziship_cargo_line_ids" nolabel="1" create="false" delete="false">
+                            <tree editable="bottom">
+                                <field name="pieces" string="UNITS" readonly="1"/>
+                                <field name="packaging_type" string="TYPE" readonly="1"/>
+                                <field name="weight" string="WEIGHT" readonly="1"/>
+                                <field name="weight_unit" nolabel="1" class="oe_inline" readonly="1"/>
+                                <field name="length" string="L" readonly="1"/>
+                                <field name="width" string="W" readonly="1"/>
+                                <field name="height" string="H" readonly="1"/>
+                                <field name="dim_unit" nolabel="1" readonly="1"/>
+                                <field name="cargo_desc" string="DESCRIPTION" readonly="1"/>
+                                <field name="computed_freight_class" string="CLASS" readonly="1"/>
                                 <field name="nmfc" string="NMFC" optional="show"/>
                             </tree>
                         </field>

@@ -347,20 +347,21 @@
     margin-right: 4px !important;
 }
 
-/* Row 2: Class Section */
+/* Row 2: Class Section & Flags (Merged) */
 .biziship-cargo-row-class {
     font-size: 1.1rem !important;
     color: #475569 !important;
-    margin-bottom: 20px !important;
+    margin-bottom: 16px !important;
     display: flex !important;
     align-items: center !important;
+    justify-content: space-between !important;
 }
 
-/* Row 3: Flags (Hazmat, Stackable, etc.) */
+/* Row 3: Flags (Hazmat, Stackable, etc.) - nested in Row 2 or standalone */
 .biziship-cargo-row-flags {
     display: flex !important;
     flex-wrap: wrap !important;
-    gap: 24px !important; /* Space between different flag groups */
+    gap: 16px !important;
     align-items: center !important;
 }
 
@@ -379,6 +380,11 @@
 
 .biziship-cargo-desc-input {
     flex-grow: 1 !important;
+    min-width: 480px !important; /* Significantly longer as requested */
+}
+
+.biziship-cargo-desc-input .o_field_widget {
+    width: 100% !important;
 }
 
 .biziship-cargo-nmfc-box {
@@ -463,4 +469,178 @@
 .modal:has(.biziship-cargo-form) .modal-footer button.o_form_button_delete,
 .modal:has(.biziship-cargo-form) .modal-footer button.o_btn_remove {
     display: none !important;
+}
+
+/* Commodity Autocomplete & NMFC Suggestion */
+.biziship-commodity-container {
+    width: 100%;
+}
+
+.biziship-autocomplete-dropdown {
+    width: 100% !important;
+    max-height: 250px;
+    overflow-y: auto;
+    z-index: 1060;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    border-radius: 8px;
+    margin-top: 2px;
+}
+
+.biziship-autocomplete-dropdown .dropdown-item {
+    padding: 8px 12px;
+    font-size: 0.95rem;
+    color: #495057;
+    border-bottom: 1px solid #f1f3f5;
+}
+
+.biziship-autocomplete-dropdown .dropdown-item:hover {
+    background-color: #f8f9fa;
+    color: #714B67;
+}
+
+.biziship-nmfc-stale input {
+    background-color: #fff9db !important; /* Very light amber */
+    border: 1.5px solid #ffbf00 !important;
+    border-radius: 4px;
+}
+
+.biziship-cargo-nmfc-box.biziship-nmfc-stale {
+    border: 1px solid #ffbf00;
+    background-color: #fff9db;
+    border-radius: 4px;
+    padding-left: 5px;
+}
+
+.badge.bg-success {
+    background-color: #2fb344 !important; /* Vibrant green */
+}
+
+.badge.bg-warning {
+    background-color: #f59f00 !important; /* Vibrant amber */
+    color: #fff !important;
+}
+
+.badge.bg-secondary {
+    background-color: #6c7a91 !important;
+}
+
+.biziship-nmfc-warning-text {
+    color: #d97706;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.biziship-nmfc-warning-text i {
+    color: #d97706;
+}
+
+.biziship-nmfc-info-text {
+    color: #64748b !important;
+    font-size: 0.85rem;
+    font-weight: 400;
+}
+
+.biziship-nmfc-info-text i {
+    color: #94a3b8;
+}
+
+.biziship-nmfc-suggestion-box {
+    background-color: #f0f7ff;
+    border: 1px solid #e1effe;
+    border-radius: 8px;
+    padding: 12px;
+    margin-top: 8px;
+}
+
+.biziship-nmfc-suggestion-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 4px;
+}
+
+.biziship-nmfc-suggested-label {
+    color: #1a56db;
+    font-weight: 700;
+}
+
+.biziship-badge-high {
+    background-color: #def7ec;
+    color: #03543f;
+    padding: 2px 8px;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.biziship-badge-medium {
+    background-color: #fdf6b2;
+    color: #723b13;
+    padding: 2px 8px;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.biziship-nmfc-btn-apply {
+    background-color: #1a56db;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 2px 12px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.biziship-nmfc-btn-apply:hover {
+    background-color: #1e429f;
+}
+
+.biziship-nmfc-btn-dismiss {
+    color: #9ca3af;
+    background: none;
+    border: none;
+    font-size: 0.8rem;
+    cursor: pointer;
+    margin-left: 8px;
+}
+
+.biziship-nmfc-btn-dismiss:hover {
+    color: #4b5563;
+    text-decoration: underline;
+}
+
+.biziship-nmfc-applied-text {
+    color: #059669;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.biziship-nmfc-btn-clear {
+    color: #94a3b8;
+    background: none;
+    border: none;
+    font-size: 0.85rem;
+    cursor: pointer;
+    margin-left: 8px;
+    padding: 0;
+}
+
+.biziship-nmfc-btn-clear:hover {
+    color: #64748b;
+    text-decoration: underline;
+}
+
+.biziship-nmfc-rationale {
+    color: #6b7280;
+    font-size: 0.8rem;
+    line-height: 1.4;
+}
+
+/* Red labels for mandatory phone fields in booking wizard */
+.o_form_label:has(+ .biziship-mandatory-field),
+.o_field_widget.biziship-mandatory-field + .o_form_label,
+.o_form_label.biziship-mandatory-field {
+    color: #dc3545 !important;
 }

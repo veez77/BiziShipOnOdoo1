@@ -1,7 +1,6 @@
-from odoo import models, fields, api
+from odoo import models, fields, api, tools
 import base64
 import os
-from odoo.modules.module import get_module_resource
 
 class BizishipQuote(models.Model):
     _name = 'biziship.quote'
@@ -85,13 +84,16 @@ class BizishipQuote(models.Model):
                     break
                     
             if best_match:
-                img_path = get_module_resource('BiziShip', 'static', 'carriers', best_match)
-                if img_path and os.path.exists(img_path):
-                    try:
-                        with open(img_path, 'rb') as f:
-                            logo_data = base64.b64encode(f.read())
-                    except Exception:
-                        pass
+                try:
+                    img_path = tools.file_path('BiziShip/static/carriers/' + best_match)
+                    if img_path and os.path.exists(img_path):
+                        try:
+                            with open(img_path, 'rb') as f:
+                                logo_data = base64.b64encode(f.read())
+                        except Exception:
+                            pass
+                except Exception:
+                    pass
             
             rec.carrier_logo = logo_data
 

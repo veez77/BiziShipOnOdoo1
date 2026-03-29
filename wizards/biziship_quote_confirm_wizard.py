@@ -4,6 +4,7 @@ import os
 import logging
 from odoo import models, fields, api, _
 from odoo.exceptions import UserError
+from odoo.addons.BiziShip import api_utils
 
 _logger = logging.getLogger(__name__)
 
@@ -37,7 +38,7 @@ class BizishipQuoteConfirmWizard(models.TransientModel):
 
     quote_id = fields.Many2one('biziship.quote', string="Selected Quote", required=True)
     sale_order_id = fields.Many2one(related="quote_id.sale_order_id", readonly=True)
-    biziship_cargo_line_ids = fields.One2many(related="sale_order_id.biziship_cargo_line_ids", readonly=True)
+    biziship_cargo_line_ids = fields.One2many(related="sale_order_id.biziship_cargo_line_ids", readonly=False)
     
     # Terminals
     origin_terminal_city = fields.Char(related="quote_id.origin_terminal_city", readonly=True)
@@ -60,9 +61,10 @@ class BizishipQuoteConfirmWizard(models.TransientModel):
     origin_state = fields.Char(related="sale_order_id.biziship_origin_state_id.code", string="Origin State", readonly=True)
     origin_zip = fields.Char(related="sale_order_id.biziship_origin_zip", string="Origin Zip", readonly=True)
     origin_phone = fields.Char(related="sale_order_id.company_id.phone", string="Origin Phone", readonly=True)
-    origin_contact_name = fields.Char(related="sale_order_id.biziship_origin_contact_name", readonly=True)
-    origin_contact_phone = fields.Char(related="sale_order_id.biziship_origin_contact_phone", readonly=True)
-    origin_contact_email = fields.Char(related="sale_order_id.biziship_origin_contact_email", readonly=True)
+    
+    origin_contact_name = fields.Char(string='Contact Name')
+    origin_contact_phone = fields.Char(string='Contact Phone', required=True)
+    origin_contact_email = fields.Char(string='Contact Email')
     
     # Destination Details
     destination_company = fields.Char(related="sale_order_id.biziship_dest_company", readonly=True)
@@ -72,9 +74,10 @@ class BizishipQuoteConfirmWizard(models.TransientModel):
     destination_state = fields.Char(related="sale_order_id.biziship_dest_state_id.code", string="Dest State", readonly=True)
     destination_zip = fields.Char(related="sale_order_id.biziship_dest_zip", string="Dest Zip", readonly=True)
     destination_phone = fields.Char(related="sale_order_id.partner_shipping_id.phone", string="Dest Phone", readonly=True)
-    destination_contact_name = fields.Char(related="sale_order_id.biziship_dest_contact_name", readonly=True)
-    destination_contact_phone = fields.Char(related="sale_order_id.biziship_dest_contact_phone", readonly=True)
-    destination_contact_email = fields.Char(related="sale_order_id.biziship_dest_contact_email", readonly=True)
+    
+    destination_contact_name = fields.Char(string='Contact Name')
+    destination_contact_phone = fields.Char(string='Contact Phone', required=True)
+    destination_contact_email = fields.Char(string='Contact Email')
 
     # Quote Detailed Charges
     quote_details = fields.Text(related="quote_id.quote_details", readonly=True)
@@ -114,6 +117,23 @@ class BizishipQuoteConfirmWizard(models.TransientModel):
     ], string='Pieces Packaging')
 
     is_hazmat_valid = fields.Boolean(compute='_compute_is_hazmat_valid')
+
+    @api.model
+    def default_get(self, fields_list):
+        res = super(BizishipQuoteConfirmWizard, self).default_get(fields_list)
+        if 'quote_id' in res:
+            quote = self.env['biziship.quote'].browse(res['quote_id'])
+            so = quote.sale_order_id
+            if so:
+                res.update({
+                    'origin_contact_name': so.biziship_origin_contact_name,
+                    'origin_contact_phone': so.biziship_origin_contact_phone,
+                    'origin_contact_email': so.biziship_origin_contact_email,
+                    'destination_contact_name': so.biziship_dest_contact_name,
+                    'destination_contact_phone': so.biziship_dest_contact_phone,
+                    'destination_contact_email': so.biziship_dest_contact_email,
+                })
+        return res
 
     @api.depends('is_hazmat', 'hazmat_contact_name', 'hazmat_contact_phone', 'hazmat_un_number', 'hazmat_proper_shipping_name', 'hazmat_hazard_class', 'hazmat_packing_group', 'hazmat_pieces_packaging')
     def _compute_is_hazmat_valid(self):
@@ -230,15 +250,17 @@ class BizishipQuoteConfirmWizard(models.TransientModel):
             "state": sale_order.biziship_origin_state_id.code if sale_order.biziship_origin_state_id else (extracted_data.get("origin_state") or (company.state_id.code if company.state_id else "")),
             "zip": sale_order.biziship_origin_zip or extracted_data.get("origin_zip") or company.zip or "",
         }
-        # Only add contact fields if explicitly set by the user
-        if sale_order.biziship_origin_contact_name:
-            shipper["contact_name"] = sale_order.biziship_origin_contact_name
-            shipper["contact"] = sale_order.biziship_origin_contact_name
-        origin_phone = format_phone(sale_order.biziship_origin_contact_phone)
+        # Update contact fields in payload from wizard
+        if self.origin_contact_name:
+            shipper["contact_name"] = self.origin_contact_name
+            shipper["contact"] = self.origin_contact_name
+        
+        origin_phone = format_phone(self.origin_contact_phone)
         if origin_phone:
             shipper["phone"] = origin_phone
-        if sale_order.biziship_origin_contact_email:
-            shipper["email"] = sale_order.biziship_origin_contact_email
+            
+        if self.origin_contact_email:
+            shipper["email"] = self.origin_contact_email
 
         partner = sale_order.partner_shipping_id or sale_order.partner_id
         consignee = {
@@ -249,15 +271,27 @@ class BizishipQuoteConfirmWizard(models.TransientModel):
             "state": sale_order.biziship_dest_state_id.code if sale_order.biziship_dest_state_id else (extracted_data.get("destination_state") or (partner.state_id.code if partner.state_id else "")),
             "zip": sale_order.biziship_dest_zip or extracted_data.get("destination_zip") or partner.zip or "",
         }
-        # Only add contact fields if explicitly set by the user
-        if sale_order.biziship_dest_contact_name:
-            consignee["contact_name"] = sale_order.biziship_dest_contact_name
-            consignee["contact"] = sale_order.biziship_dest_contact_name
-        dest_phone = format_phone(sale_order.biziship_dest_contact_phone)
+
+        if self.destination_contact_name:
+            consignee["contact_name"] = self.destination_contact_name
+            consignee["contact"] = self.destination_contact_name
+            
+        dest_phone = format_phone(self.destination_contact_phone)
         if dest_phone:
             consignee["phone"] = dest_phone
-        if sale_order.biziship_dest_contact_email:
-            consignee["email"] = sale_order.biziship_dest_contact_email
+            
+        if self.destination_contact_email:
+            consignee["email"] = self.destination_contact_email
+        
+        # Save back to Sale Order
+        sale_order.write({
+            'biziship_origin_contact_name': self.origin_contact_name,
+            'biziship_origin_contact_phone': self.origin_contact_phone,
+            'biziship_origin_contact_email': self.origin_contact_email,
+            'biziship_dest_contact_name': self.destination_contact_name,
+            'biziship_dest_contact_phone': self.destination_contact_phone,
+            'biziship_dest_contact_email': self.destination_contact_email,
+        })
         
         from datetime import timedelta
         
@@ -267,13 +301,33 @@ class BizishipQuoteConfirmWizard(models.TransientModel):
         if not pickup_date or str(pickup_date) < str(today):
             pickup_date = str(tomorrow)
             
+        # Build line items for booking
+        line_items = []
+        for line in self.biziship_cargo_line_ids:
+            line_item = {
+                "num_pieces": line.pieces or 1,
+                "packaging_type": line.packaging_type or "pallet",
+                "weight": round(api_utils.convert_to_lbs(line.weight, line.weight_unit), 2),
+                "length": round(api_utils.convert_to_inches(line.length, line.dim_unit), 2),
+                "width": round(api_utils.convert_to_inches(line.width, line.dim_unit), 2),
+                "height": round(api_utils.convert_to_inches(line.height, line.dim_unit), 2),
+                "freight_class": line.freight_class or line.computed_freight_class or "50",
+                "cargo_description": line.cargo_desc or "General Freight",
+                "hazmat": line.hazmat or False,
+                "stackable": line.stackable or False
+            }
+            if line.nmfc:
+                line_item["nmfc_code"] = line.nmfc
+            line_items.append(line_item)
+
         payload = {
             "quote_id": self.quote_id_ref,
             "po_number": self.po_number or "",
             "shipper": shipper,
             "consignee": consignee,
             "pickup_date": pickup_date,
-            "pickup_note": sale_order.biziship_special_instructions or ""
+            "pickup_note": sale_order.biziship_special_instructions or "",
+            "line_items": line_items
         }
 
         if self.is_hazmat:

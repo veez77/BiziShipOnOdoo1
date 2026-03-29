@@ -144,6 +144,14 @@
                                             
                                             <div class="biziship-cargo-item-label">
                                                 <field name="display_name" class="fw-bold text-primary"/>
+                                                <!-- Hidden fields for Suggestion logic -->
+                                                <field name="nmfc_suggested_code" invisible="1"/>
+                                                <field name="nmfc_suggestion_confidence" invisible="1"/>
+                                                <field name="nmfc_suggestion_label" invisible="1"/>
+                                                <field name="nmfc_suggestion_rationale" invisible="1"/>
+                                                <field name="nmfc_applied_desc" invisible="1"/>
+                                                <field name="nmfc_is_stale" invisible="1"/>
+                                                <field name="is_processing" invisible="1"/>
                                             </div>
 
                                             <!-- Row 1: Key Details -->
@@ -163,43 +171,50 @@
                                                 <field name="dim_unit" class="ms-1" style="max-width: 55px;"/>
                                             </div>
 
-                                            <!-- Row 2: Class -->
+                                            <!-- Row 2: Class Section & Flags (Merged) -->
                                             <div class="biziship-cargo-row-class">
-                                                <span>Class:</span>
-                                                <field name="freight_class" class="ms-1 fw-bold"/>
-                                                <field name="is_class_overridden" invisible="1"/>
-                                                <span invisible="not is_class_overridden" class="ms-3 text-muted fw-normal">
-                                                    Calculated: <field name="computed_freight_class"/>
-                                                </span>
+                                                <div class="d-flex align-items-center">
+                                                    <span class="me-2">Class:</span>
+                                                    <field name="freight_class" class="fw-bold me-2"/>
+                                                    <t t-if="record.is_class_overridden.raw_value">
+                                                        <span class="badge rounded-pill bg-info text-dark" style="font-size: 0.7em;">Calculated: <field name="computed_freight_class"/></span>
+                                                    </t>
+                                                </div>
+
+                                                <!-- Checkboxes on the Right (Always Visible) -->
+                                                <div class="biziship-cargo-row-flags">
+                                                    <div class="biziship-cargo-flag-group">
+                                                        <field name="hazmat" title="Hazardous Material"/><span>Hazmat</span>
+                                                    </div>
+                                                    <div class="biziship-cargo-flag-group">
+                                                        <field name="stackable" title="Stackable"/><span>Stackable</span>
+                                                    </div>
+                                                    <div class="biziship-cargo-flag-group">
+                                                        <field name="used" title="Used / Reconditioned"/><span>Used</span>
+                                                    </div>
+                                                    <div class="biziship-cargo-flag-group">
+                                                        <field name="machinery" title="Machinery"/><span>Machinery</span>
+                                                    </div>
+                                                </div>
                                             </div>
 
-                                            <!-- Row 3: Flags -->
-                                            <div class="biziship-cargo-row-flags py-1 mt-1">
-                                                <div class="biziship-cargo-flag-group">
-                                                    <field name="hazmat" title="Hazardous Material"/><span>Hazmat</span>
-                                                </div>
-                                                <div class="biziship-cargo-flag-group">
-                                                    <field name="stackable" title="Stackable Cargo"/><span>Stackable</span>
-                                                </div>
-                                                <div class="biziship-cargo-flag-group">
-                                                    <field name="used" title="Used or Reconditioned"/><span>Used / Reconditioned</span>
-                                                </div>
-                                                <div class="biziship-cargo-flag-group">
-                                                    <field name="machinery" title="Machinery"/><span>Machinery</span>
-                                                </div>
-                                            </div>
-
-                                            <!-- Row 4: Description & NMFC -->
+                                            <!-- Row 3: Description & NMFC (Moved up) -->
                                             <div class="biziship-cargo-row-desc">
                                                 <div class="biziship-cargo-desc-input">
-                                                    <field name="cargo_desc" placeholder="Cargo Description"/>
+                                                    <field name="cargo_desc" placeholder="Cargo Description..." widget="biziship_commodity"/>
                                                 </div>
-                                                <div class="biziship-cargo-nmfc-box">
-                                                    <field name="nmfc" placeholder="NMFC (optional)"/>
+                                                <div t-attf-class="biziship-cargo-nmfc-box {{ record.nmfc_is_stale.raw_value ? 'biziship-nmfc-stale' : '' }}">
+                                                    <i class="fa fa-barcode me-2 text-muted" title="NMFC Code Icon"/>
+                                                    <field name="nmfc" placeholder="NMFC Code"/>
+                                                    <button name="action_biziship_nmfc_suggest" type="object" class="btn btn-sm btn-link p-0 ms-2" title="Suggest NMFC">
+                                                        <i t-if="!record.is_processing.raw_value" class="fa fa-star text-primary" style="font-size: 1.1em;"/>
+                                                        <i t-if="record.is_processing.raw_value" class="fa fa-spinner fa-spin text-primary" style="font-size: 1.1em;"/>
+                                                    </button>
                                                 </div>
-                                                <button name="action_biziship_nmfc_search" type="object" class="btn btn-sm btn-link p-0" title="Suggest NMFC">
-                                                    <i class="fa fa-star text-primary" style="font-size: 1.2em;"/>
-                                                </button>
+                                            </div>
+
+                                            <!-- Row 4: Empty (Implicitly handled by card padding if no content) -->
+                                            <div class="biziship-cargo-row-empty">
                                             </div>
                                         </div>
                                     </t>
@@ -213,6 +228,12 @@
                                             <field name="display_name" readonly="1" class="fw-bold text-primary" style="font-size: 1.4em;"/>
                                             <field name="last_weight_unit" invisible="1"/>
                                             <field name="last_dim_unit" invisible="1"/>
+                                            <!-- Hidden fields for Suggestion logic -->
+                                            <field name="nmfc_suggested_code" invisible="1"/>
+                                            <field name="nmfc_suggestion_confidence" invisible="1"/>
+                                            <field name="nmfc_suggestion_label" invisible="1"/>
+                                            <field name="nmfc_suggestion_rationale" invisible="1"/>
+                                            <field name="nmfc_applied_desc" invisible="1"/>
                                         </div>
                                         
                                         <!-- Row 1: Key Details -->
@@ -228,31 +249,47 @@
                                                 <span class="ms-1 text-muted">x</span> <span class="ms-1">H</span><field name="height" style="width: 85px;"/>
                                                 <field name="dim_unit" class="ms-2" style="width: 70px;"/>
                                             </div>
+                                        <!-- Row 2: Class Section & Flags (Merged) -->
                                         <div class="biziship-cargo-row-class mb-4">
-                                            <span>Class:</span>
-                                            <field name="freight_class" class="oe_inline fw-bold ms-1"/>
-                                            <field name="is_class_overridden" invisible="1"/>
-                                            <span class="text-muted ms-3" invisible="not is_class_overridden">
-                                                Calculated: <field name="computed_freight_class" readonly="1" class="oe_inline"/>
-                                            </span>
+                                            <div class="d-flex align-items-center">
+                                                <span class="me-2 text-muted">Class:</span>
+                                                <field name="freight_class" class="fw-bold me-2" style="width: 80px;"/>
+                                                <field name="is_class_overridden" invisible="1"/>
+                                                <span invisible="not is_class_overridden" class="badge rounded-pill bg-info text-dark" style="font-size: 0.8em;">Calculated: <field name="computed_freight_class"/></span>
+                                            </div>
+
+                                            <!-- Checkboxes on the Right -->
+                                            <div class="biziship-cargo-row-flags">
+                                                <div class="biziship-cargo-flag-group">
+                                                    <field name="hazmat"/><span>Hazmat</span>
+                                                </div>
+                                                <div class="biziship-cargo-flag-group">
+                                                    <field name="stackable"/><span>Stackable</span>
+                                                </div>
+                                                <div class="biziship-cargo-flag-group">
+                                                    <field name="used"/><span>Used / Reconditioned</span>
+                                                </div>
+                                                <div class="biziship-cargo-flag-group">
+                                                    <field name="machinery"/><span>Machinery</span>
+                                                </div>
+                                            </div>
                                         </div>
-                                        <div class="biziship-cargo-row-flags mb-4">
-                                            <div class="biziship-cargo-flag-group">
-                                                <field name="hazmat"/><span>Hazmat</span>
+
+                                        <div class="biziship-cargo-row-desc mb-4">
+                                            <div class="biziship-cargo-desc-input">
+                                                <field name="cargo_desc" placeholder="Cargo Description..." widget="biziship_commodity"/>
                                             </div>
-                                            <div class="biziship-cargo-flag-group">
-                                                <field name="stackable"/><span>Stackable</span>
-                                            </div>
-                                            <div class="biziship-cargo-flag-group">
-                                                <field name="used"/><span>Used / Reconditioned</span>
-                                            </div>
-                                            <div class="biziship-cargo-flag-group">
-                                                <field name="machinery"/><span>Machinery</span>
+                                            <div class="biziship-cargo-nmfc-box">
+                                                <i class="fa fa-barcode me-2 text-muted" title="NMFC Code Icon"/>
+                                                <field name="nmfc" placeholder="NMFC Code"/>
+                                                <button name="action_biziship_nmfc_suggest" type="object" class="btn btn-sm btn-link p-0 ms-2" title="Suggest NMFC">
+                                                    <i class="fa fa-star text-primary" style="font-size: 1.1em;"/>
+                                                </button>
                                             </div>
                                         </div>
-                                        <div class="biziship-cargo-row-desc">
-                                            <field name="cargo_desc" placeholder="Cargo Description" class="flex-grow-1"/>
-                                            <field name="nmfc" placeholder="NMFC (optional)" style="width: 200px;"/>
+
+                                        <!-- Row 4: Empty -->
+                                        <div class="biziship-cargo-row-empty" style="height: 20px;">
                                         </div>
                                     </div>
                                 </sheet>

@@ -61,13 +61,32 @@ def get_groq_api_key():
 
 def get_erp_api_key(env=None):
     """
-    Returns the ERP API Key with fallback to secrets or hardcoded key.
-    If 'env' is provided, it checks Odoo config first.
+    Returns the ERP API Key securely with the following priority:
+    1. Odoo System Parameters (ir.config_parameter: biziship.erp_api_key)
+    2. Odoo Config File (odoo.conf: biziship_erp_api_key)
+    3. OS Environment Variables (BIZISHIP_ERP_API_KEY)
+    4. Local secrets.json fallback (development only)
+    5. Hardcoded generic fallback key
     """
     key = None
+    
+    # 1. System Parameters (Best for UI management)
     if env:
         key = env['ir.config_parameter'].sudo().get_param('biziship.erp_api_key')
     
+    # 2. Odoo Config File (odoo.conf)
+    if not key:
+        try:
+            from odoo.tools import config
+            key = config.get('biziship_erp_api_key')
+        except ImportError:
+            pass
+            
+    # 3. Environment Variables (Best for Docker/Cloud deployments)
+    if not key:
+        key = os.environ.get('BIZISHIP_ERP_API_KEY')
+    
+    # 4. Local secrets.json Fallback
     if not key:
         secrets = get_secrets()
         key = secrets.get("BIZISHIP_ERP_GATEWAY_KEY") or secrets.get("EMAIL2QUOTE_API_KEY")

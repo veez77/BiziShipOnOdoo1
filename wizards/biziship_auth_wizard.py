@@ -7,6 +7,7 @@ from odoo.exceptions import UserError
 _logger = logging.getLogger(__name__)
 
 from .. import api_utils
+from ..api_utils import get_erp_api_key
 
 class BizishipAuthWizard(models.TransientModel):
     _name = 'biziship.auth.wizard'
@@ -27,7 +28,7 @@ class BizishipAuthWizard(models.TransientModel):
         return res
 
     def action_request_pin(self):
-        erp_api_key = self.env['ir.config_parameter'].sudo().get_param('biziship.erp_api_key', '')
+        erp_api_key = get_erp_api_key(self.env)
         base_url = api_utils.get_biziship_api_url()
         url = f"{base_url}/erp/auth/login"
         payload = {'email': self.email}
@@ -66,7 +67,7 @@ class BizishipAuthWizard(models.TransientModel):
             raise UserError(_("Error connecting to BiziShip (%s): %s") % (type(e).__name__, str(e)))
 
     def action_verify_pin(self):
-        erp_api_key = self.env['ir.config_parameter'].sudo().get_param('biziship.erp_api_key', '')
+        erp_api_key = get_erp_api_key(self.env)
         base_url = api_utils.get_biziship_api_url()
         url = f"{base_url}/erp/auth/verify-pin"
         payload = {

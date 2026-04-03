@@ -85,7 +85,7 @@ class BizishipQuote(models.Model):
                     
             if best_match:
                 try:
-                    img_path = tools.file_path('BiziShip/static/carriers/' + best_match)
+                    img_path = tools.file_path('biziship/static/carriers/' + best_match)
                     if img_path and os.path.exists(img_path):
                         try:
                             with open(img_path, 'rb') as f:

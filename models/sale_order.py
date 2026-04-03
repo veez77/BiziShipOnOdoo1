@@ -9,8 +9,9 @@ import logging
 
 _logger = logging.getLogger(__name__)
 
-from odoo.addons.BiziShip.api_utils import (
+from odoo.addons.biziship.api_utils import (
     get_biziship_api_url, 
+    get_erp_api_key,
     BIZISHIP_MODULE_VERSION, 
     BIZISHIP_APP_NAME,
     KG_TO_LBS,
@@ -160,11 +161,10 @@ class SaleOrder(models.Model):
     )
 
     def _fetch_gateway_maps_key(self):
-        erp_api_key = self.env['ir.config_parameter'].sudo().get_param('biziship.erp_api_key', '')
+        erp_api_key = get_erp_api_key(self.env)
         if not erp_api_key: return None
         import requests
-        from odoo.addons.BiziShip import api_utils
-        url = f"{api_utils.get_biziship_api_url()}/erp/config"
+        url = f"{get_biziship_api_url()}/erp/config"
         try:
             r = requests.get(url, headers={'X-ERP-API-Key': erp_api_key}, timeout=5)
             if r.status_code == 200:
@@ -202,12 +202,11 @@ class SaleOrder(models.Model):
                 
         # Call ERP Gateway for Smarty Residential Detection
         try:
-            from odoo.addons.BiziShip import api_utils
             import requests
             import logging
             _logger = logging.getLogger(__name__)
-            url = f"{api_utils.get_biziship_api_url()}/erp/validate-address"
-            erp_api_key = self.env['ir.config_parameter'].sudo().get_param('biziship.erp_api_key', '')
+            url = f"{get_biziship_api_url()}/erp/validate-address"
+            erp_api_key = get_erp_api_key(self.env)
             headers = {"X-ERP-API-Key": erp_api_key}
             payload = {
                 "street": street or "",
@@ -478,7 +477,7 @@ class SaleOrder(models.Model):
                 raise UserError(_("Cargo Line #%s has a missing or zero value. All cargo lines must have Pieces, Weight, Length, Width, and Height greater than 0.") % idx)
 
         email2quote_api_url = get_biziship_api_url()
-        erp_api_key = self.env['ir.config_parameter'].sudo().get_param('biziship.erp_api_key', '')
+        erp_api_key = get_erp_api_key(self.env)
         
         api_url = f"{email2quote_api_url.rstrip('/')}/erp/quote"
         headers = {

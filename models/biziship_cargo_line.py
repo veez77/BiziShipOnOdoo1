@@ -1,6 +1,6 @@
 from odoo import models, fields, api
 import json
-from odoo.addons.BiziShip.api_utils import KG_TO_LBS, CM_TO_IN, M_TO_IN, FT_TO_IN, convert_to_lbs
+from odoo.addons.biziship.api_utils import KG_TO_LBS, CM_TO_IN, M_TO_IN, FT_TO_IN, convert_to_lbs
 
 class BizishipSaleCargoLine(models.Model):
     _name = 'biziship.sale.cargo.line'
@@ -143,7 +143,7 @@ class BizishipSaleCargoLine(models.Model):
     def action_biziship_nmfc_suggest(self):
         """Proxies call to ERP Gateway /erp/nmfc/suggest."""
         self.ensure_one()
-        from odoo.addons.BiziShip import api_utils
+        from odoo.addons.biziship import api_utils
         import requests
         import logging
         _logger = logging.getLogger(__name__)

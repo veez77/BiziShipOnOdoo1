@@ -20,7 +20,7 @@ try:
     
     # 2. Reset the module record's icon_file field (if it exists)
     try:
-        cur.execute("UPDATE ir_module_module SET icon = '/BiziShip/static/description/icon.png' WHERE name = 'BiziShip'")
+        cur.execute("UPDATE ir_module_module SET icon = '/biziship/static/description/icon.png' WHERE name IN ('BiziShip', 'biziship')")
         module_updated = cur.rowcount
     except Exception:
         module_updated = "Error updating icon field"

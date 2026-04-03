@@ -6,7 +6,8 @@ import logging
 
 _logger = logging.getLogger(__name__)
 
-from odoo.addons.BiziShip import api_utils
+from odoo.addons.biziship import api_utils
+from odoo.addons.biziship.api_utils import get_erp_api_key, BIZISHIP_APP_NAME, BIZISHIP_MODULE_VERSION
 
 class BizishipLoadFreightFilterUser(models.TransientModel):
     _name = 'biziship.load.freight.filter.user'
@@ -39,13 +40,16 @@ class BizishipLoadFreightWizard(models.TransientModel):
         if not token:
             self.status_message = "Please connect your BiziShip account in the User settings."
             return
-        erp_api_key = self.env['ir.config_parameter'].sudo().get_param('biziship.erp_api_key', '')
+        erp_api_key = get_erp_api_key(self.env)
         base_url = api_utils.get_biziship_api_url()
         url = f"{base_url}/erp/saved-freights"
         headers = {
             "Authorization": f"Bearer {token}",
-            "X-ERP-API-Key": erp_api_key
+            "X-ERP-API-Key": erp_api_key,
+            "X-Client-App": BIZISHIP_APP_NAME,
+            "X-Client-Version": BIZISHIP_MODULE_VERSION,
         }
+        _logger.info("BiziShip: Fetching freights from %s", url)
         try:
             response = requests.get(url, headers=headers, timeout=10)
             if response.status_code == 200:
@@ -68,13 +72,18 @@ class BizishipLoadFreightWizard(models.TransientModel):
                 self.env['biziship.load.freight.filter.user'].create([{'name': name, 'wizard_id': self.id} for name in user_names])
                 
                 self._apply_filters()
-            elif response.status_code == 401:
-                self.env.user.biziship_token = False
-                self.status_message = "Your BiziShip session has expired. Please reconnect in your User Profile."
+            elif response.status_code == 403:
+                _logger.error("BiziShip: Company registration error. Detail: %s", response.text)
+                try:
+                    detail = response.json().get('detail', 'No company associated with your account.')
+                    self.status_message = detail
+                except:
+                    self.status_message = "No company associated with your BiziShip account. Please complete registration in your BiziShip profile."
             else:
+                _logger.error("BiziShip: Failed to fetch freights. Status: %d, Response: %s", response.status_code, response.text)
                 self.status_message = f"Failed to fetch freights (Error {response.status_code})"
         except Exception as e:
-            _logger.error("BiziShip: Error fetching freights for wizard: %s", str(e))
+            _logger.exception("BiziShip: Error fetching freights for wizard")
             self.status_message = f"Unable to connect to BiziShip: {str(e)}"
 
     @api.onchange('search_name', 'filter_user_id')
@@ -171,12 +180,14 @@ class BizishipLoadFreightWizard(models.TransientModel):
         token = self.env.user.biziship_token
         if not token:
             raise UserError(_("Please connect your BiziShip account first."))
-        erp_api_key = self.env['ir.config_parameter'].sudo().get_param('biziship.erp_api_key', '')
+        erp_api_key = get_erp_api_key(self.env)
         base_url = api_utils.get_biziship_api_url()
         url = f"{base_url}/erp/saved-freights"
         headers = {
             "Authorization": f"Bearer {token}",
-            "X-ERP-API-Key": erp_api_key
+            "X-ERP-API-Key": erp_api_key,
+            "X-Client-App": BIZISHIP_APP_NAME,
+            "X-Client-Version": BIZISHIP_MODULE_VERSION,
         }
         
         try:

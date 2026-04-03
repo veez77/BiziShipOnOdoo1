@@ -4,7 +4,7 @@ import os
 import logging
 from odoo import models, fields, api, _
 from odoo.exceptions import UserError
-from odoo.addons.BiziShip import api_utils
+from odoo.addons.biziship import api_utils
 
 _logger = logging.getLogger(__name__)
 
@@ -29,7 +29,7 @@ ACCESSORIAL_MAPPING = {
     "CNVPU": "Trade Show Pickup"
 }
 
-from odoo.addons.BiziShip.api_utils import get_biziship_api_url, BIZISHIP_MODULE_VERSION, BIZISHIP_APP_NAME
+from odoo.addons.biziship.api_utils import get_biziship_api_url, get_erp_api_key, BIZISHIP_MODULE_VERSION, BIZISHIP_APP_NAME
 
 
 class BizishipQuoteConfirmWizard(models.TransientModel):
@@ -207,7 +207,7 @@ class BizishipQuoteConfirmWizard(models.TransientModel):
             raise UserError(_("Please provide a PO Number before submitting the quote."))
             
         email2quote_api_url = get_biziship_api_url()
-        erp_api_key = self.env['ir.config_parameter'].sudo().get_param('biziship.erp_api_key', '')
+        erp_api_key = get_erp_api_key(self.env)
         
         local_api_book_url = f"{email2quote_api_url.rstrip('/')}/erp/book"
         headers = {

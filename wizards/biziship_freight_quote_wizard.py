@@ -8,7 +8,7 @@ import logging
 
 _logger = logging.getLogger(__name__)
 
-from odoo.addons.BiziShip.api_utils import (
+from odoo.addons.biziship.api_utils import (
     get_biziship_api_url, 
     BIZISHIP_MODULE_VERSION, 
     BIZISHIP_APP_NAME,

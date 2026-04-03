@@ -9,6 +9,7 @@ import json
 BIZISHIP_ENV = 'PROD'
 BIZISHIP_MODULE_VERSION = '2.0.0'
 BIZISHIP_APP_NAME = 'BiziShip Odoo'
+BIZISHIP_FALLBACK_KEY = '116b2056ca09c1006119ec548cff60a66a1182b579b86f0f6168ec44e74a1409=Odoo'
 
 # Unit Conversion Constants
 KG_TO_LBS = 2.20462
@@ -57,3 +58,18 @@ def get_email2quote_api_key():
 
 def get_groq_api_key():
     return get_secrets().get("GROQ_API_KEY", "")
+
+def get_erp_api_key(env=None):
+    """
+    Returns the ERP API Key with fallback to secrets or hardcoded key.
+    If 'env' is provided, it checks Odoo config first.
+    """
+    key = None
+    if env:
+        key = env['ir.config_parameter'].sudo().get_param('biziship.erp_api_key')
+    
+    if not key:
+        secrets = get_secrets()
+        key = secrets.get("BIZISHIP_ERP_GATEWAY_KEY") or secrets.get("EMAIL2QUOTE_API_KEY")
+        
+    return key or BIZISHIP_FALLBACK_KEY

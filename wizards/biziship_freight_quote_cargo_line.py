@@ -1,5 +1,5 @@
 from odoo import models, fields, api
-from odoo.addons.BiziShip.api_utils import KG_TO_LBS, CM_TO_IN, M_TO_IN, FT_TO_IN, convert_to_lbs
+from odoo.addons.biziship.api_utils import KG_TO_LBS, CM_TO_IN, M_TO_IN, FT_TO_IN, convert_to_lbs
 
 class BizishipQuoteCargoLine(models.TransientModel):
     _name = 'biziship.quote.cargo.line'

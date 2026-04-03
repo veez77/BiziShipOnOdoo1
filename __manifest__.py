@@ -25,11 +25,11 @@
     ],
     'assets': {
         'web.assets_backend': [
-            'BiziShip/static/src/js/biziship_tab_handler.js',
-            'BiziShip/static/src/js/biziship_places_autocomplete.js',
-            'BiziShip/static/src/js/biziship_commodity_autocomplete.js',
-            'BiziShip/static/src/xml/biziship_commodity_templates.xml',
-            'BiziShip/static/src/css/biziship_modern.css',
+            'biziship/static/src/js/biziship_tab_handler.js',
+            'biziship/static/src/js/biziship_places_autocomplete.js',
+            'biziship/static/src/js/biziship_commodity_autocomplete.js',
+            'biziship/static/src/xml/biziship_commodity_templates.xml',
+            'biziship/static/src/css/biziship_modern.css',
         ],
     },
     'installable': True,

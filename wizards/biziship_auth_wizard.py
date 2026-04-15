@@ -92,8 +92,12 @@ class BizishipAuthWizard(models.TransientModel):
                 env = user_data.get('priority1Env', 'DEV')
                 user_name = user_data.get('name') or user_data.get('email', 'Connected User')
                 
+                # Save BiziShip email (the email Andy used to register with BiziShip)
+                # and the display name separately. The biziship_email field is what
+                # gets sent as X-User-Email in all API calls to the BiziShip backend.
                 self.env.user.write({
                     'biziship_token': token,
+                    'biziship_email': self.email,
                     'biziship_user_name': user_name,
                     'biziship_p1_env': env
                 })

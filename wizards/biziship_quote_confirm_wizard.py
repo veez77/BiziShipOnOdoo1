@@ -213,7 +213,7 @@ class BizishipQuoteConfirmWizard(models.TransientModel):
         headers = {
             "X-ERP-API-Key": erp_api_key,
             "Content-Type": "application/json",
-            "X-User-Email": self.env.user.email or "",
+            "X-User-Email": (self.env.user.biziship_email if self.env.user.biziship_token and self.env.user.biziship_email else self.env.user.email) or "",
             "X-Client-App": BIZISHIP_APP_NAME,
             "X-Client-Version": BIZISHIP_MODULE_VERSION,
         }

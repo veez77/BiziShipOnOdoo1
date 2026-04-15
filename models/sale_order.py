@@ -62,7 +62,10 @@ class SaleOrder(models.Model):
             user = self.env.user
             order.biziship_is_connected = bool(user.biziship_token)
             if order.biziship_is_connected:
-                order.biziship_connected_user_name = user.biziship_user_name or user.login or "Connected User"
+                if user.biziship_user_name:
+                    order.biziship_connected_user_name = user.biziship_user_name.split('|')[0]
+                else:
+                    order.biziship_connected_user_name = user.login or "Connected User"
             else:
                 order.biziship_connected_user_name = ""
 
@@ -483,7 +486,7 @@ class SaleOrder(models.Model):
         headers = {
             "X-ERP-API-Key": erp_api_key,
             "Content-Type": "application/json",
-            "X-User-Email": self.env.user.email or "",
+            "X-User-Email": (self.env.user.biziship_email if self.env.user.biziship_token and self.env.user.biziship_email else self.env.user.email) or "",
             "X-Client-App": BIZISHIP_APP_NAME,
             "X-Client-Version": BIZISHIP_MODULE_VERSION,
         }

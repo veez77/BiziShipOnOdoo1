@@ -164,7 +164,7 @@ class BizishipBolImportWizard(models.TransientModel):
         erp_api_key = self.env['ir.config_parameter'].sudo().get_param('biziship.erp_api_key', '')
         api_key_header = {
             "X-ERP-API-Key": erp_api_key,
-            "X-User-Email": self.env.user.email or "",
+            "X-User-Email": (self.env.user.biziship_email if self.env.user.biziship_token and self.env.user.biziship_email else self.env.user.email) or "",
             "X-Client-App": BIZISHIP_APP_NAME,
             "X-Client-Version": BIZISHIP_MODULE_VERSION,
         }

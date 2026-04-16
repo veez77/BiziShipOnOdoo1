@@ -101,6 +101,7 @@
                             <field name="biziship_origin_contact_phone" nolabel="1" colspan="2" placeholder="Contact Phone (optional)"/>
                             <field name="biziship_origin_contact_email" nolabel="1" colspan="2" placeholder="Contact Email (optional)"/>
                             <field name="biziship_origin_residential_warning" invisible="1"/>
+                            <field name="biziship_origin_address_invalid" invisible="1"/>
                             <group colspan="2" class="mt-2">
                                 <field name="biziship_origin_residential"/>
                                 <field name="biziship_origin_liftgate"/>
@@ -109,6 +110,10 @@
                             <div colspan="2" class="alert alert-warning py-1 mt-1 mb-2 d-flex align-items-center" role="alert" invisible="not biziship_origin_residential_warning or biziship_origin_residential" style="font-size: 13px;">
                                 <i class="fa fa-exclamation-triangle me-2" title="Warning"></i>
                                 <span>This address appears to be residential. Consider checking "Residential Pickup/Delivery".</span>
+                            </div>
+                            <div colspan="2" class="alert alert-warning py-1 mt-1 mb-2 d-flex align-items-center" role="alert" invisible="not biziship_origin_address_invalid" style="font-size: 13px;">
+                                <i class="fa fa-exclamation-triangle me-2" title="Warning"></i>
+                                <span>This pickup address could not be validated. Please verify it is correct before requesting quotes.</span>
                             </div>
                             <div class="d-flex justify-content-between align-items-center mt-2 w-100" colspan="2">
                                 <field name="biziship_origin_accessorial_ids" widget="many2many_tags" options="{'no_create': True}" placeholder="+ More Services" nolabel="1" style="flex-grow: 1;"/>
@@ -135,6 +140,7 @@
                             <field name="biziship_dest_contact_phone" nolabel="1" colspan="2" placeholder="Contact Phone (optional)"/>
                             <field name="biziship_dest_contact_email" nolabel="1" colspan="2" placeholder="Contact Email (optional)"/>
                             <field name="biziship_dest_residential_warning" invisible="1"/>
+                            <field name="biziship_dest_address_invalid" invisible="1"/>
                             <group col="4" colspan="2" class="mt-2">
                                 <field name="biziship_dest_appointment" colspan="2"/>
                                 <field name="biziship_dest_residential" colspan="2"/>
@@ -146,6 +152,10 @@
                             <div colspan="2" class="alert alert-warning py-1 mt-1 mb-2 d-flex align-items-center" role="alert" invisible="not biziship_dest_residential_warning or biziship_dest_residential" style="font-size: 13px;">
                                 <i class="fa fa-exclamation-triangle me-2" title="Warning"></i>
                                 <span>This address appears to be residential. Consider checking "Residential Pickup/Delivery".</span>
+                            </div>
+                            <div colspan="2" class="alert alert-warning py-1 mt-1 mb-2 d-flex align-items-center" role="alert" invisible="not biziship_dest_address_invalid" style="font-size: 13px;">
+                                <i class="fa fa-exclamation-triangle me-2" title="Warning"></i>
+                                <span>This destination address could not be validated. Please verify it is correct before requesting quotes.</span>
                             </div>
                             <div class="d-flex justify-content-between align-items-center mt-2 w-100" colspan="2">
                                 <field name="biziship_dest_accessorial_ids" widget="many2many_tags" options="{'no_create': True}" placeholder="+ More Services" nolabel="1" style="flex-grow: 1;"/>
@@ -159,7 +169,7 @@
                         </div>
                         
                         <field name="biziship_cargo_line_ids" nolabel="1" colspan="2" context="{'default_sale_order_id': id}" mode="kanban">
-                            <kanban class="biziship-cargo-kanban">
+                            <kanban class="biziship-cargo-kanban" create="0" quick_create="false">
                                 <templates>
                                      <t t-name="kanban-box">
                                         <div class="biziship-cargo-card oe_kanban_global_click">
@@ -507,6 +517,15 @@
                             <field name="biziship_route_map_html" nolabel="1" readonly="1" />
                         </div>
                     </group>
+
+                    <!-- Route Distance Row -->
+                    <group invisible="not biziship_route_miles">
+                        <div colspan="2" style="display:flex;align-items:center;justify-content:flex-end;padding:4px 2px 10px 2px;">
+                            <span style="font-size:13px;font-weight:700;color:#201f41;letter-spacing:0.2px;">
+                                🛣&#160;&#160;<field name="biziship_route_miles" nolabel="1" readonly="1" style="display:inline;font-weight:700;color:#201f41;"/> driving
+                            </span>
+                        </div>
+                    </group>
                     <group invisible="not biziship_quote_ids">
                         <div colspan="2" class="d-flex align-items-center justify-content-between mb-2 mt-4" style="border-bottom: 1px solid #dee2e6; padding-bottom: 8px;">
                             <div class="d-flex align-items-center">
@@ -581,6 +600,35 @@
                                     </group>
                                 </group>
                                 <notebook>
+                                    <page string="Cargo Details" name="cargo_details">
+                                        <field name="biziship_cargo_line_ids" nolabel="1" create="false" delete="false">
+                                            <tree>
+                                                <field name="pieces" string="UNITS" readonly="1"/>
+                                                <field name="packaging_type" string="TYPE" readonly="1"/>
+                                                <field name="weight" string="WEIGHT" readonly="1"/>
+                                                <field name="weight_unit" nolabel="1" readonly="1"/>
+                                                <field name="length" string="L" readonly="1"/>
+                                                <field name="width" string="W" readonly="1"/>
+                                                <field name="height" string="H" readonly="1"/>
+                                                <field name="dim_unit" readonly="1"/>
+                                                <field name="cargo_desc" string="DESCRIPTION" readonly="1"/>
+                                                <field name="computed_freight_class" string="CLASS" readonly="1"/>
+                                                <field name="nmfc" string="NMFC" optional="show"/>
+                                            </tree>
+                                        </field>
+                                        <group col="6" class="mt-2">
+                                            <group colspan="4"/>
+                                            <group class="oe_subtotal_footer oe_right" colspan="2">
+                                                <div class="oe_subtotal_footer_separator oe_inline o_td_label">
+                                                    <label for="biziship_total_weight" string="Total Weight"/>
+                                                </div>
+                                                <div class="oe_subtotal_footer_separator oe_inline">
+                                                    <field name="biziship_total_weight" nolabel="1" class="oe_inline oe_right" readonly="1" style="font-weight: bold; font-size: 1.2em;"/>
+                                                    <field name="biziship_total_weight_unit" nolabel="1" class="oe_inline ms-1" readonly="1"/>
+                                                </div>
+                                            </group>
+                                        </group>
+                                    </page>
                                     <page string="Charge Breakdown" name="charge_breakdown">
                                         <field name="quote_details" readonly="1" widget="text" style="font-family: monospace; white-space: pre;"/>
                                     </page>

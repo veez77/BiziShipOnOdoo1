@@ -40,6 +40,10 @@ class BizishipQuote(models.Model):
     quote_details = fields.Text(string='Quote Details')
     carrier_logo = fields.Binary(string="Carrier Logo", compute="_compute_carrier_logo")
 
+    biziship_cargo_line_ids = fields.One2many(related='sale_order_id.biziship_cargo_line_ids', string='Cargo Lines')
+    biziship_total_weight = fields.Float(related='sale_order_id.biziship_total_weight', string='Total Weight')
+    biziship_total_weight_unit = fields.Selection(related='sale_order_id.biziship_total_weight_unit', string='Weight Unit')
+
     @api.depends('carrier_name', 'carrier_code')
     def _compute_carrier_logo(self):
         mapping = {

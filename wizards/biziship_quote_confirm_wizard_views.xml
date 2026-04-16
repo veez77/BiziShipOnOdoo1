@@ -63,6 +63,25 @@
                     .biziship-hazmat-section .o_field_char input {
                         border-bottom: 1px solid #ccc !important;
                     }
+                    /* Highlight PO Number field when empty */
+                    div[name="po_number"] input.o_input:placeholder-shown {
+                        background-color: #fff3cd !important;
+                        border-bottom: 2px solid #e6a817 !important;
+                        border-radius: 3px !important;
+                        padding-left: 4px !important;
+                    }
+                    /* Highlight PO Number label when field is empty */
+                    .o_wrap_field:has(div[name="po_number"] input:placeholder-shown) .o_form_label,
+                    .o_group:has(div[name="po_number"] input:placeholder-shown) label[for="po_number"] {
+                        color: #856404 !important;
+                        font-weight: bold !important;
+                    }
+                    /* Real-time: gray out Confirm Booking button when PO is empty */
+                    .modal:has(div[name="po_number"] input.o_input:placeholder-shown) button[name="action_confirm_and_send"] {
+                        opacity: 0.5 !important;
+                        pointer-events: none !important;
+                        cursor: not-allowed !important;
+                    }
                 </style>
                 <div class="alert alert-info text-center biziship-quote-help-group" role="alert" style="font-size: 14px;">
                     Please confirm the details below to <b>confirm your booking</b>.
@@ -79,7 +98,7 @@
                     <group>
                         <!-- Left column -->
                         <field name="delivery_date"/>
-                        <field name="po_number"/>
+                        <field name="po_number" required="1" placeholder="Required"/>
                         <field name="has_accessorials" invisible="1"/>
                     </group>
                     <group>
@@ -189,7 +208,7 @@
                         <group name="cargo_footer" col="6" class="mt-2 mt-md-0">
                             <group colspan="4">
                                 <field name="accessorial_services_text" string="Accessorials" readonly="1" invisible="not has_accessorials" style="white-space: pre; font-size: 13px; color: #666;"/>
-                                <field name="biziship_special_instructions" string="Special Instructions" readonly="1" invisible="not biziship_special_instructions" style="white-space: pre; font-size: 1.1em; color: #000; text-align: left;"/>
+                                <field name="biziship_special_instructions" string="Special Instructions" style="white-space: pre; font-size: 1.1em; color: #000; text-align: left;"/>
                         
                         <!-- Environment Indicator -->
                         <div class="mt-4 mb-2 text-center" invisible="not priority1_env">
@@ -227,7 +246,7 @@
                 </div>
                 <footer>
                     <button name="action_confirm_and_send" string="Confirm Booking" type="object" class="btn-primary" invisible="is_hazmat and not is_hazmat_valid" data-hotkey="q"/>
-                    <!-- Disabled mock button identical to original -->
+                    <!-- Disabled: hazmat not valid -->
                     <button string="Confirm Booking" class="btn-primary o_disabled pe-none opacity-50" invisible="not is_hazmat or is_hazmat_valid"/>
                     <button string="Cancel" class="btn-secondary" special="cancel" data-hotkey="z"/>
                 </footer>

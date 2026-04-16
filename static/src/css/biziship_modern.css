@@ -638,6 +638,22 @@
     line-height: 1.4;
 }
 
+/* Purple background highlight on address inputs in Origin & Destination groups */
+div[name="biziship_origin_address"] input,
+div[name="biziship_origin_address2"] input,
+div[name="biziship_origin_city"] input,
+div[name="biziship_origin_zip"] input,
+div[name="biziship_origin_state_id"] input,
+div[name="biziship_origin_country_id"] input,
+div[name="biziship_dest_address"] input,
+div[name="biziship_dest_address2"] input,
+div[name="biziship_dest_city"] input,
+div[name="biziship_dest_zip"] input,
+div[name="biziship_dest_state_id"] input,
+div[name="biziship_dest_country_id"] input {
+    font-weight: bold !important;
+}
+
 /* Red labels for mandatory phone fields in booking wizard */
 .o_form_label:has(+ .biziship-mandatory-field),
 .o_field_widget.biziship-mandatory-field + .o_form_label,

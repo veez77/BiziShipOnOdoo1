@@ -130,7 +130,7 @@ class SaleOrder(models.Model):
     )
 
     # Destination
-    biziship_dest_company = fields.Char(string="Destination Company", related="partner_shipping_id.name", readonly=False, store=True)
+    biziship_dest_company = fields.Char(string="Destination Company", store=True)
 
     biziship_priority1_env = fields.Char(string="Priority1 Environment", help="DEV or PROD", readonly=True)
     biziship_dest_address = fields.Char(string="Destination Address Line 1", related="partner_shipping_id.street", readonly=False, store=True)
@@ -161,6 +161,11 @@ class SaleOrder(models.Model):
         string='Route Map', 
         compute='_compute_route_map_html', 
         sanitize=False
+    )
+    biziship_route_miles = fields.Char(
+        string='Route Distance',
+        compute='_compute_route_miles',
+        store=False
     )
 
     def _fetch_gateway_maps_key(self):
@@ -224,10 +229,9 @@ class SaleOrder(models.Model):
             if response.status_code == 200:
                 data = response.json()
                 _logger.warning("SMARTY RESPONSE DATA: %s", data)
-                if data.get("rdi") == "Residential":
-                    res[f"{prefix}residential_warning"] = True
-                else:
-                    res[f"{prefix}residential_warning"] = False
+                rdi = data.get("rdi")
+                res[f"{prefix}residential_warning"] = (rdi == "Residential")
+                res[f"{prefix}address_invalid"] = (rdi is None)
             else:
                 _logger.warning("SMARTY TEXT: %s", response.text)
         except Exception as e:
@@ -240,6 +244,43 @@ class SaleOrder(models.Model):
     # Maps JS integration: Smarty Residential validation warnings
     biziship_origin_residential_warning = fields.Boolean("Origin Residential Warning", default=False)
     biziship_dest_residential_warning = fields.Boolean("Dest Residential Warning", default=False)
+    biziship_origin_address_invalid = fields.Boolean("Origin Address Invalid", default=False)
+    biziship_dest_address_invalid = fields.Boolean("Dest Address Invalid", default=False)
+
+    @api.depends('biziship_origin_zip', 'biziship_dest_zip')
+    def _compute_route_miles(self):
+        import requests as req
+        api_key = self.env['ir.config_parameter'].sudo().get_param('biziship.google_maps_api_key')
+        for order in self:
+            try:
+                origin_zip = (order.biziship_origin_zip or '').strip()
+                dest_zip   = (order.biziship_dest_zip or '').strip()
+                if not api_key or not origin_zip or not dest_zip:
+                    order.biziship_route_miles = ''
+                    continue
+
+                # Google Routes API v2 — same call used by BiziShip web app
+                url = 'https://routes.googleapis.com/directions/v2:computeRoutes'
+                headers = {
+                    'X-Goog-Api-Key': api_key,
+                    'X-Goog-FieldMask': 'routes.distanceMeters',
+                    'Content-Type': 'application/json',
+                }
+                body = {
+                    'origin':      {'address': origin_zip},
+                    'destination': {'address': dest_zip},
+                    'travelMode':  'DRIVE',
+                }
+                resp = req.post(url, json=body, headers=headers, timeout=5)
+                data = resp.json()
+                distance_meters = data.get('routes', [{}])[0].get('distanceMeters')
+                if distance_meters:
+                    miles = round(distance_meters * 0.000621371)
+                    order.biziship_route_miles = f"{miles:,} miles"
+                else:
+                    order.biziship_route_miles = ''
+            except Exception:
+                order.biziship_route_miles = ''
 
     @api.depends('biziship_origin_address', 'biziship_origin_city', 'biziship_origin_state_id', 'biziship_origin_zip', 'biziship_origin_country_id',
                  'biziship_dest_address', 'biziship_dest_city', 'biziship_dest_state_id', 'biziship_dest_zip', 'biziship_dest_country_id')
@@ -248,12 +289,56 @@ class SaleOrder(models.Model):
             # The actual HTML is now generated and served by controllers/main.py
             # This ensures the browser sends the correct HTTP Referer to Google Maps.
             iframe_html = f'''
-            <div style="width: 100%; height: 350px; border-radius: 8px; overflow: hidden; border: 1px solid #e0e0e0; display: block; margin-bottom: 20px;">
+            <div style="width: 100%; height: 350px; border-radius: 8px; overflow: hidden; border: 1px solid #e0e0e0; display: block; margin-bottom: 8px;">
                 <iframe width="100%" height="100%" frameborder="0" style="border:0;" loading="lazy" src="/biziship/map/{order.id}"></iframe>
             </div>
             '''
             order.biziship_route_map_html = iframe_html
 
+
+    @api.onchange('partner_shipping_id')
+    def _onchange_partner_shipping_id_biziship(self):
+        partner = self.partner_shipping_id
+        if not partner:
+            return
+        if partner.parent_id:
+            self.biziship_dest_company = partner.commercial_company_name or partner.parent_id.name or partner.name
+            self.biziship_dest_contact_name = partner.name
+        else:
+            self.biziship_dest_company = partner.name
+        if partner.phone or partner.mobile:
+            self.biziship_dest_contact_phone = partner.phone or partner.mobile
+        if partner.email:
+            self.biziship_dest_contact_email = partner.email
+        self._biziship_run_address_validation(
+            partner.street, partner.city,
+            partner.state_id.code if partner.state_id else '',
+            partner.zip, 'dest'
+        )
+
+    @api.onchange('warehouse_id')
+    def _onchange_warehouse_id_biziship(self):
+        self.biziship_origin_company = self.env.company.name or ''
+        warehouse = self.warehouse_id
+        if warehouse and warehouse.partner_id:
+            p = warehouse.partner_id
+            if p.street:
+                self.biziship_origin_address = p.street
+            if p.street2:
+                self.biziship_origin_address2 = p.street2
+            if p.city:
+                self.biziship_origin_city = p.city
+            if p.state_id:
+                self.biziship_origin_state_id = p.state_id
+            if p.zip:
+                self.biziship_origin_zip = p.zip
+            if p.country_id:
+                self.biziship_origin_country_id = p.country_id
+            self._biziship_run_address_validation(
+                p.street, p.city,
+                p.state_id.code if p.state_id else '',
+                p.zip, 'origin'
+            )
 
     @api.onchange('biziship_dest_residential')
     def _onchange_biziship_dest_residential(self):
@@ -347,23 +432,49 @@ class SaleOrder(models.Model):
             })
         return True
 
+    def _biziship_run_address_validation(self, street, city, state_code, zip_code, prefix):
+        """Call Smarty validation server-side. Sets residential warning and invalid address flag."""
+        try:
+            erp_api_key = get_erp_api_key(self.env)
+            if not erp_api_key:
+                return
+            url = f"{get_biziship_api_url()}/erp/validate-address"
+            payload = {"street": street or "", "city": city or "", "state": state_code or "", "zip": zip_code or ""}
+            response = requests.post(url, headers={"X-ERP-API-Key": erp_api_key}, json=payload, timeout=5)
+            if response.status_code == 200:
+                rdi = response.json().get("rdi")
+                setattr(self, f"biziship_{prefix}_residential_warning", rdi == "Residential")
+                setattr(self, f"biziship_{prefix}_address_invalid", rdi is None)
+        except Exception:
+            pass
+
     def action_biziship_copy_customer_to_dest(self):
         self.ensure_one()
         if self.partner_id:
             partner = self.partner_id
+            if partner.parent_id:
+                dest_company = partner.commercial_company_name or partner.parent_id.name or partner.name
+                dest_contact = partner.name
+            else:
+                dest_company = partner.name
+                dest_contact = False
             self.write({
-                'biziship_dest_company': partner.name,
+                'biziship_dest_company': dest_company,
                 'biziship_dest_address': partner.street,
                 'biziship_dest_address2': partner.street2,
                 'biziship_dest_city': partner.city,
                 'biziship_dest_state_id': partner.state_id.id if partner.state_id else False,
                 'biziship_dest_zip': partner.zip,
                 'biziship_dest_country_id': partner.country_id.id if partner.country_id else False,
-                # Contact fields: use partner data if available, otherwise clear whatever was there
-                'biziship_dest_contact_name': partner.name or False,
+                'biziship_dest_contact_name': dest_contact,
                 'biziship_dest_contact_phone': partner.phone or partner.mobile or False,
                 'biziship_dest_contact_email': partner.email or False,
             })
+            self._biziship_run_address_validation(
+                partner.street, partner.city,
+                partner.state_id.code if partner.state_id else '',
+                partner.zip, 'dest'
+            )
         return True
 
     def action_biziship_save_to_pool(self):

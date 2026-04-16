@@ -38,15 +38,21 @@ class BiziShipMapController(http.Controller):
                 html, body {{ margin: 0; padding: 0; height: 100%; width: 100%; font-family: sans-serif; position: relative; }}
                 #map {{ height: 100%; width: 100%; border-radius: 8px; }}
                 #distance-box {{
-                    position: absolute; bottom: 15px; right: 15px; 
-                    background: rgba(0,0,0,0.65); color: white; 
-                    padding: 4px 8px; border-radius: 6px; 
-                    font-size: 13px; font-weight: bold; display: none;
-                    z-index: 99999;
-                    box-shadow: 0px 2px 4px rgba(0,0,0,0.3);
+                    background: rgba(32, 31, 65, 0.88);
+                    color: white;
+                    margin: 0 10px 10px 0;
+                    padding: 6px 14px;
+                    border-radius: 20px;
+                    font-size: 13px;
+                    font-weight: 700;
+                    letter-spacing: 0.3px;
+                    display: none;
+                    box-shadow: 0 2px 8px rgba(0,0,0,0.35);
+                    border: 1px solid rgba(244,152,0,0.5);
+                    cursor: default;
                 }}
             </style>
-            <script src="https://maps.googleapis.com/maps/api/js?key={api_key}"></script>
+            <script src="https://maps.googleapis.com/maps/api/js?key={api_key}&language=en&region=US"></script>
             <script>
                 function initMap() {{
                     var map = new google.maps.Map(document.getElementById('map'), {{
@@ -86,11 +92,19 @@ class BiziShipMapController(http.Controller):
                             new google.maps.Marker({{ position: leg.start_location, map: map, icon: markerOpts, zIndex: 100 }});
                             new google.maps.Marker({{ position: leg.end_location, map: map, icon: markerOpts, zIndex: 100 }});
                             
-                            // Make distance box display the miles natively
+                            // Add distance as a native Google Maps control (bottom right)
+                            // This is the only reliable way to overlay content inside an iframe map
                             var dist = leg.distance.text;
                             var box = document.getElementById('distance-box');
-                            box.innerText = dist;
+                            box.innerText = '🛣  ' + dist;
                             box.style.display = 'block';
+                            map.controls[google.maps.ControlPosition.BOTTOM_RIGHT].push(box);
+                            
+                            // Also send to the parent Odoo page to display below the map
+                            try {{
+                                var orderId = window.location.pathname.split('/').pop();
+                                window.parent.postMessage({{ type: 'biziship_distance_' + orderId, distance: dist }}, '*');
+                            }} catch(e) {{}}
                         }}
                     }});
                 }}

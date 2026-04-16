@@ -91,7 +91,7 @@ class BizishipQuoteConfirmWizard(models.TransientModel):
     currency = fields.Char(related="quote_id.currency", string="Currency Code", readonly=True)
     currency_id = fields.Many2one(related="quote_id.currency_id", readonly=True)
     quote_id_ref = fields.Char(related="quote_id.quote_id_ref", readonly=True)
-    biziship_special_instructions = fields.Text(related="sale_order_id.biziship_special_instructions", readonly=True)
+    biziship_special_instructions = fields.Text(string="Special Instructions")
     priority1_env = fields.Char(related="sale_order_id.biziship_priority1_env", readonly=True)
     po_number = fields.Char(string="PO Number", compute='_compute_po_number', store=True, readonly=False)
 
@@ -132,6 +132,7 @@ class BizishipQuoteConfirmWizard(models.TransientModel):
                     'destination_contact_name': so.biziship_dest_contact_name,
                     'destination_contact_phone': so.biziship_dest_contact_phone,
                     'destination_contact_email': so.biziship_dest_contact_email,
+                    'biziship_special_instructions': so.biziship_special_instructions,
                 })
         return res
 
@@ -326,7 +327,7 @@ class BizishipQuoteConfirmWizard(models.TransientModel):
             "shipper": shipper,
             "consignee": consignee,
             "pickup_date": pickup_date,
-            "pickup_note": sale_order.biziship_special_instructions or "",
+            "pickup_note": self.biziship_special_instructions or "",
             "line_items": line_items
         }
 

@@ -391,6 +391,33 @@ class SaleOrder(models.Model):
     biziship_cargo_desc = fields.Char(string="Cargo Description", default="General Freight")
     biziship_special_instructions = fields.Text(string="Special Instructions")
 
+    # Shipment Tracking (persisted summary only — full event list lives in wizard)
+    biziship_tracking_status = fields.Char(string="Tracking Status", readonly=True, copy=False)
+    biziship_pro_number = fields.Char(string="PRO Number", readonly=True, copy=False)
+    biziship_last_tracked_at = fields.Char(string="Last Tracked At", readonly=True, copy=False)
+
+    def action_open_tracking_wizard(self):
+        self.ensure_one()
+        if not self.biziship_bol_number:
+            raise UserError(_("No BOL number found. Please book the shipment first."))
+        wizard = self.env['biziship.tracking.wizard'].create({
+            'sale_order_id': self.id,
+            'bol_number': self.biziship_bol_number,
+            'tracking_status': self.biziship_tracking_status or '',
+            'pro_number': self.biziship_pro_number or '',
+            'last_updated': self.biziship_last_tracked_at or '',
+        })
+        # Auto-fetch latest tracking on open — same as clicking Refresh
+        wizard._fetch_tracking_data()
+        return {
+            'type': 'ir.actions.act_window',
+            'name': 'Shipment Tracking',
+            'res_model': 'biziship.tracking.wizard',
+            'res_id': wizard.id,
+            'view_mode': 'form',
+            'target': 'new',
+        }
+
     @api.depends('biziship_cargo_line_ids', 'biziship_cargo_line_ids.weight', 'biziship_cargo_line_ids.weight_unit', 'biziship_cargo_line_ids.pieces', 'biziship_total_weight_unit')
     def _compute_biziship_totals(self):
         for order in self:

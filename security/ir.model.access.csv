@@ -12,3 +12,4 @@ access_biziship_save_freight_wizard,biziship.save.freight.wizard,model_biziship_
 access_biziship_load_freight_wizard,biziship.load.freight.wizard,model_biziship_load_freight_wizard,base.group_user,1,1,1,1
 access_biziship_load_freight_line,biziship.load.freight.line,model_biziship_load_freight_line,base.group_user,1,1,1,1
 access_biziship_load_freight_filter_user,biziship.load.freight.filter.user,model_biziship_load_freight_filter_user,base.group_user,1,1,1,1
+access_biziship_tracking_wizard,biziship.tracking.wizard,model_biziship_tracking_wizard,base.group_user,1,1,1,1

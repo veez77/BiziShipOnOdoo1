@@ -85,6 +85,7 @@
                         <group name="biziship_origin_group">
                             <div colspan="2" class="d-flex align-items-center justify-content-between o_horizontal_separator mb-2 mt-0">
                                 <span class="fw-bold">ORIGIN &amp; PICKUP</span>
+                                <button name="action_biziship_refresh_origin_from_warehouse" string="Copy from Warehouse" type="object" class="btn btn-sm btn-link text-primary p-0" icon="fa-copy"/>
                             </div>
                             <field name="biziship_origin_company" nolabel="1" colspan="2" placeholder="Origin Company Name"/>
                             <field name="biziship_origin_address" widget="biziship_places" nolabel="1" colspan="2" placeholder="Address Line 1"/>

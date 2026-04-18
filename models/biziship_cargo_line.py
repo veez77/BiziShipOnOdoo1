@@ -166,7 +166,8 @@ class BizishipSaleCargoLine(models.Model):
         # Collect flags
         flags = []
         if self.hazmat: flags.append("hazmat")
-        if self.used: flags.append("used")
+        if self.stackable: flags.append("stackable")
+        if self.used: flags.append("used_reconditioned")
         if self.machinery: flags.append("machinery")
 
         payload = {

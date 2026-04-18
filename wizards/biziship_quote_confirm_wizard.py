@@ -171,12 +171,17 @@ class BizishipQuoteConfirmWizard(models.TransientModel):
         for rec in self:
             po = False
             if rec.quote_id and rec.quote_id.sale_order_id:
-                po = rec.quote_id.sale_order_id.biziship_po_number
-                
-                # Fallback to extracted JSON if empty
-                if not po and rec.quote_id.sale_order_id.biziship_extracted_json:
+                so = rec.quote_id.sale_order_id
+                po = so.biziship_po_number
+
+                # Fallback to HexcelPack's Destination PO field
+                if not po:
+                    po = getattr(so, 'x_destination_po', False) or False
+
+                # Fallback to extracted JSON if still empty
+                if not po and so.biziship_extracted_json:
                     try:
-                        data = json.loads(rec.quote_id.sale_order_id.biziship_extracted_json)
+                        data = json.loads(so.biziship_extracted_json)
                         po = data.get('po_number', False)
                     except Exception:
                         pass

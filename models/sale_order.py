@@ -296,6 +296,12 @@ class SaleOrder(models.Model):
             order.biziship_route_map_html = iframe_html
 
 
+    @api.onchange('x_destination_po')
+    def _onchange_x_destination_po_biziship(self):
+        x_po = getattr(self, 'x_destination_po', False)
+        if x_po and not self.biziship_po_number:
+            self.biziship_po_number = x_po
+
     @api.onchange('partner_shipping_id')
     def _onchange_partner_shipping_id_biziship(self):
         partner = self.partner_shipping_id
@@ -340,6 +346,28 @@ class SaleOrder(models.Model):
                 p.zip, 'origin'
             )
 
+    def action_biziship_refresh_origin_from_warehouse(self):
+        for rec in self:
+            rec.biziship_origin_company = rec.env.company.name or ''
+            warehouse = getattr(rec, 'warehouse_id', False)
+            if warehouse and warehouse.partner_id:
+                p = warehouse.partner_id
+                rec.biziship_origin_address = p.street or ''
+                rec.biziship_origin_address2 = p.street2 or ''
+                rec.biziship_origin_city = p.city or ''
+                if p.state_id:
+                    rec.biziship_origin_state_id = p.state_id
+                rec.biziship_origin_zip = p.zip or ''
+                if p.country_id:
+                    rec.biziship_origin_country_id = p.country_id
+                if p.phone or p.mobile:
+                    rec.biziship_origin_contact_phone = p.phone or p.mobile
+                rec._biziship_run_address_validation(
+                    p.street, p.city,
+                    p.state_id.code if p.state_id else '',
+                    p.zip, 'origin'
+                )
+
     @api.onchange('biziship_dest_residential')
     def _onchange_biziship_dest_residential(self):
         if self.biziship_dest_residential:
@@ -363,12 +391,12 @@ class SaleOrder(models.Model):
     biziship_cargo_desc = fields.Char(string="Cargo Description", default="General Freight")
     biziship_special_instructions = fields.Text(string="Special Instructions")
 
-    @api.depends('biziship_cargo_line_ids', 'biziship_cargo_line_ids.weight', 'biziship_cargo_line_ids.weight_unit', 'biziship_total_weight_unit')
+    @api.depends('biziship_cargo_line_ids', 'biziship_cargo_line_ids.weight', 'biziship_cargo_line_ids.weight_unit', 'biziship_cargo_line_ids.pieces', 'biziship_total_weight_unit')
     def _compute_biziship_totals(self):
         for order in self:
             total_lbs = 0.0
             for line in order.biziship_cargo_line_ids:
-                total_lbs += convert_to_lbs(line.weight, line.weight_unit)
+                total_lbs += convert_to_lbs(line.weight, line.weight_unit) * (line.pieces or 1)
                     
             if order.biziship_total_weight_unit == 'kg':
                 order.biziship_total_weight = round(total_lbs / KG_TO_LBS, 2)

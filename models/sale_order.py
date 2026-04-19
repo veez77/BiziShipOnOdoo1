@@ -346,6 +346,12 @@ class SaleOrder(models.Model):
                 p.zip, 'origin'
             )
 
+    def action_sync_po_from_destination(self):
+        for rec in self:
+            x_po = getattr(rec, 'x_destination_po', False)
+            if x_po:
+                rec.biziship_po_number = x_po
+
     def action_biziship_refresh_origin_from_warehouse(self):
         for rec in self:
             rec.biziship_origin_company = rec.env.company.name or ''

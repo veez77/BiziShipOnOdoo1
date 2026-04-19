@@ -78,7 +78,11 @@
                                 <button name="action_biziship_load_from_pool" string="Load Saved Freight" type="object" class="biziship-btn-pool-action me-2" icon="fa-folder-open-o"/>
                                 <button name="action_biziship_save_to_pool" string="Save to My Pool" type="object" class="biziship-btn-pool-action" icon="fa-save"/>
                             </div>
-                            <field name="biziship_po_number"/>
+                            <label for="biziship_po_number" string="PO Number"/>
+                            <div class="d-flex align-items-center gap-2">
+                                <button name="action_sync_po_from_destination" type="object" icon="fa-refresh" string="" class="btn btn-sm btn-link text-primary p-0" title="Copy from Destination PO"/>
+                                <field name="biziship_po_number" nolabel="1" class="flex-grow-1"/>
+                            </div>
                             <field name="biziship_pickup_date"/>
                         </group>
                     <group>

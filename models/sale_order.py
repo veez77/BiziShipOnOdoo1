@@ -396,6 +396,46 @@ class SaleOrder(models.Model):
     biziship_pro_number = fields.Char(string="PRO Number", readonly=True, copy=False)
     biziship_last_tracked_at = fields.Char(string="Last Tracked At", readonly=True, copy=False)
 
+    def action_open_origin_address_history(self):
+        self.ensure_one()
+        wizard = self.env['biziship.address.history.wizard'].create({
+            'sale_order_id': self.id,
+            'address_type': 'origin',
+        })
+        lines = wizard._load_address_lines()
+        if lines:
+            self.env['biziship.address.history.line'].create(
+                [dict(l, wizard_id=wizard.id) for l in lines]
+            )
+        return {
+            'type': 'ir.actions.act_window',
+            'name': 'Previous Origin Addresses',
+            'res_model': 'biziship.address.history.wizard',
+            'res_id': wizard.id,
+            'view_mode': 'form',
+            'target': 'new',
+        }
+
+    def action_open_dest_address_history(self):
+        self.ensure_one()
+        wizard = self.env['biziship.address.history.wizard'].create({
+            'sale_order_id': self.id,
+            'address_type': 'destination',
+        })
+        lines = wizard._load_address_lines()
+        if lines:
+            self.env['biziship.address.history.line'].create(
+                [dict(l, wizard_id=wizard.id) for l in lines]
+            )
+        return {
+            'type': 'ir.actions.act_window',
+            'name': 'Previous Destination Addresses',
+            'res_model': 'biziship.address.history.wizard',
+            'res_id': wizard.id,
+            'view_mode': 'form',
+            'target': 'new',
+        }
+
     def action_open_tracking_wizard(self):
         self.ensure_one()
         if not self.biziship_bol_number:

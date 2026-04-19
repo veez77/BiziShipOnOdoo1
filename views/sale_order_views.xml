@@ -85,7 +85,10 @@
                         <group name="biziship_origin_group">
                             <div colspan="2" class="d-flex align-items-center justify-content-between o_horizontal_separator mb-2 mt-0">
                                 <span class="fw-bold">ORIGIN &amp; PICKUP</span>
-                                <button name="action_biziship_refresh_origin_from_warehouse" string="Copy from Warehouse" type="object" class="btn btn-sm btn-link text-primary p-0" icon="fa-copy"/>
+                                <div class="d-flex align-items-center gap-4">
+                                    <button name="action_open_origin_address_history" string="Previous Addresses" type="object" class="btn btn-sm btn-link text-primary p-0" icon="fa-history"/>
+                                    <button name="action_biziship_refresh_origin_from_warehouse" string="Copy from Warehouse" type="object" class="btn btn-sm btn-link text-primary p-0" icon="fa-copy"/>
+                                </div>
                             </div>
                             <field name="biziship_origin_company" nolabel="1" colspan="2" placeholder="Origin Company Name"/>
                             <field name="biziship_origin_address" widget="biziship_places" nolabel="1" colspan="2" placeholder="Address Line 1"/>
@@ -124,7 +127,10 @@
                         <group name="biziship_destination_group">
                             <div colspan="2" class="d-flex align-items-center justify-content-between o_horizontal_separator mb-2 mt-0">
                                 <span class="fw-bold">DESTINATION</span>
-                                <button name="action_biziship_copy_customer_to_dest" string="Copy Customer Details" type="object" class="btn btn-sm btn-link text-primary p-0" icon="fa-copy" invisible="not partner_id"/>
+                                <div class="d-flex align-items-center gap-4">
+                                    <button name="action_open_dest_address_history" string="Previous Addresses" type="object" class="btn btn-sm btn-link text-primary p-0" icon="fa-history"/>
+                                    <button name="action_biziship_copy_customer_to_dest" string="Copy Customer Details" type="object" class="btn btn-sm btn-link text-primary p-0" icon="fa-copy" invisible="not partner_id"/>
+                                </div>
                             </div>
                             <field name="biziship_dest_company" nolabel="1" colspan="2" placeholder="Destination Company Name"/>
                             <field name="biziship_dest_address" widget="biziship_places" nolabel="1" colspan="2" placeholder="Address Line 1"/>

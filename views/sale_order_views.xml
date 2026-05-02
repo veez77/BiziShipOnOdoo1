@@ -60,14 +60,17 @@
                     </div>
                     <!-- End BiziShip Branded Header -->
                     <field name="biziship_is_connected" invisible="1"/>
-                    <field name="biziship_connected_user_name" invisible="1"/>
+                    <field name="biziship_connected_email" invisible="1"/>
                     <field name="biziship_last_fetch_nonce" invisible="1"/>
                     <div class="alert alert-info py-1 mb-2 d-flex justify-content-between align-items-center" role="status" style="border-radius: 4px; border-left: 4px solid #00b14f;" invisible="not biziship_is_connected">
                         <div class="d-flex align-items-center">
                             <i class="fa fa-user-circle text-primary me-2" title="User" style="font-size: 1.1rem;"/>
-                            <span>Logged in BiziShip as: <field name="biziship_connected_user_name" class="fw-bold ms-1"/></span>
+                            <span>Logged in BiziShip as: <field name="biziship_connected_email" class="fw-bold ms-1"/></span>
                         </div>
-                        <span class="badge rounded-pill bg-success-light text-success fw-bold px-3" style="font-size: 11px; border: 1px solid #00b14f;">ACCOUNT CONNECTED</span>
+                        <div class="d-flex align-items-center gap-2">
+                            <button name="action_biziship_refresh_profile_rpc" type="object" icon="fa-refresh" class="btn btn-link p-0 text-muted" title="Refresh BiziShip account" style="font-size: 0.95rem; line-height: 1;"/>
+                            <span class="badge rounded-pill bg-success-light text-success fw-bold px-3" style="font-size: 11px; border: 1px solid #00b14f;">ACCOUNT CONNECTED</span>
+                        </div>
                     </div>
                     <div class="d-flex align-items-center gap-2 mb-2" invisible="not biziship_is_connected">
                         <div class="d-flex align-items-center" invisible="biziship_priority1_env != 'PROD'">
@@ -507,9 +510,12 @@
                     <div class="alert alert-info py-1 mb-2 d-flex justify-content-between align-items-center" role="status" style="border-radius: 4px; border-left: 4px solid #00b14f;" invisible="not biziship_is_connected">
                         <div class="d-flex align-items-center">
                             <i class="fa fa-user-circle text-primary me-2" style="font-size: 1.1rem;"/>
-                            <span>Logged in BiziShip as: <field name="biziship_connected_user_name" class="fw-bold ms-1"/></span>
+                            <span>Logged in BiziShip as: <field name="biziship_connected_email" class="fw-bold ms-1"/></span>
                         </div>
-                        <span class="badge rounded-pill bg-success-light text-success fw-bold px-3" style="font-size: 11px; border: 1px solid #00b14f;">ACCOUNT CONNECTED</span>
+                        <div class="d-flex align-items-center gap-2">
+                            <button name="action_biziship_refresh_profile_rpc" type="object" icon="fa-refresh" class="btn btn-link p-0 text-muted" title="Refresh BiziShip account" style="font-size: 0.95rem; line-height: 1;"/>
+                            <span class="badge rounded-pill bg-success-light text-success fw-bold px-3" style="font-size: 11px; border: 1px solid #00b14f;">ACCOUNT CONNECTED</span>
+                        </div>
                     </div>
                     <!-- BiziShip Booking Details Group -->
                     <group invisible="not biziship_shipment_id">
@@ -519,8 +525,15 @@
                         </div>
                         <field name="biziship_bol_number" readonly="1"/>
                         <field name="biziship_shipment_id" readonly="1"/>
+                        <field name="biziship_pro_number" readonly="1" invisible="not biziship_pro_number"/>
                         <field name="biziship_bol_url" invisible="1"/>
-                        <field name="biziship_documents_html" nolabel="1" readonly="1" invisible="not biziship_bol_url and not biziship_documents_html"/>
+                        <div colspan="2" class="d-flex align-items-center justify-content-between mt-1 mb-1" invisible="not biziship_bol_url and not biziship_documents_html">
+                            <field name="biziship_documents_html" nolabel="1" readonly="1" class="flex-grow-1"/>
+                            <button name="action_biziship_refresh_documents" type="object"
+                                    string="Refresh Documents" icon="fa-refresh"
+                                    class="btn btn-sm btn-outline-secondary ms-3 flex-shrink-0"
+                                    title="Fetch latest documents and fresh URLs from BiziShip"/>
+                        </div>
                         <div colspan="2" class="text-end mt-3 mb-1" style="padding-right: 4px;" invisible="not biziship_shipment_id">
                             <div style="font-size: 1.25rem; font-weight: 700; color: #1a1a2e; letter-spacing: -0.2px; line-height: 1.3;">
                                 🎉 Congratulations, Your Shipment is Booked!

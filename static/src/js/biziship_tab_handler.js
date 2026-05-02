@@ -14,6 +14,7 @@ patch(FormController.prototype, {
         onMounted(() => {
             this._checkBiziShipTabSwitch();
             this._setupBiziShipHandlers();
+            this._bizishipRefreshProfile();
         });
         onPatched(() => {
             this._checkBiziShipTabSwitch();
@@ -37,23 +38,30 @@ patch(FormController.prototype, {
 
         // 2. Refresh BiziShip user profile when either freight tab is clicked
         document.addEventListener('click', (ev) => {
-            // Use the selector we know resolves (.o_notebook .nav-link), then check name in JS
             const navLink = ev.target.closest('.o_notebook .nav-link');
             if (!navLink) return;
             const tabName = navLink.getAttribute('name') || navLink.getAttribute('data-name');
             if (tabName !== 'biziship_freight_quotes' && tabName !== 'biziship_freight_details') return;
-            const record = this.model.root;
-            const recordId = (record && record.resId) || (record && record.data && record.data.id);
-            if (!recordId) return;
-            this.orm.call('sale.order', 'action_biziship_refresh_profile_rpc', [[recordId]])
-                .then((result) => {
-                    if (result && this.model.root && this.model.root.data) {
-                        this.model.root.data.biziship_priority1_env = result.biziship_priority1_env;
-                        this.model.root.data.biziship_demo_tries = result.biziship_demo_tries;
-                    }
-                })
-                .catch((err) => console.warn('BiziShip refresh error:', err));
+            this._bizishipRefreshProfile();
         }, true);
+    },
+
+    _bizishipRefreshProfile() {
+        if (!this.props || this.props.resModel !== 'sale.order') return;
+        const record = this.model.root;
+        const recordId = (record && record.resId) || (record && record.data && record.data.id);
+        if (!recordId) return;
+        this.orm.call('sale.order', 'action_biziship_refresh_profile_rpc', [[recordId]])
+            .then((result) => this._bizishipApplyProfileResult(result))
+            .catch((err) => console.warn('BiziShip refresh error:', err));
+    },
+
+    _bizishipApplyProfileResult(result) {
+        if (!result || !this.model.root || !this.model.root.data) return;
+        const data = this.model.root.data;
+        data.biziship_priority1_env = result.biziship_priority1_env;
+        data.biziship_demo_tries = result.biziship_demo_tries;
+        data.biziship_connected_email = result.biziship_connected_email;
     },
 
     _checkBiziShipTabSwitch() {

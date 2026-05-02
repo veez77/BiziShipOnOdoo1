@@ -34,6 +34,9 @@ class SaleOrder(models.Model):
 
     biziship_documents_json = fields.Text(string='Shipment Documents JSON', readonly=True, copy=False)
     biziship_documents_html = fields.Html(string='Shipment Documents', compute='_compute_biziship_documents_html', readonly=True)
+    biziship_pro_number = fields.Char(string='PRO Number', readonly=True, copy=False)
+    biziship_booking_id = fields.Char(string='BiziShip Booking ID', readonly=True, copy=False)
+    biziship_connected_email = fields.Char(string='Connected BiziShip Email', readonly=True, copy=False)
     biziship_po_number = fields.Char(string="PO Number")
     biziship_last_fetch_nonce = fields.Char(string='Last Fetch Nonce', readonly=True, copy=False)
 
@@ -360,6 +363,7 @@ class SaleOrder(models.Model):
         return {
             'biziship_priority1_env': self.biziship_priority1_env or False,
             'biziship_demo_tries': self.biziship_demo_tries,
+            'biziship_connected_email': self.biziship_connected_email or False,
         }
 
     def action_biziship_refresh_origin_from_warehouse(self):
@@ -492,12 +496,22 @@ class SaleOrder(models.Model):
             order.biziship_has_selected_quote = any(q.is_selected for q in order.biziship_quote_ids)
 
     def _biziship_fetch_and_store_user_profile(self):
-        """Fetch fresh user profile from /erp/auth/me and store priority1_env + demo_tries on this order."""
+        """Fetch fresh user profile from /erp/auth/me and write only changed values."""
         self.ensure_one()
         profile = fetch_biziship_user_profile(self.env)
         if profile:
-            self.biziship_priority1_env = profile.get('priority1Env', self.biziship_priority1_env)
-            self.biziship_demo_tries = profile.get('demoTries', -1)
+            vals = {}
+            new_env = profile.get('priority1Env') or self.biziship_priority1_env
+            new_tries = profile.get('demoTries', -1)
+            new_email = profile.get('email') or ''
+            if new_env != self.biziship_priority1_env:
+                vals['biziship_priority1_env'] = new_env
+            if new_tries != self.biziship_demo_tries:
+                vals['biziship_demo_tries'] = new_tries
+            if new_email != (self.biziship_connected_email or ''):
+                vals['biziship_connected_email'] = new_email
+            if vals:
+                self.write(vals)
         return profile
 
     def action_open_biziship_quote_confirm(self):
@@ -671,6 +685,36 @@ class SaleOrder(models.Model):
             order.biziship_quote_ids.unlink()
         return True
 
+    def action_biziship_refresh_documents(self):
+        self.ensure_one()
+        lookup_id = self.biziship_booking_id or self.biziship_shipment_id
+        if not lookup_id:
+            raise UserError(_("No shipment ID found on this record."))
+        url = f"{get_biziship_api_url()}/erp/shipments/{lookup_id}/documents"
+        user = self.env.user
+        headers = {
+            "X-ERP-API-Key": get_erp_api_key(self.env),
+            "X-User-Email": (user.biziship_email if user.biziship_token and user.biziship_email else user.email) or "",
+        }
+        if user.biziship_token:
+            headers["Authorization"] = f"Bearer {user.biziship_token}"
+        try:
+            response = requests.get(url, headers=headers, timeout=15)
+            response.raise_for_status()
+            data = response.json()
+        except Exception as e:
+            raise UserError(_("Failed to fetch documents: %s") % str(e))
+        docs = data.get('documents', [])
+        vals = {}
+        if docs:
+            vals['biziship_documents_json'] = json.dumps(docs)
+        pro_number = data.get('proNumber')
+        if pro_number and not self.biziship_pro_number:
+            vals['biziship_pro_number'] = pro_number
+        if vals:
+            self.write(vals)
+        return True
+
     def action_delete_biziship_booking(self):
         for order in self:
             order.write({
@@ -679,6 +723,8 @@ class SaleOrder(models.Model):
                 'biziship_bol_url': False,
                 'biziship_extracted_json': False,
                 'biziship_documents_json': False,
+                'biziship_pro_number': False,
+                'biziship_booking_id': False,
             })
             # Also reset selection
             for quote in order.biziship_quote_ids:

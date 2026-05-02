@@ -101,16 +101,32 @@ class BizishipAuthWizard(models.TransientModel):
                     'biziship_user_name': user_name,
                     'biziship_p1_env': env
                 })
-                
+
+                # If opened from a Sale Order, refresh its profile fields and reload the form
+                active_model = self.env.context.get('active_model')
+                active_id = self.env.context.get('active_id')
+                next_action = {'type': 'ir.actions.act_window_close'}
+                if active_model == 'sale.order' and active_id:
+                    order = self.env['sale.order'].browse(active_id)
+                    if order.exists():
+                        order._biziship_fetch_and_store_user_profile()
+                    next_action = {
+                        'type': 'ir.actions.act_window',
+                        'res_model': 'sale.order',
+                        'res_id': active_id,
+                        'view_mode': 'form',
+                        'target': 'current',
+                    }
+
                 return {
                     'type': 'ir.actions.client',
                     'tag': 'display_notification',
                     'params': {
                         'title': _('Success'),
-                        'message': _('Successfully connected to BiziShip!'),
+                        'message': _('Successfully connected to BiziShip as %s!') % user_name,
                         'type': 'success',
                         'sticky': False,
-                        'next': {'type': 'ir.actions.act_window_close'},
+                        'next': next_action,
                     }
                 }
             else:

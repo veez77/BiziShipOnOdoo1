@@ -375,6 +375,7 @@ class BizishipQuoteConfirmWizard(models.TransientModel):
             sale_order.write({
                 'biziship_bol_number': response_json.get('bol_number'),
                 'biziship_shipment_id': response_json.get('shipment_id'),
+                'biziship_booking_id': response_json.get('biziship_id') or False,
                 'biziship_bol_url': response_json.get('bol_url'),
                 'biziship_documents_json': json.dumps(response_json.get('documents', [])) if response_json.get('documents') else False
             })

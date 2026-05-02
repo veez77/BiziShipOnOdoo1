@@ -10,9 +10,10 @@ import logging
 _logger = logging.getLogger(__name__)
 
 from odoo.addons.biziship.api_utils import (
-    get_biziship_api_url, 
+    get_biziship_api_url,
     get_erp_api_key,
-    BIZISHIP_MODULE_VERSION, 
+    fetch_biziship_user_profile,
+    BIZISHIP_MODULE_VERSION,
     BIZISHIP_APP_NAME,
     KG_TO_LBS,
     convert_to_lbs,
@@ -132,7 +133,8 @@ class SaleOrder(models.Model):
     # Destination
     biziship_dest_company = fields.Char(string="Destination Company", store=True)
 
-    biziship_priority1_env = fields.Char(string="Priority1 Environment", help="DEV or PROD", readonly=True)
+    biziship_priority1_env = fields.Char(string="Priority1 Environment", help="DEV, PROD, or DEMO", readonly=True)
+    biziship_demo_tries = fields.Integer(string="Demo Tries Remaining", default=-1)
     biziship_dest_address = fields.Char(string="Destination Address Line 1", related="partner_shipping_id.street", readonly=False, store=True)
     biziship_dest_address2 = fields.Char(string="Destination Address Line 2", related="partner_shipping_id.street2", readonly=False, store=True)
     biziship_dest_city = fields.Char(string="Destination City", related="partner_shipping_id.city", readonly=False, store=True)
@@ -352,6 +354,14 @@ class SaleOrder(models.Model):
             if x_po:
                 rec.biziship_po_number = x_po
 
+    def action_biziship_refresh_profile_rpc(self):
+        self.ensure_one()
+        self._biziship_fetch_and_store_user_profile()
+        return {
+            'biziship_priority1_env': self.biziship_priority1_env or False,
+            'biziship_demo_tries': self.biziship_demo_tries,
+        }
+
     def action_biziship_refresh_origin_from_warehouse(self):
         for rec in self:
             rec.biziship_origin_company = rec.env.company.name or ''
@@ -481,12 +491,23 @@ class SaleOrder(models.Model):
         for order in self:
             order.biziship_has_selected_quote = any(q.is_selected for q in order.biziship_quote_ids)
 
+    def _biziship_fetch_and_store_user_profile(self):
+        """Fetch fresh user profile from /erp/auth/me and store priority1_env + demo_tries on this order."""
+        self.ensure_one()
+        profile = fetch_biziship_user_profile(self.env)
+        if profile:
+            self.biziship_priority1_env = profile.get('priority1Env', self.biziship_priority1_env)
+            self.biziship_demo_tries = profile.get('demoTries', -1)
+        return profile
+
     def action_open_biziship_quote_confirm(self):
         self.ensure_one()
         selected_quote = self.biziship_quote_ids.filtered(lambda q: q.is_selected)
         if not selected_quote:
             raise models.ValidationError("Please select a quote from the LTL Freight Quotes list first.")
-        
+
+        self._biziship_fetch_and_store_user_profile()
+
         if self.biziship_priority1_env == 'PROD':
             return {
                 'name': 'Live Freight Booking',
@@ -788,9 +809,9 @@ class SaleOrder(models.Model):
             response_json = response.json()
             quotes = response_json.get('quotes', [])
             
-            # Capture environment from top level
-            p1_env = response_json.get('priority1_env', 'DEV')
-            self.biziship_priority1_env = p1_env
+            # Capture environment from top level, then fetch full profile for demo_tries
+            self.biziship_priority1_env = response_json.get('priority1_env', 'DEV')
+            self._biziship_fetch_and_store_user_profile()
             self.biziship_last_fetch_nonce = str(uuid.uuid4())
             
             if not quotes:

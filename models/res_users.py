@@ -10,7 +10,7 @@ class ResUsers(models.Model):
     biziship_token = fields.Char(string='BiziShip JWT Token', copy=False, groups='base.group_user')
     biziship_email = fields.Char(string='BiziShip Email', copy=False)
     biziship_user_name = fields.Char(string='BiziShip User Name', copy=False)
-    biziship_p1_env = fields.Selection([('DEV', 'Development'), ('PROD', 'Production')], string='BiziShip Environment', copy=False)
+    biziship_p1_env = fields.Selection([('DEV', 'Development'), ('PROD', 'Production'), ('DEMO', 'Demo')], string='BiziShip Environment', copy=False)
 
     @api.model
     def _register_hook(self):

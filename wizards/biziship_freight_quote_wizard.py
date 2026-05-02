@@ -302,9 +302,9 @@ class BizishipFreightQuoteWizard(models.TransientModel):
             response_json = response.json()
             quotes = response_json.get('quotes', [])
             
-            # Capture environment from top level
-            p1_env = response_json.get('priority1_env', 'DEV')
-            self.order_id.biziship_priority1_env = p1_env
+            # Capture environment from top level, then fetch full profile for demo_tries
+            self.order_id.biziship_priority1_env = response_json.get('priority1_env', 'DEV')
+            self.order_id._biziship_fetch_and_store_user_profile()
             
             if not quotes:
                 raise UserError(_("No carrier quotes available for this lane. Check origin/destination zip codes or freight details."))

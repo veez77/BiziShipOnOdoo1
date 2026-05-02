@@ -59,6 +59,34 @@ def get_email2quote_api_key():
 def get_groq_api_key():
     return get_secrets().get("GROQ_API_KEY", "")
 
+def fetch_biziship_user_profile(env):
+    """
+    Call GET /erp/auth/me and return the profile dict, or None on failure.
+    Response keys: id, email, fullName, role, priority1Env, demoTries, companyId, companyName
+    """
+    import requests
+    import logging
+    _logger = logging.getLogger(__name__)
+    try:
+        user = env.user
+        erp_api_key = get_erp_api_key(env)
+        email = (
+            user.biziship_email
+            if user.biziship_token and user.biziship_email
+            else user.email
+        ) or ""
+        url = f"{get_biziship_api_url()}/erp/auth/me"
+        headers = {"X-ERP-API-Key": erp_api_key, "X-User-Email": email}
+        if user.biziship_token:
+            headers["Authorization"] = f"Bearer {user.biziship_token}"
+        response = requests.get(url, headers=headers, timeout=10)
+        if response.status_code == 200:
+            return response.json()
+    except Exception as e:
+        _logger.error("BiziShip /auth/me error: %s", e)
+    return None
+
+
 def get_erp_api_key(env=None):
     """
     Returns the ERP API Key securely with the following priority:

@@ -3,10 +3,12 @@
 import { patch } from "@web/core/utils/patch";
 import { FormController } from "@web/views/form/form_controller";
 import { onMounted, onPatched } from "@odoo/owl";
+import { useService } from "@web/core/utils/hooks";
 
 patch(FormController.prototype, {
     setup() {
         super.setup();
+        this.orm = useService("orm");
         this.lastHandledNonce = null;
 
         onMounted(() => {
@@ -23,8 +25,6 @@ patch(FormController.prototype, {
         this.bizishipHandlersInitialized = true;
 
         // 1. Autofilter Logic (Debounced)
-        // This triggers a 'change' event on the input field as the user types,
-        // which Odoo's ORM listens to to execute 'onchange' methods immediately.
         document.addEventListener('input', (ev) => {
             const input = ev.target;
             if (input && input.classList && input.classList.contains('biziship-autofilter')) {
@@ -33,6 +33,26 @@ patch(FormController.prototype, {
                     input.dispatchEvent(new Event('change', { bubbles: true }));
                 }, 300);
             }
+        }, true);
+
+        // 2. Refresh BiziShip user profile when either freight tab is clicked
+        document.addEventListener('click', (ev) => {
+            // Use the selector we know resolves (.o_notebook .nav-link), then check name in JS
+            const navLink = ev.target.closest('.o_notebook .nav-link');
+            if (!navLink) return;
+            const tabName = navLink.getAttribute('name') || navLink.getAttribute('data-name');
+            if (tabName !== 'biziship_freight_quotes' && tabName !== 'biziship_freight_details') return;
+            const record = this.model.root;
+            const recordId = (record && record.resId) || (record && record.data && record.data.id);
+            if (!recordId) return;
+            this.orm.call('sale.order', 'action_biziship_refresh_profile_rpc', [[recordId]])
+                .then((result) => {
+                    if (result && this.model.root && this.model.root.data) {
+                        this.model.root.data.biziship_priority1_env = result.biziship_priority1_env;
+                        this.model.root.data.biziship_demo_tries = result.biziship_demo_tries;
+                    }
+                })
+                .catch((err) => console.warn('BiziShip refresh error:', err));
         }, true);
     },
 
@@ -46,7 +66,9 @@ patch(FormController.prototype, {
         if (hasSwitchFlag && nonce && nonce !== this.lastHandledNonce) {
             this.lastHandledNonce = nonce;
             setTimeout(() => {
-                const quotesTab = document.querySelector('.o_notebook a[name="biziship_freight_quotes"]');
+                const quotesTab = document.querySelector(
+                    '.o_notebook [name="biziship_freight_quotes"], .o_notebook [data-name="biziship_freight_quotes"]'
+                );
                 if (quotesTab && !quotesTab.classList.contains('active')) {
                     quotesTab.click();
                 }

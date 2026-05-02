@@ -69,6 +69,15 @@
                         </div>
                         <span class="badge rounded-pill bg-success-light text-success fw-bold px-3" style="font-size: 11px; border: 1px solid #00b14f;">ACCOUNT CONNECTED</span>
                     </div>
+                    <div class="d-flex align-items-center gap-2 mb-2" invisible="not biziship_is_connected">
+                        <div class="d-flex align-items-center" invisible="biziship_priority1_env != 'PROD'">
+                            <span class="badge rounded-pill bg-success text-white px-2 py-1" style="font-size: 11px; font-weight: bold; letter-spacing: 0.5px;">Live!</span>
+                        </div>
+                        <div class="d-flex align-items-center gap-2" invisible="biziship_priority1_env != 'DEMO'">
+                            <span class="badge rounded-pill bg-secondary text-white px-2 py-1" style="font-size: 11px; font-weight: bold; letter-spacing: 0.5px;">Demo</span>
+                            <span class="text-muted" style="font-size: 11px;" invisible="biziship_demo_tries &lt; 0"><field name="biziship_demo_tries" nolabel="1" readonly="1" class="d-inline fw-bold"/> tries left</span>
+                        </div>
+                    </div>
                     <div class="alert alert-warning py-1 mb-2" role="alert" invisible="biziship_is_connected">
                         <i class="fa fa-exclamation-triangle me-1" title="Warning"/> 
                         <span>BiziShip account not connected. Please <button name="%(action_biziship_auth_wizard)d" string="Connect" type="action" class="btn btn-link p-0 align-baseline"/> to enable all features.</span>
@@ -564,6 +573,11 @@
                             <div class="d-flex align-items-center" invisible="biziship_priority1_env != 'PROD'">
                                 <span class="badge rounded-pill bg-success text-white px-2 py-1" style="font-size: 11px; font-weight: bold; letter-spacing: 0.5px;">Live!</span>
                             </div>
+                            <div class="d-flex align-items-center gap-2" invisible="biziship_priority1_env != 'DEMO'">
+                                <span class="badge rounded-pill bg-secondary text-white px-2 py-1" style="font-size: 11px; font-weight: bold; letter-spacing: 0.5px;">Demo</span>
+                                <field name="biziship_demo_tries" invisible="1"/>
+                                <span class="text-muted" style="font-size: 11px;" invisible="biziship_demo_tries &lt; 0"><field name="biziship_demo_tries" nolabel="1" readonly="1" class="d-inline fw-bold"/> tries left</span>
+                            </div>
                             <field name="biziship_priority1_env" invisible="1"/>
                         </div>
                     </group>
@@ -671,8 +685,14 @@
                     <div class="mt-4 text-center" invisible="not biziship_quote_ids">
 
                         <field name="biziship_has_selected_quote" invisible="1"/>
-                        <button name="action_open_biziship_quote_confirm" type="object" string="Submit the chosen quote" class="btn-primary" invisible="not biziship_has_selected_quote"/>
-                        <button name="action_open_biziship_quote_confirm" type="object" string="Submit the chosen quote" class="btn-secondary" invisible="biziship_has_selected_quote" title="Please select a quote first to submit it."/>
+                        <button name="action_open_biziship_quote_confirm" type="object" string="Submit the chosen quote" class="btn-primary" invisible="not biziship_has_selected_quote or biziship_priority1_env == 'DEMO'"/>
+                        <button name="action_open_biziship_quote_confirm" type="object" string="Submit the chosen quote" class="btn-secondary" invisible="biziship_has_selected_quote or biziship_priority1_env == 'DEMO'" title="Please select a quote first to submit it."/>
+                        <div class="d-inline-flex align-items-center gap-3" invisible="biziship_priority1_env != 'DEMO'">
+                            <button name="action_open_biziship_quote_confirm" type="object" string="Submit the chosen quote" class="btn-secondary" disabled="1"/>
+                            <div class="text-muted text-start" style="max-width: 300px; font-size: 13px;">
+                                You're exploring biziShip.ai on a complimentary demo. To activate full booking, contact your account manager or email <a href="mailto:sales@biziship.ai">sales@biziship.ai</a>.
+                            </div>
+                        </div>
                     </div>
                 </page>
             </xpath>

@@ -208,6 +208,7 @@
                                                 <field name="nmfc_applied_desc" invisible="1"/>
                                                 <field name="nmfc_is_stale" invisible="1"/>
                                                 <field name="is_processing" invisible="1"/>
+                                                <field name="biziship_nmfc_fav_trigger" invisible="1"/>
                                             </div>
 
                                             <!-- Row 1: Key Details -->
@@ -262,8 +263,9 @@
                                                 <div t-attf-class="biziship-cargo-nmfc-box {{ record.nmfc_is_stale.raw_value ? 'biziship-nmfc-stale' : '' }}">
                                                     <i class="fa fa-barcode me-2 text-muted" title="NMFC Code Icon"/>
                                                     <field name="nmfc" placeholder="NMFC Code"/>
-                                                    <button name="action_biziship_nmfc_suggest" type="object" class="btn btn-sm btn-link p-0 ms-2" title="Suggest NMFC">
-                                                        <i t-if="!record.is_processing.raw_value" class="fa fa-star text-primary" style="font-size: 1.1em;"/>
+                                                    <field name="biziship_nmfc_fav_trigger" widget="biziship_nmfc_star" nolabel="1"/>
+                                                    <button name="action_biziship_nmfc_suggest" type="object" class="btn btn-sm btn-link p-0 ms-1" title="AI Suggest NMFC">
+                                                        <i t-if="!record.is_processing.raw_value" class="fa fa-magic text-primary" style="font-size: 1.1em;"/>
                                                         <i t-if="record.is_processing.raw_value" class="fa fa-spinner fa-spin text-primary" style="font-size: 1.1em;"/>
                                                     </button>
                                                 </div>
@@ -290,6 +292,7 @@
                                             <field name="nmfc_suggestion_label" invisible="1"/>
                                             <field name="nmfc_suggestion_rationale" invisible="1"/>
                                             <field name="nmfc_applied_desc" invisible="1"/>
+                                            <field name="biziship_nmfc_fav_trigger" invisible="1"/>
                                         </div>
                                         
                                         <!-- Row 1: Key Details -->
@@ -338,8 +341,9 @@
                                             <div class="biziship-cargo-nmfc-box">
                                                 <i class="fa fa-barcode me-2 text-muted" title="NMFC Code Icon"/>
                                                 <field name="nmfc" placeholder="NMFC Code"/>
-                                                <button name="action_biziship_nmfc_suggest" type="object" class="btn btn-sm btn-link p-0 ms-2" title="Suggest NMFC">
-                                                    <i class="fa fa-star text-primary" style="font-size: 1.1em;"/>
+                                                <field name="biziship_nmfc_fav_trigger" widget="biziship_nmfc_star" nolabel="1"/>
+                                                <button name="action_biziship_nmfc_suggest" type="object" class="btn btn-sm btn-link p-0 ms-1" title="AI Suggest NMFC">
+                                                    <i class="fa fa-magic text-primary" style="font-size: 1.1em;"/>
                                                 </button>
                                             </div>
                                         </div>

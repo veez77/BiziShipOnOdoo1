@@ -1,4 +1,5 @@
-from odoo import models, fields, api
+from odoo import models, fields, api, _
+from odoo.exceptions import UserError
 import json
 from odoo.addons.biziship.api_utils import KG_TO_LBS, CM_TO_IN, M_TO_IN, FT_TO_IN, convert_to_lbs
 
@@ -268,6 +269,107 @@ class BizishipSaleCargoLine(models.Model):
     def _compute_is_class_overridden(self):
         for rec in self:
             rec.is_class_overridden = (
-                rec.freight_class and rec.computed_freight_class 
+                rec.freight_class and rec.computed_freight_class
                 and rec.freight_class != rec.computed_freight_class
             )
+
+    # Non-stored trigger field — used only to attach the NMFC Favorites widget in the kanban card
+    biziship_nmfc_fav_trigger = fields.Boolean(compute='_compute_nmfc_fav_trigger', store=False)
+
+    def _compute_nmfc_fav_trigger(self):
+        for rec in self:
+            rec.biziship_nmfc_fav_trigger = False
+
+    @api.model
+    def action_biziship_get_nmfc_favorites(self):
+        """Fetch company NMFC favorites from BiziShip API."""
+        import requests
+        import logging
+        _logger = logging.getLogger(__name__)
+        from odoo.addons.biziship import api_utils
+
+        base_url = api_utils.get_biziship_api_url().rstrip('/')
+        erp_api_key = self.env['ir.config_parameter'].sudo().get_param('biziship.erp_api_key', '')
+        user = self.env.user
+        user_email = (user.biziship_email if user.biziship_token and user.biziship_email else user.email) or ""
+        headers = {
+            "X-ERP-API-Key": erp_api_key,
+            "X-User-Email": user_email,
+        }
+        try:
+            response = requests.get(f"{base_url}/erp/company/nmfc-favorites", headers=headers, timeout=10)
+            if response.status_code == 200:
+                return response.json().get('favorites', [])
+            _logger.warning("NMFC Favorites GET error: %s - %s", response.status_code, response.text)
+            return []
+        except Exception as e:
+            _logger.error("NMFC Favorites GET exception: %s", str(e))
+            return []
+
+    @api.model
+    def action_biziship_save_nmfc_favorite(self, description=None, nmfc_code=None):
+        """Save a new NMFC favorite to BiziShip API."""
+        import requests
+        import logging
+        _logger = logging.getLogger(__name__)
+        from odoo.addons.biziship import api_utils
+
+        if not description or not nmfc_code:
+            raise UserError(_("Both description and NMFC code are required."))
+
+        base_url = api_utils.get_biziship_api_url().rstrip('/')
+        erp_api_key = self.env['ir.config_parameter'].sudo().get_param('biziship.erp_api_key', '')
+        user = self.env.user
+        user_email = (user.biziship_email if user.biziship_token and user.biziship_email else user.email) or ""
+        headers = {
+            "X-ERP-API-Key": erp_api_key,
+            "X-User-Email": user_email,
+            "Content-Type": "application/json",
+        }
+        try:
+            response = requests.post(
+                f"{base_url}/erp/company/nmfc-favorites",
+                headers=headers,
+                json={"description": description, "nmfc_code": nmfc_code},
+                timeout=10,
+            )
+            if response.status_code == 201:
+                return response.json()
+            error_msg = response.text
+            try:
+                error_msg = response.json().get('detail', error_msg)
+            except Exception:
+                pass
+            raise UserError(error_msg or _("Failed to save NMFC favorite."))
+        except UserError:
+            raise
+        except Exception as e:
+            _logger.error("NMFC Favorites POST exception: %s", str(e))
+            raise UserError(_("Error connecting to BiziShip: %s") % str(e))
+
+    @api.model
+    def action_biziship_delete_nmfc_favorite(self, favorite_id=None):
+        """Delete an NMFC favorite from BiziShip API."""
+        import requests
+        import logging
+        _logger = logging.getLogger(__name__)
+        from odoo.addons.biziship import api_utils
+
+        base_url = api_utils.get_biziship_api_url().rstrip('/')
+        erp_api_key = self.env['ir.config_parameter'].sudo().get_param('biziship.erp_api_key', '')
+        user = self.env.user
+        user_email = (user.biziship_email if user.biziship_token and user.biziship_email else user.email) or ""
+        headers = {
+            "X-ERP-API-Key": erp_api_key,
+            "X-User-Email": user_email,
+        }
+        try:
+            response = requests.delete(
+                f"{base_url}/erp/company/nmfc-favorites/{favorite_id}",
+                headers=headers,
+                timeout=10,
+            )
+            return response.status_code == 204
+        except Exception as e:
+            _logger.error("NMFC Favorites DELETE exception: %s", str(e))
+            return False

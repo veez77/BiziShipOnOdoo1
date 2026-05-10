@@ -86,7 +86,7 @@ class BizishipQuoteCargoLine(models.TransientModel):
                 elif rec.dim_unit == 'ft':
                     l, w, h = l * FT_TO_IN, w * FT_TO_IN, h * FT_TO_IN
                     
-                volume_cf = (l * w * h * rec.pieces) / 1728.0
+                volume_cf = (l * w * h) / 1728.0
                 if volume_cf > 0:
                     effective_weight = convert_to_lbs(rec.weight, rec.weight_unit)
                     density = effective_weight / volume_cf

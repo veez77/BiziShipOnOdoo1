@@ -239,7 +239,7 @@ class BizishipSaleCargoLine(models.Model):
                 elif rec.dim_unit == 'ft':
                     l, w, h = l * FT_TO_IN, w * FT_TO_IN, h * FT_TO_IN
                     
-                volume_cf = (l * w * h * rec.pieces) / 1728.0
+                volume_cf = (l * w * h) / 1728.0
                 if volume_cf > 0:
                     effective_weight = convert_to_lbs(rec.weight, rec.weight_unit)
                     density = effective_weight / volume_cf
@@ -264,6 +264,17 @@ class BizishipSaleCargoLine(models.Model):
                     rec.computed_freight_class = '50'
             else:
                 rec.computed_freight_class = False
+
+    line_total_weight_display = fields.Char(compute='_compute_line_total_weight_display', store=False)
+
+    @api.depends('weight', 'weight_unit', 'pieces')
+    def _compute_line_total_weight_display(self):
+        for rec in self:
+            if rec.weight and rec.pieces:
+                total = convert_to_lbs(rec.weight, rec.weight_unit) * rec.pieces
+                rec.line_total_weight_display = f"= {total:,.0f} lbs"
+            else:
+                rec.line_total_weight_display = ""
 
     @api.depends('freight_class', 'computed_freight_class')
     def _compute_is_class_overridden(self):

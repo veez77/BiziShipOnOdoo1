@@ -792,25 +792,25 @@ class SaleOrder(models.Model):
         origin_phone = self.company_id.phone or self.env.company.phone or ''
         dest_phone = self.partner_shipping_id.phone or self.partner_id.phone or ''
         
-        # Build generic payload weights
-        payload_weight = convert_to_lbs(self.biziship_total_weight, self.biziship_total_weight_unit)
-
         payload_items = []
+        total_payload_weight = 0.0
         for line in self.biziship_cargo_line_ids:
-            line_w = convert_to_lbs(line.weight, line.weight_unit)
-            
+            line_w_total = round(convert_to_lbs(line.weight, line.weight_unit) * (line.pieces or 1), 2)
+            total_payload_weight += line_w_total
+
             payload_l = convert_to_inches(line.length, line.dim_unit)
             payload_w = convert_to_inches(line.width, line.dim_unit)
             payload_h = convert_to_inches(line.height, line.dim_unit)
-                
+
             payload_items.append({
-                "weight": round(line_w, 2),
+                "weight": line_w_total,
                 "weight_unit": "lbs",
                 "length": round(payload_l, 2),
                 "width": round(payload_w, 2),
                 "height": round(payload_h, 2),
                 "dimension_unit": "inches",
                 "num_pieces": line.pieces or 1,
+                "total_pieces": 1,
                 "packaging_type": line.packaging_type or "",
                 "freight_class": line.computed_freight_class or line.freight_class or "",
                 "cargo_description": line.cargo_desc or "",
@@ -836,7 +836,7 @@ class SaleOrder(models.Model):
             "destination_country": self.biziship_dest_country_id.code if self.biziship_dest_country_id else "US",
             "destination_phone": self._format_phone(dest_phone),
             "cargo_description": self.biziship_cargo_desc or "",
-            "weight": round(payload_weight, 2),
+            "weight": round(total_payload_weight, 2),
             "weight_unit": "lbs",
             "line_items": payload_items,
             "accessorial_codes": accessorials_list,

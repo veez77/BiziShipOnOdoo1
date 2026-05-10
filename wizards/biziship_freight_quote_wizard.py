@@ -95,13 +95,13 @@ class BizishipFreightQuoteWizard(models.TransientModel):
             rec.biziship_dest_accessorial_ids = [(5, 0, 0)]
         return {"type": "ir.actions.do_nothing"}
 
-    @api.depends('cargo_line_ids', 'cargo_line_ids.weight', 'cargo_line_ids.weight_unit', 'total_weight_unit')
+    @api.depends('cargo_line_ids', 'cargo_line_ids.weight', 'cargo_line_ids.weight_unit', 'cargo_line_ids.pieces', 'total_weight_unit')
     def _compute_totals(self):
         for rec in self:
             total_lbs = 0.0
             for line in rec.cargo_line_ids:
-                total_lbs += convert_to_lbs(line.weight, line.weight_unit)
-                    
+                total_lbs += convert_to_lbs(line.weight, line.weight_unit) * (line.pieces or 1)
+
             if rec.total_weight_unit == 'kg':
                 rec.total_weight = round(total_lbs / KG_TO_LBS, 2)
             else:
@@ -243,24 +243,24 @@ class BizishipFreightQuoteWizard(models.TransientModel):
             d = re.sub(r'\D', '', p)
             return d[-10:] if len(d) >= 10 else "5555555555"
         
-        # Base weights sum
-        payload_weight = convert_to_lbs(self.total_weight, self.total_weight_unit)
-
         payload_items = []
+        total_payload_weight = 0.0
         for line in self.cargo_line_ids:
-            line_w = convert_to_lbs(line.weight, line.weight_unit)
+            line_w_total = round(convert_to_lbs(line.weight, line.weight_unit) * (line.pieces or 1), 2)
+            total_payload_weight += line_w_total
             payload_l = convert_to_inches(line.length, line.dim_unit)
             payload_w = convert_to_inches(line.width, line.dim_unit)
             payload_h = convert_to_inches(line.height, line.dim_unit)
-                
+
             payload_items.append({
-                "weight": round(line_w, 2),
+                "weight": line_w_total,
                 "weight_unit": "lbs",
                 "length": round(payload_l, 2),
                 "width": round(payload_w, 2),
                 "height": round(payload_h, 2),
                 "dimension_unit": "inches",
                 "num_pieces": line.pieces or 1,
+                "total_pieces": 1,
                 "packaging_type": line.packaging_type or "",
                 "freight_class": line.freight_class or "",
                 "cargo_description": line.cargo_desc or ""
@@ -285,7 +285,7 @@ class BizishipFreightQuoteWizard(models.TransientModel):
             "destination_phone": self._format_phone(self.destination_phone),
             "cargo_description": self.cargo_description or "",
             "special_instructions": self.special_instructions or "",
-            "weight": round(payload_weight, 2),
+            "weight": round(total_payload_weight, 2),
             "weight_unit": "lbs",
             "line_items": payload_items,
             "accessorial_codes": accessorials_list,

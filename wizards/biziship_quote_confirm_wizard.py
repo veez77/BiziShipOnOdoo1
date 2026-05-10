@@ -312,11 +312,14 @@ class BizishipQuoteConfirmWizard(models.TransientModel):
         for line in self.biziship_cargo_line_ids:
             line_item = {
                 "num_pieces": line.pieces or 1,
+                "total_pieces": 1,
                 "packaging_type": line.packaging_type or "pallet",
-                "weight": round(api_utils.convert_to_lbs(line.weight, line.weight_unit), 2),
+                "weight": round(api_utils.convert_to_lbs(line.weight, line.weight_unit) * (line.pieces or 1), 2),
+                "weight_unit": "lbs",
                 "length": round(api_utils.convert_to_inches(line.length, line.dim_unit), 2),
                 "width": round(api_utils.convert_to_inches(line.width, line.dim_unit), 2),
                 "height": round(api_utils.convert_to_inches(line.height, line.dim_unit), 2),
+                "dimension_unit": "inches",
                 "freight_class": line.freight_class or line.computed_freight_class or "50",
                 "cargo_description": line.cargo_desc or "General Freight",
                 "hazmat": line.hazmat or False,

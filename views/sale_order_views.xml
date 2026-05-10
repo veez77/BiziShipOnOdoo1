@@ -214,7 +214,7 @@
                                             <!-- Row 1: Key Details -->
                                             <div class="biziship-cargo-row-details">
                                                 <field name="packaging_type" class="fw-bold me-3" style="max-width: 100px;"/>
-                                                <span class="text-muted">Pcs:</span>
+                                                <span class="text-muted">Units:</span>
                                                 <field name="pieces" class="fw-bold me-3"/>
                                                 <span class="text-muted">Weight:</span>
                                                 <field name="weight" class="fw-bold"/>
@@ -260,14 +260,9 @@
                                                 <div class="biziship-cargo-desc-input">
                                                     <field name="cargo_desc" placeholder="Cargo Description..." widget="biziship_commodity"/>
                                                 </div>
-                                                <div t-attf-class="biziship-cargo-nmfc-box {{ record.nmfc_is_stale.raw_value ? 'biziship-nmfc-stale' : '' }}">
-                                                    <i class="fa fa-barcode me-2 text-muted" title="NMFC Code Icon"/>
+                                                <div t-attf-class="biziship-cargo-nmfc-box {{ record.nmfc_is_stale.raw_value ? 'biziship-nmfc-stale' : '' }}" style="width: 140px !important;">
+                                                    <span class="text-muted me-1">NMFC</span>
                                                     <field name="nmfc" placeholder="NMFC Code"/>
-                                                    <field name="biziship_nmfc_fav_trigger" widget="biziship_nmfc_star" nolabel="1"/>
-                                                    <button name="action_biziship_nmfc_suggest" type="object" class="btn btn-sm btn-link p-0 ms-1" title="AI Suggest NMFC">
-                                                        <i t-if="!record.is_processing.raw_value" class="fa fa-magic text-primary" style="font-size: 1.1em;"/>
-                                                        <i t-if="record.is_processing.raw_value" class="fa fa-spinner fa-spin text-primary" style="font-size: 1.1em;"/>
-                                                    </button>
                                                 </div>
                                             </div>
 
@@ -298,8 +293,8 @@
                                         <!-- Row 1: Key Details -->
                                             <div class="biziship-cargo-row-details mb-4" style="white-space: nowrap; display: flex; align-items: baseline;">
                                                 <field name="packaging_type" class="me-3" style="width: 100px;"/>
-                                                <span class="me-1">Pcs:</span>
-                                                <field name="pieces" placeholder="Pcs" class="me-3" style="width: 65px;"/>
+                                                <span class="me-1">Units:</span>
+                                                <field name="pieces" placeholder="Units" class="me-3" style="width: 65px;"/>
                                                 <span class="me-1">Weight:</span>
                                                 <field name="weight" placeholder="Weight" style="width: 110px;"/>
                                                 <field name="weight_unit" class="me-3" style="width: 60px;"/>

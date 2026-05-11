@@ -151,7 +151,15 @@ class SaleOrder(models.Model):
                             rows += plain_row(label, value_cell)
                             # PRO row immediately after BOL — icon column holds the refresh button
                             pro_val = order.biziship_pro_number or ''
-                            pro_display = _html.escape(pro_val) if pro_val else '<span style="color:#aaa;font-style:italic;">Was not created yet</span>'
+                            if pro_val:
+                                pro_esc = _html.escape(pro_val)
+                                pro_display = (
+                                    f'<span class="biziship-ref-copyable" '
+                                    f'title="Click to copy" '
+                                    f'data-copy-text="{pro_esc}">{pro_esc}</span>'
+                                )
+                            else:
+                                pro_display = '<span style="color:#aaa;font-style:italic;">Was not created yet</span>'
                             icon = (
                                 f'<i class="fa fa-refresh biziship-pro-refresh" '
                                 f'data-order-id="{order.id}" '
@@ -778,6 +786,7 @@ class SaleOrder(models.Model):
         self.ensure_one()
         if not self.biziship_bol_number:
             raise UserError(_("No BOL number found on this record."))
+        bol_number = self.biziship_bol_number
         url = f"{get_biziship_api_url().rstrip('/')}/erp/shipments/documents"
         user = self.env.user
         headers = {
@@ -787,7 +796,7 @@ class SaleOrder(models.Model):
         if user.biziship_token:
             headers["Authorization"] = f"Bearer {user.biziship_token}"
         try:
-            response = requests.get(url, headers=headers, params={'bol_number': self.biziship_bol_number}, timeout=15)
+            response = requests.get(url, headers=headers, params={'bol_number': bol_number}, timeout=15)
             response.raise_for_status()
             data = response.json()
         except Exception as e:
@@ -799,9 +808,7 @@ class SaleOrder(models.Model):
             bol_doc = next((d for d in docs if d.get('type') == 'BillOfLading'), None)
             if bol_doc and bol_doc.get('url'):
                 vals['biziship_bol_url'] = bol_doc['url']
-        pro_number = data.get('proNumber')
-        if pro_number:
-            vals['biziship_pro_number'] = pro_number
+        vals['biziship_pro_number'] = data.get('proNumber') or False
         if vals:
             self.write(vals)
         return True

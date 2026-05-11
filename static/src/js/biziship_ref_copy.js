@@ -46,7 +46,8 @@ document.addEventListener('click', function (e) {
             var proCell = refreshEl.closest('tr').querySelector('.biziship-pro-value');
             if (proCell) {
                 if (proNumber) {
-                    proCell.textContent = proNumber;
+                    var safe = proNumber.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
+                    proCell.innerHTML = '<span class="biziship-ref-copyable" title="Click to copy" data-copy-text="' + safe + '">' + safe + '</span>';
                 } else {
                     proCell.innerHTML = '<span style="color:#aaa;font-style:italic;">Was not created yet</span>';
                 }

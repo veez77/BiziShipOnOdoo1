@@ -1,3 +1,4 @@
+import re
 import requests
 import json
 from odoo import models, fields, api, _
@@ -267,7 +268,7 @@ class BizishipLoadFreightWizard(models.TransientModel):
                 'biziship_origin_address': get_val('origin_address'),
                 'biziship_origin_address2': get_val('origin_address2'),
                 'biziship_origin_city': get_val('origin_city'),
-                'biziship_origin_zip': get_val('origin_zip'),
+                'biziship_origin_zip': re.sub(r'\D', '', get_val('origin_zip') or '')[:5],
                 'biziship_origin_country_id': origin_country.id if origin_country else False,
                 
                 'biziship_cargo_desc': get_val('cargo_description', 'General Freight'),
@@ -327,8 +328,8 @@ class BizishipLoadFreightWizard(models.TransientModel):
             if 'destination_address2' in details: vals['biziship_dest_address2'] = details['destination_address2']
             elif 'dest_address2' in details: vals['biziship_dest_address2'] = details['dest_address2']
             
-            if 'destination_zip' in details: vals['biziship_dest_zip'] = details['destination_zip']
-            elif 'dest_zip' in details: vals['biziship_dest_zip'] = details['dest_zip']
+            if 'destination_zip' in details: vals['biziship_dest_zip'] = re.sub(r'\D', '', details['destination_zip'] or '')[:5]
+            elif 'dest_zip' in details: vals['biziship_dest_zip'] = re.sub(r'\D', '', details['dest_zip'] or '')[:5]
 
             # Extended Accessorials Mapping
             # We handle 'accessorial_codes' (new spec) or 'origin_more'/'dest_more' (old spec/parallel)

@@ -62,6 +62,8 @@
                     <field name="biziship_is_connected" invisible="1"/>
                     <field name="biziship_connected_email" invisible="1"/>
                     <field name="biziship_last_fetch_nonce" invisible="1"/>
+                    <field name="biziship_origin_zip_invalid" invisible="1"/>
+                    <field name="biziship_dest_zip_invalid" invisible="1"/>
                     <div class="alert alert-info py-1 mb-2 d-flex justify-content-between align-items-center" role="status" style="border-radius: 4px; border-left: 4px solid #00b14f;" invisible="not biziship_is_connected">
                         <div class="d-flex align-items-center">
                             <i class="fa fa-user-circle text-primary me-2" title="User" style="font-size: 1.1rem;"/>
@@ -115,7 +117,10 @@
                                 <field name="biziship_origin_state_id" nolabel="1" placeholder="State" options="{'no_open': True, 'no_create': True}" style="flex: 1;" domain="[('country_id', '=?', biziship_origin_country_id)]"/>
                             </div>
                             <div class="d-flex w-100" colspan="2">
-                                <field name="biziship_origin_zip" placeholder="Zip Code" style="flex: 2; margin-right: 8px;"/>
+                                <div style="flex: 2; margin-right: 8px;">
+                                    <field name="biziship_origin_zip" placeholder="Zip Code" nolabel="1" style="width: 100%;"/>
+                                    <div class="biziship-zip-error-bar" invisible="not biziship_origin_zip_invalid"/>
+                                </div>
                                 <field name="biziship_origin_country_id" nolabel="1" placeholder="Country" options="{'no_open': True, 'no_create': True}" domain="[('code', 'in', ('US', 'CA', 'MX'))]" style="flex: 1;"/>
                             </div>
                             <field name="biziship_origin_contact_name" nolabel="1" colspan="2" placeholder="Contact Name (optional)"/>
@@ -157,7 +162,10 @@
                                 <field name="biziship_dest_state_id" nolabel="1" placeholder="State" options="{'no_open': True, 'no_create': True}" style="flex: 1;" domain="[('country_id', '=?', biziship_dest_country_id)]"/>
                             </div>
                             <div class="d-flex w-100" colspan="2">
-                                <field name="biziship_dest_zip" placeholder="Zip Code" style="flex: 2; margin-right: 8px;"/>
+                                <div style="flex: 2; margin-right: 8px;">
+                                    <field name="biziship_dest_zip" placeholder="Zip Code" nolabel="1" style="width: 100%;"/>
+                                    <div class="biziship-zip-error-bar" invisible="not biziship_dest_zip_invalid"/>
+                                </div>
                                 <field name="biziship_dest_country_id" nolabel="1" placeholder="Country" options="{'no_open': True, 'no_create': True}" domain="[('code', 'in', ('US', 'CA', 'MX'))]" style="flex: 1;"/>
                             </div>
                             <field name="biziship_dest_contact_name" nolabel="1" colspan="2" placeholder="Contact Name (optional)"/>

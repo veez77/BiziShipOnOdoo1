@@ -116,7 +116,8 @@ class SaleOrder(models.Model):
     biziship_origin_address2 = fields.Char(string="Pickup Address Line 2", default=lambda self: self.env.company.street2 or '')
     biziship_origin_city = fields.Char(string="Pickup City", default=lambda self: self.env.company.city or '')
     biziship_origin_state_id = fields.Many2one('res.country.state', string="Pickup State", default=lambda self: self.env.company.state_id.id if self.env.company.state_id else False)
-    biziship_origin_zip = fields.Char(string="Pickup Zip Code", default=lambda self: self.env.company.zip or '')
+    biziship_origin_zip = fields.Char(string="Pickup Zip Code", size=5, default=lambda self: self.env.company.zip or '')
+    biziship_origin_zip_invalid = fields.Boolean(compute='_compute_zip_validity', store=False)
     biziship_origin_country_id = fields.Many2one('res.country', string="Origin Country", default=lambda self: self.env.company.country_id.id if self.env.company.country_id else False)
     
     biziship_origin_residential = fields.Boolean(string="Residential Pickup")
@@ -142,7 +143,8 @@ class SaleOrder(models.Model):
     biziship_dest_address2 = fields.Char(string="Destination Address Line 2", related="partner_shipping_id.street2", readonly=False, store=True)
     biziship_dest_city = fields.Char(string="Destination City", related="partner_shipping_id.city", readonly=False, store=True)
     biziship_dest_state_id = fields.Many2one('res.country.state', string="Destination State", related="partner_shipping_id.state_id", readonly=False, store=True)
-    biziship_dest_zip = fields.Char(string="Destination Zip Code", related="partner_shipping_id.zip", readonly=False, store=True)
+    biziship_dest_zip = fields.Char(string="Destination Zip Code", size=5, related="partner_shipping_id.zip", readonly=False, store=True)
+    biziship_dest_zip_invalid = fields.Boolean(compute='_compute_zip_validity', store=False)
     biziship_dest_country_id = fields.Many2one('res.country', string="Destination Country", compute='_compute_biziship_dest_country_id', readonly=False, store=True)
     
     biziship_dest_appointment = fields.Boolean(string="Delivery Appointment")
@@ -736,6 +738,32 @@ class SaleOrder(models.Model):
         for order in self:
             pass
         return True
+
+    @api.depends('biziship_origin_zip', 'biziship_dest_zip')
+    def _compute_zip_validity(self):
+        for rec in self:
+            oz = rec.biziship_origin_zip or ''
+            dz = rec.biziship_dest_zip or ''
+            rec.biziship_origin_zip_invalid = not (len(oz) == 5 and oz.isdigit())
+            rec.biziship_dest_zip_invalid = not (len(dz) == 5 and dz.isdigit())
+
+    @api.onchange('biziship_origin_zip')
+    def _onchange_origin_zip(self):
+        cleaned = re.sub(r'\D', '', self.biziship_origin_zip or '')[:5]
+        if cleaned != (self.biziship_origin_zip or ''):
+            self.biziship_origin_zip = cleaned
+
+    @api.onchange('biziship_dest_zip')
+    def _onchange_dest_zip(self):
+        cleaned = re.sub(r'\D', '', self.biziship_dest_zip or '')[:5]
+        if cleaned != (self.biziship_dest_zip or ''):
+            self.biziship_dest_zip = cleaned
+
+    def write(self, vals):
+        for field in ('biziship_origin_zip', 'biziship_dest_zip'):
+            if vals.get(field):
+                vals[field] = re.sub(r'\D', '', vals[field])[:5]
+        return super().write(vals)
 
     def _format_phone(self, phone_str):
         if not phone_str:

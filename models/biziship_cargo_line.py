@@ -68,7 +68,7 @@ class BizishipSaleCargoLine(models.Model):
     length = fields.Float(string="Length", default=48.0, required=True)
     width = fields.Float(string="Width", default=40.0, required=True)
     height = fields.Float(string="Height", default=48.0, required=True)
-    dim_unit = fields.Selection([('in', 'in'), ('cm', 'cm'), ('m', 'm'), ('ft', 'ft')], string="Dimension Unit", default='in', required=True)
+    dim_unit = fields.Selection([('in', 'in'), ('cm', 'cm'), ('m', 'm'), ('ft', 'ft')], string="Dim Unit", default='in', required=True)
 
     @api.onchange('dim_unit')
     def _onchange_dim_unit(self):

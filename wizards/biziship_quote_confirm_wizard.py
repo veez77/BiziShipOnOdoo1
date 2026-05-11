@@ -1,6 +1,5 @@
 import json
 import requests
-import os
 import logging
 from odoo import models, fields, api, _
 from odoo.exceptions import UserError
@@ -382,7 +381,14 @@ class BizishipQuoteConfirmWizard(models.TransientModel):
                 'biziship_bol_url': response_json.get('bol_url'),
                 'biziship_documents_json': json.dumps(response_json.get('documents', [])) if response_json.get('documents') else False
             })
-            
+
+            # Parse reference fields from the booked BOL PDF
+            bol_url = response_json.get('bol_url')
+            if bol_url:
+                ref_fields = self._parse_bol_reference(bol_url)
+                if ref_fields:
+                    sale_order.write(ref_fields)
+
         except requests.exceptions.RequestException as e:
             error_details = e.response.text if hasattr(e, 'response') and e.response is not None else str(e)
             raise UserError(_("Failed to contact Email2Quote booking API.\n\nDetails:\n%s") % error_details)
@@ -399,3 +405,47 @@ class BizishipQuoteConfirmWizard(models.TransientModel):
                 'biziship_booking_success': True,
             },
         }
+
+    def _parse_bol_reference(self, bol_url):
+        """Download BOL PDF from bol_url and POST to /erp/bol/reference to extract the Reference section."""
+        try:
+            pdf_resp = requests.get(bol_url, timeout=30)
+            pdf_resp.raise_for_status()
+            pdf_bytes = pdf_resp.content
+        except Exception as e:
+            _logger.warning("Failed to download BOL PDF from %s: %s", bol_url, str(e))
+            return {}
+
+        try:
+            base_url = get_biziship_api_url().rstrip('/')
+            erp_api_key = get_erp_api_key(self.env)
+            headers = {
+                "X-ERP-API-Key": erp_api_key,
+                "X-User-Email": (
+                    self.env.user.biziship_email
+                    if self.env.user.biziship_token and self.env.user.biziship_email
+                    else self.env.user.email
+                ) or "",
+            }
+            resp = requests.post(
+                f"{base_url}/erp/bol/reference",
+                headers=headers,
+                files={"file": ("bol.pdf", pdf_bytes, "application/pdf")},
+                timeout=45,
+            )
+            resp.raise_for_status()
+            response_json = resp.json()
+            _logger.info("BOL reference API response: %s", response_json)
+
+            result = {'biziship_ref_json': json.dumps(response_json)}
+
+            # Also populate the PRO number field if present in the fields array
+            for f in response_json.get('fields', []):
+                if f.get('label', '').lower() in ('itemized pro', 'pro', 'pro number'):
+                    result['biziship_pro_number'] = f.get('value') or False
+                    break
+
+            return result
+        except Exception as e:
+            _logger.warning("BOL reference API call failed: %s", str(e))
+            return {}

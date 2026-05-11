@@ -40,6 +40,13 @@ class SaleOrder(models.Model):
     biziship_po_number = fields.Char(string="PO Number")
     biziship_last_fetch_nonce = fields.Char(string='Last Fetch Nonce', readonly=True, copy=False)
 
+    # BOL Reference section — raw JSON from /erp/bol/reference, rendered dynamically
+    biziship_ref_json = fields.Text(string='BOL Reference JSON', readonly=True, copy=False)
+    biziship_ref_html = fields.Html(
+        string='BOL Reference', compute='_compute_biziship_ref_html',
+        sanitize=False, readonly=True
+    )
+
     def action_add_cargo_line(self):
         """Adds a blank cargo line to the current sale order."""
         self.ensure_one()
@@ -107,6 +114,26 @@ class SaleOrder(models.Model):
                 order.biziship_documents_html = f'<div class="d-flex flex-column mt-2">{"".join(html_links)}</div>'
             else:
                 order.biziship_documents_html = ""
+
+    @api.depends('biziship_ref_json', 'biziship_shipment_id')
+    def _compute_biziship_ref_html(self):
+        import html as _html
+        for order in self:
+            rows = ''
+            if order.biziship_shipment_id:
+                sid = _html.escape(order.biziship_shipment_id)
+                rows += f'<tr><td class="biziship-ref-label">Shipment ID</td><td class="biziship-ref-value">{sid}</td></tr>'
+            if order.biziship_ref_json:
+                try:
+                    data = json.loads(order.biziship_ref_json)
+                    for f in data.get('fields', []):
+                        label = _html.escape(str(f.get('label', '')))
+                        value = _html.escape(str(f.get('value', '') or ''))
+                        if label and value:
+                            rows += f'<tr><td class="biziship-ref-label">{label}</td><td class="biziship-ref-value">{value}</td></tr>'
+                except Exception:
+                    pass
+            order.biziship_ref_html = f'<table class="biziship-reference-table">{rows}</table>' if rows else False
 
     # --- LTL Freight Fields ---
     # Origin & Pickup
@@ -480,6 +507,21 @@ class SaleOrder(models.Model):
             'target': 'new',
         }
 
+    def action_biziship_refresh_tracking_quick(self):
+        """Refresh tracking status inline without opening the wizard."""
+        self.ensure_one()
+        if not self.biziship_bol_number:
+            raise UserError(_("No BOL number found. Please book the shipment first."))
+        wizard = self.env['biziship.tracking.wizard'].create({
+            'sale_order_id': self.id,
+            'bol_number': self.biziship_bol_number,
+            'tracking_status': self.biziship_tracking_status or '',
+            'pro_number': self.biziship_pro_number or '',
+            'last_updated': self.biziship_last_tracked_at or '',
+        })
+        wizard._fetch_tracking_data()
+        return True
+
     @api.depends('biziship_cargo_line_ids', 'biziship_cargo_line_ids.weight', 'biziship_cargo_line_ids.weight_unit', 'biziship_cargo_line_ids.pieces', 'biziship_total_weight_unit')
     def _compute_biziship_totals(self):
         for order in self:
@@ -727,6 +769,7 @@ class SaleOrder(models.Model):
                 'biziship_documents_json': False,
                 'biziship_pro_number': False,
                 'biziship_booking_id': False,
+                'biziship_ref_json': False,
             })
             # Also reset selection
             for quote in order.biziship_quote_ids:

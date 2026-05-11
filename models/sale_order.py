@@ -127,12 +127,32 @@ class SaleOrder(models.Model):
                 try:
                     data = json.loads(order.biziship_ref_json)
                     for f in data.get('fields', []):
-                        label = _html.escape(str(f.get('label', '')))
-                        value = _html.escape(str(f.get('value', '') or ''))
+                        label_raw = str(f.get('label', ''))
+                        value_raw = str(f.get('value', '') or '')
+                        label = _html.escape(label_raw)
+                        value = _html.escape(value_raw)
                         if label and value:
-                            rows += f'<tr><td class="biziship-ref-label">{label}</td><td class="biziship-ref-value">{value}</td></tr>'
+                            if label_raw.lower() == 'bol':
+                                value_cell = (
+                                    f'<span class="biziship-ref-copyable" '
+                                    f'title="Click to copy" '
+                                    f'data-copy-text="{value}">'
+                                    f'{value}</span>'
+                                )
+                            else:
+                                value_cell = value
+                            rows += f'<tr><td class="biziship-ref-label">{label}</td><td class="biziship-ref-value">{value_cell}</td></tr>'
                 except Exception:
                     pass
+            # Customer-specific custom fields (safe getattr — may not exist in all environments)
+            for label, fname in [
+                ('Tracking Reference', 'x_studio_bill_of_lading_ship_date'),
+                ('Destination PO',     'x_destination_po'),
+                ('Originating PO',     'x_studio_originating_po'),
+            ]:
+                val = getattr(order, fname, False)
+                if val:
+                    rows += f'<tr><td class="biziship-ref-label">{label}</td><td class="biziship-ref-value">{_html.escape(str(val))}</td></tr>'
             order.biziship_ref_html = f'<table class="biziship-reference-table">{rows}</table>' if rows else False
 
     # --- LTL Freight Fields ---

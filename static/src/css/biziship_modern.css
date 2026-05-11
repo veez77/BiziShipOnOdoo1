@@ -49,6 +49,16 @@
     color: #1a1a2e;
 }
 
+.biziship-ref-copyable {
+    cursor: pointer;
+    border-bottom: 1px dashed #aaa;
+    transition: color 0.15s, border-color 0.15s;
+}
+.biziship-ref-copyable:hover {
+    color: #017e84;
+    border-bottom-color: #017e84;
+}
+
 /* Modern BiziShip Freight Pool Styling */
 
 .biziship-freight-pool-container {

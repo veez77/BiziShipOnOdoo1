@@ -32,6 +32,7 @@
             'biziship/static/src/js/biziship_commodity_autocomplete.js',
             'biziship/static/src/js/biziship_nmfc_favorites.js',
             'biziship/static/src/js/biziship_zip_input.js',
+            'biziship/static/src/js/biziship_ref_copy.js',
             'biziship/static/src/xml/biziship_commodity_templates.xml',
             'biziship/static/src/xml/biziship_nmfc_favorites.xml',
             'biziship/static/src/css/biziship_modern.css',

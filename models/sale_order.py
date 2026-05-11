@@ -115,14 +115,23 @@ class SaleOrder(models.Model):
             else:
                 order.biziship_documents_html = ""
 
-    @api.depends('biziship_ref_json', 'biziship_shipment_id')
+    @api.depends('biziship_ref_json', 'biziship_shipment_id', 'biziship_pro_number')
     def _compute_biziship_ref_html(self):
         import html as _html
+
+        def plain_row(label, value_html):
+            return (
+                f'<tr>'
+                f'<td class="biziship-ref-icon"></td>'
+                f'<td class="biziship-ref-label">{label}</td>'
+                f'<td class="biziship-ref-value">{value_html}</td>'
+                f'</tr>'
+            )
+
         for order in self:
             rows = ''
             if order.biziship_shipment_id:
-                sid = _html.escape(order.biziship_shipment_id)
-                rows += f'<tr><td class="biziship-ref-label">Shipment ID</td><td class="biziship-ref-value">{sid}</td></tr>'
+                rows += plain_row('Shipment ID', _html.escape(order.biziship_shipment_id))
             if order.biziship_ref_json:
                 try:
                     data = json.loads(order.biziship_ref_json)
@@ -131,17 +140,33 @@ class SaleOrder(models.Model):
                         value_raw = str(f.get('value', '') or '')
                         label = _html.escape(label_raw)
                         value = _html.escape(value_raw)
-                        if label and value:
-                            if label_raw.lower() == 'bol':
-                                value_cell = (
-                                    f'<span class="biziship-ref-copyable" '
-                                    f'title="Click to copy" '
-                                    f'data-copy-text="{value}">'
-                                    f'{value}</span>'
-                                )
-                            else:
-                                value_cell = value
-                            rows += f'<tr><td class="biziship-ref-label">{label}</td><td class="biziship-ref-value">{value_cell}</td></tr>'
+                        if not (label and value):
+                            continue
+                        if label_raw.lower() == 'bol':
+                            value_cell = (
+                                f'<span class="biziship-ref-copyable" '
+                                f'title="Click to copy" '
+                                f'data-copy-text="{value}">{value}</span>'
+                            )
+                            rows += plain_row(label, value_cell)
+                            # PRO row immediately after BOL — icon column holds the refresh button
+                            pro_val = order.biziship_pro_number or ''
+                            pro_display = _html.escape(pro_val) if pro_val else '<span style="color:#aaa;font-style:italic;">Was not created yet</span>'
+                            icon = (
+                                f'<i class="fa fa-refresh biziship-pro-refresh" '
+                                f'data-order-id="{order.id}" '
+                                f'title="Refresh PRO number" '
+                                f'style="cursor:pointer;color:#aaa;font-size:10px;"></i>'
+                            )
+                            rows += (
+                                f'<tr>'
+                                f'<td class="biziship-ref-icon">{icon}</td>'
+                                f'<td class="biziship-ref-label">PRO</td>'
+                                f'<td class="biziship-ref-value biziship-pro-value">{pro_display}</td>'
+                                f'</tr>'
+                            )
+                        else:
+                            rows += plain_row(label, value)
                 except Exception:
                     pass
             # Customer-specific custom fields (safe getattr — may not exist in all environments)
@@ -152,7 +177,7 @@ class SaleOrder(models.Model):
             ]:
                 val = getattr(order, fname, False)
                 if val:
-                    rows += f'<tr><td class="biziship-ref-label">{label}</td><td class="biziship-ref-value">{_html.escape(str(val))}</td></tr>'
+                    rows += plain_row(label, _html.escape(str(val)))
             order.biziship_ref_html = f'<table class="biziship-reference-table">{rows}</table>' if rows else False
 
     # --- LTL Freight Fields ---
@@ -751,10 +776,9 @@ class SaleOrder(models.Model):
 
     def action_biziship_refresh_documents(self):
         self.ensure_one()
-        lookup_id = self.biziship_booking_id or self.biziship_shipment_id
-        if not lookup_id:
-            raise UserError(_("No shipment ID found on this record."))
-        url = f"{get_biziship_api_url()}/erp/shipments/{lookup_id}/documents"
+        if not self.biziship_bol_number:
+            raise UserError(_("No BOL number found on this record."))
+        url = f"{get_biziship_api_url().rstrip('/')}/erp/shipments/documents"
         user = self.env.user
         headers = {
             "X-ERP-API-Key": get_erp_api_key(self.env),
@@ -763,7 +787,7 @@ class SaleOrder(models.Model):
         if user.biziship_token:
             headers["Authorization"] = f"Bearer {user.biziship_token}"
         try:
-            response = requests.get(url, headers=headers, timeout=15)
+            response = requests.get(url, headers=headers, params={'bol_number': self.biziship_bol_number}, timeout=15)
             response.raise_for_status()
             data = response.json()
         except Exception as e:
@@ -772,8 +796,11 @@ class SaleOrder(models.Model):
         vals = {}
         if docs:
             vals['biziship_documents_json'] = json.dumps(docs)
+            bol_doc = next((d for d in docs if d.get('type') == 'BillOfLading'), None)
+            if bol_doc and bol_doc.get('url'):
+                vals['biziship_bol_url'] = bol_doc['url']
         pro_number = data.get('proNumber')
-        if pro_number and not self.biziship_pro_number:
+        if pro_number:
             vals['biziship_pro_number'] = pro_number
         if vals:
             self.write(vals)

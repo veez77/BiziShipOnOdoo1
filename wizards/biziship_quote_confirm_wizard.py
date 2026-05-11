@@ -382,6 +382,12 @@ class BizishipQuoteConfirmWizard(models.TransientModel):
                 'biziship_documents_json': json.dumps(response_json.get('documents', [])) if response_json.get('documents') else False
             })
 
+            # Fetch fresh documents list and PRO number from the documents endpoint
+            try:
+                sale_order.action_biziship_refresh_documents()
+            except Exception as e:
+                _logger.warning("Failed to fetch shipment documents after booking: %s", str(e))
+
             # Parse reference fields from the booked BOL PDF
             bol_url = response_json.get('bol_url')
             if bol_url:

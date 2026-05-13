@@ -15,3 +15,5 @@ access_biziship_load_freight_filter_user,biziship.load.freight.filter.user,model
 access_biziship_tracking_wizard,biziship.tracking.wizard,model_biziship_tracking_wizard,base.group_user,1,1,1,1
 access_biziship_address_history_wizard,biziship.address.history.wizard,model_biziship_address_history_wizard,base.group_user,1,1,1,1
 access_biziship_address_history_line,biziship.address.history.line,model_biziship_address_history_line,base.group_user,1,1,1,1
+access_biziship_not_connected_wizard,biziship.not.connected.wizard,model_biziship_not_connected_wizard,base.group_user,1,1,1,1
+access_biziship_logout_wizard,biziship.logout.wizard,model_biziship_logout_wizard,base.group_user,1,1,1,1

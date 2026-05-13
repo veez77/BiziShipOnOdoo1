@@ -66,13 +66,14 @@
                     <field name="biziship_dest_zip_invalid" invisible="1"/>
                     <div class="alert alert-info py-1 mb-2 d-flex justify-content-between align-items-center" role="status" style="border-radius: 4px; border-left: 4px solid #00b14f;" invisible="not biziship_is_connected">
                         <div class="d-flex align-items-center">
-                            <i class="fa fa-user-circle text-primary me-2" title="User" style="font-size: 1.1rem;"/>
-                            <span>Logged in BiziShip as: <field name="biziship_connected_email" class="fw-bold ms-1"/></span>
-                            <button name="%(action_biziship_auth_wizard)d" string="Reconnect" type="action" class="btn btn-link p-0 ms-3 text-primary" style="font-size: 0.85em;"/>
+                            <i class="fa fa-user-circle text-primary me-2" style="font-size: 1.1rem;"/>
+                            <span>Logged in biziShip.ai as: <field name="biziship_connected_email" class="fw-bold ms-1"/></span>
                         </div>
                         <div class="d-flex align-items-center gap-2">
-                            <button name="action_biziship_refresh_profile_rpc" type="object" icon="fa-refresh" class="btn btn-link p-0 text-muted" title="Refresh BiziShip account" style="font-size: 0.95rem; line-height: 1;"/>
+                            <button name="action_biziship_refresh_profile_rpc" type="object" icon="fa-refresh" class="btn btn-link p-0 text-muted" title="Sync your BiziShip account details (name, environment) without re-authenticating" style="font-size: 0.95rem; line-height: 1;"/>
                             <span class="badge rounded-pill bg-success-light text-success fw-bold px-3" style="font-size: 11px; border: 1px solid #00b14f;">ACCOUNT CONNECTED</span>
+                            <button name="%(action_biziship_auth_wizard)d" type="action" icon="fa-sign-in" class="btn btn-link p-0 text-muted" style="font-size: 0.75rem; opacity: 0.35;" title="Sign in again with a different email or refresh your session. You will receive a one-time PIN by email."/>
+                            <button name="%(action_biziship_logout_wizard)d" type="action" icon="fa-sign-out" class="btn btn-link p-0 text-muted" style="font-size: 0.75rem; opacity: 0.35;" title="Sign out from biziShip.ai"/>
                         </div>
                     </div>
                     <div class="d-flex align-items-center gap-2 mb-2" invisible="not biziship_is_connected">
@@ -86,7 +87,7 @@
                     </div>
                     <div class="alert alert-warning py-1 mb-2" role="alert" invisible="biziship_is_connected">
                         <i class="fa fa-exclamation-triangle me-1" title="Warning"/> 
-                        <span>BiziShip account not connected. Please <button name="%(action_biziship_auth_wizard)d" string="Connect" type="action" class="btn btn-link p-0 align-baseline"/> to enable all features.</span>
+                        <span>biziShip.ai account not connected. Please <button name="%(action_biziship_auth_wizard)d" string="Connect" type="action" class="btn btn-link p-0 align-baseline"/> to enable all features.</span>
                     </div>
                     <group string="Logistics Details">
                             <div class="d-flex align-items-center mb-2" colspan="2">
@@ -524,12 +525,13 @@
                     <div class="alert alert-info py-1 mb-2 d-flex justify-content-between align-items-center" role="status" style="border-radius: 4px; border-left: 4px solid #00b14f;" invisible="not biziship_is_connected">
                         <div class="d-flex align-items-center">
                             <i class="fa fa-user-circle text-primary me-2" style="font-size: 1.1rem;"/>
-                            <span>Logged in BiziShip as: <field name="biziship_connected_email" class="fw-bold ms-1"/></span>
-                            <button name="%(action_biziship_auth_wizard)d" string="Reconnect" type="action" class="btn btn-link p-0 ms-3 text-primary" style="font-size: 0.85em;"/>
+                            <span>Logged in biziShip.ai as: <field name="biziship_connected_email" class="fw-bold ms-1"/></span>
                         </div>
                         <div class="d-flex align-items-center gap-2">
-                            <button name="action_biziship_refresh_profile_rpc" type="object" icon="fa-refresh" class="btn btn-link p-0 text-muted" title="Refresh BiziShip account" style="font-size: 0.95rem; line-height: 1;"/>
+                            <button name="action_biziship_refresh_profile_rpc" type="object" icon="fa-refresh" class="btn btn-link p-0 text-muted" title="Sync your BiziShip account details (name, environment) without re-authenticating" style="font-size: 0.95rem; line-height: 1;"/>
                             <span class="badge rounded-pill bg-success-light text-success fw-bold px-3" style="font-size: 11px; border: 1px solid #00b14f;">ACCOUNT CONNECTED</span>
+                            <button name="%(action_biziship_auth_wizard)d" type="action" icon="fa-sign-in" class="btn btn-link p-0 text-muted" style="font-size: 0.75rem; opacity: 0.35;" title="Sign in again with a different email or refresh your session. You will receive a one-time PIN by email."/>
+                            <button name="%(action_biziship_logout_wizard)d" type="action" icon="fa-sign-out" class="btn btn-link p-0 text-muted" style="font-size: 0.75rem; opacity: 0.35;" title="Sign out from biziShip.ai"/>
                         </div>
                     </div>
                     <!-- BiziShip Booking Details Group -->

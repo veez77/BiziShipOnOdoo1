@@ -8,3 +8,5 @@ from . import biziship_save_freight_wizard
 from . import biziship_load_freight_wizard
 from . import biziship_tracking_wizard
 from . import biziship_address_history_wizard
+from . import biziship_not_connected_wizard
+from . import biziship_logout_wizard

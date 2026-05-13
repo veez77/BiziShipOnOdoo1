@@ -613,6 +613,8 @@ class SaleOrder(models.Model):
 
     def action_open_biziship_quote_confirm(self):
         self.ensure_one()
+        if not self.env.user.biziship_token:
+            return self.env.ref('biziship.action_biziship_not_connected_wizard').read()[0]
         selected_quote = self.biziship_quote_ids.filtered(lambda q: q.is_selected)
         if not selected_quote:
             raise models.ValidationError("Please select a quote from the LTL Freight Quotes list first.")
@@ -872,7 +874,9 @@ class SaleOrder(models.Model):
 
     def action_biziship_fetch_live_quotes(self):
         self.ensure_one()
-        
+        if not self.env.user.biziship_token:
+            return self.env.ref('biziship.action_biziship_not_connected_wizard').read()[0]
+
         # Validation
         if not self.biziship_origin_zip or not self.biziship_dest_zip or not self.biziship_total_weight or not self.biziship_pickup_date:
             raise UserError(_("Origin Zip, Destination Zip, Total Weight, and Pickup Date are required to fetch LTL quotes."))

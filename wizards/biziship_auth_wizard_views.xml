@@ -4,10 +4,10 @@
         <field name="name">biziship.auth.wizard.form</field>
         <field name="model">biziship.auth.wizard</field>
         <field name="arch" type="xml">
-            <form string="Connect BiziShip Account">
+            <form string="Connect biziShip.ai Account">
                 <field name="state" invisible="1"/>
                 <div invisible="state != 'request'">
-                    <p>Enter your BiziShip account email to receive a login PIN.</p>
+                    <p>Enter your biziShip.ai account email to receive a login PIN.</p>
                     <group>
                         <field name="email" placeholder="email@company.com"/>
                     </group>
@@ -29,7 +29,7 @@
     </record>
 
     <record id="action_biziship_auth_wizard" model="ir.actions.act_window">
-        <field name="name">Connect BiziShip Account</field>
+        <field name="name">Connect biziShip.ai Account</field>
         <field name="res_model">biziship.auth.wizard</field>
         <field name="view_mode">form</field>
         <field name="target">new</field>

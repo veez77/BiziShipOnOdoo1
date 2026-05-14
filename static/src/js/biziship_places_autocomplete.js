@@ -151,8 +151,8 @@ export class BiziShipPlacesAutocomplete extends CharField {
                 this.props.record.resId || 0, fullAddress, city, stateCode, zip, countryCode, prefix
             ]).then((result) => {
                 if (result) {
-                    // Google Places confirmed the address exists — always clear the invalid flag
                     result[`${prefix}address_invalid`] = false;
+                    result[`${prefix}address2`] = '';
                     this.props.record.update(result);
                 }
             });

@@ -13,7 +13,7 @@ export class BiziShipPlacesAutocomplete extends CharField {
         
         onMounted(() => {
             console.log("BiziShipPlacesAutocomplete mounted for field:", this.props.name);
-            this.orm.call("ir.config_parameter", "get_param", ["biziship.google_maps_api_key"]).then((key) => {
+            this.orm.call("sale.order", "biziship_get_maps_key", []).then((key) => {
                 if (key) {
                     this.apiKey = key;
                     this.initCustomAutocomplete();

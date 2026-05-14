@@ -271,6 +271,10 @@ class SaleOrder(models.Model):
 
 
     @api.model
+    def biziship_get_maps_key(self):
+        return self.env['ir.config_parameter'].sudo().get_param('biziship.google_maps_api_key', '') or ''
+
+    @api.model
     def biziship_resolve_address(self, order_id, street, city, state_code, zip_code, country_code, prefix):
 
         """Resolves raw JS string address components into Odoo database IDs."""

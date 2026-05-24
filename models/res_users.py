@@ -1,5 +1,6 @@
 import logging
 from odoo import api, models, fields
+from .. import api_utils
 
 _logger = logging.getLogger(__name__)
 
@@ -11,6 +12,11 @@ class ResUsers(models.Model):
     biziship_email = fields.Char(string='BiziShip Email', copy=False)
     biziship_user_name = fields.Char(string='BiziShip User Name', copy=False)
     biziship_p1_env = fields.Selection([('DEV', 'Development'), ('PROD', 'Production'), ('DEMO', 'Demo')], string='BiziShip Environment', copy=False)
+    biziship_version = fields.Char(string='BiziShip.ai Version', compute='_compute_biziship_version')
+
+    def _compute_biziship_version(self):
+        for user in self:
+            user.biziship_version = api_utils.BIZISHIP_MODULE_VERSION
 
     @api.model
     def _register_hook(self):

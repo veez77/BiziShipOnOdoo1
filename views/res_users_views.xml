@@ -21,6 +21,7 @@
                     <field name="biziship_user_name" readonly="1" invisible="not biziship_user_name"/>
                     <field name="biziship_token" password="True" readonly="1"/>
                     <field name="biziship_p1_env" readonly="1"/>
+                    <field name="biziship_version" readonly="1"/>
                 </group>
             </xpath>
         </field>
@@ -40,6 +41,9 @@
                 <div class="alert alert-success d-flex justify-content-between align-items-center" role="alert" invisible="biziship_token == False">
                     <span>Account Connected (Environment: <field name="biziship_p1_env" class="fw-bold"/>)</span>
                     <button name="%(action_biziship_auth_wizard)d" string="Reconnect" type="action" class="btn btn-link btn-sm p-0"/>
+                </div>
+                <div style="font-size:0.78rem;color:#888;margin-bottom:8px;">
+                    BiziShip.ai Version: <field name="biziship_version" readonly="1" class="fw-bold" style="display:inline;"/>
                 </div>
             </xpath>
         </field>

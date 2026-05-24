@@ -19,12 +19,17 @@ class BizishipAuthWizard(models.TransientModel):
         ('request', 'Request PIN'),
         ('verify', 'Verify PIN')
     ], default='request')
+    sale_order_id = fields.Many2one('sale.order')
 
     @api.model
     def default_get(self, fields):
         res = super(BizishipAuthWizard, self).default_get(fields)
         if 'email' in fields and not res.get('email'):
             res['email'] = self.env.user.email
+        if 'sale_order_id' in fields and not res.get('sale_order_id'):
+            ctx = self.env.context
+            if ctx.get('active_model') == 'sale.order' and ctx.get('active_id'):
+                res['sale_order_id'] = ctx['active_id']
         return res
 
     def action_request_pin(self):
@@ -102,30 +107,18 @@ class BizishipAuthWizard(models.TransientModel):
                     'biziship_p1_env': env
                 })
 
-                # If opened from a Sale Order, refresh its profile fields and reload the form
-                active_model = self.env.context.get('active_model')
-                active_id = self.env.context.get('active_id')
+                # Navigate back to the sale order that opened this wizard.
+                # self.sale_order_id is set in default_get when the wizard opens from a
+                # sale.order form button; it survives the action_request_pin dialog reload
+                # unlike context['active_id'], which gets overwritten with the wizard's own
+                # ID by doActionButton when Verify PIN is clicked — causing the client to
+                # call webRead('sale.order', [<wizard_id>]) → FetchRecordError.
                 next_action = {'type': 'ir.actions.act_window_close'}
-                # Resolve the sale order from context — works for direct form buttons
-                # and also when arriving via the not-connected wizard chain
-                order_model = active_model
-                order_id = active_id
-                if order_model != 'sale.order':
-                    # Fallback: check if the original caller was a sale order
-                    order_id = self.env.context.get('sale_order_id') or active_id
-                    order_model = 'sale.order' if order_id else None
-
-                if order_model == 'sale.order' and order_id:
-                    order = self.env['sale.order'].browse(order_id)
-                    if order.exists():
-                        # Sync env/demo_tries from profile API first
-                        order._biziship_fetch_and_store_user_profile()
-                        # Then guarantee the correct email — reliable regardless of API outcome
-                        order.write({'biziship_connected_email': self.email})
+                if self.sale_order_id and self.sale_order_id.exists():
                     next_action = {
                         'type': 'ir.actions.act_window',
                         'res_model': 'sale.order',
-                        'res_id': order_id,
+                        'res_id': self.sale_order_id.id,
                         'view_mode': 'form',
                         'views': [(False, 'form')],
                         'target': 'current',

@@ -61,13 +61,14 @@
                     <!-- End BiziShip Branded Header -->
                     <field name="biziship_is_connected" invisible="1"/>
                     <field name="biziship_connected_email" invisible="1"/>
+                    <field name="biziship_connected_email_display" invisible="1"/>
                     <field name="biziship_last_fetch_nonce" invisible="1"/>
                     <field name="biziship_origin_zip_invalid" invisible="1"/>
                     <field name="biziship_dest_zip_invalid" invisible="1"/>
                     <div class="alert alert-info py-1 mb-2 d-flex justify-content-between align-items-center" role="status" style="border-radius: 4px; border-left: 4px solid #00b14f;" invisible="not biziship_is_connected">
                         <div class="d-flex align-items-center">
                             <i class="fa fa-user-circle text-primary me-2" style="font-size: 1.1rem;"/>
-                            <span>Logged in biziShip.ai as: <field name="biziship_connected_email" class="fw-bold ms-1"/></span>
+                            <span>Logged in biziShip.ai as: <field name="biziship_connected_email_display" class="fw-bold ms-1"/></span>
                         </div>
                         <div class="d-flex align-items-center gap-2">
                             <button name="action_biziship_refresh_profile_rpc" type="object" icon="fa-refresh" class="btn btn-link p-0 text-muted" title="Sync your BiziShip account details (name, environment) without re-authenticating" style="font-size: 0.95rem; line-height: 1;"/>
@@ -271,7 +272,7 @@
                                             <!-- Row 3: Description & NMFC (Moved up) -->
                                             <div class="biziship-cargo-row-desc">
                                                 <div class="biziship-cargo-desc-input">
-                                                    <field name="cargo_desc" placeholder="Cargo Description..." widget="biziship_commodity"/>
+                                                    <field name="cargo_desc" placeholder="Commodity description (e.g. Steel bearings, hydraulic pump)" widget="biziship_commodity"/>
                                                 </div>
                                                 <div t-attf-class="biziship-cargo-nmfc-box {{ record.nmfc_is_stale.raw_value ? 'biziship-nmfc-stale' : '' }}" style="width: 140px !important;">
                                                     <span class="text-muted me-1">NMFC</span>
@@ -347,7 +348,7 @@
 
                                         <div class="biziship-cargo-row-desc mb-4">
                                             <div class="biziship-cargo-desc-input">
-                                                <field name="cargo_desc" placeholder="Cargo Description..." widget="biziship_commodity"/>
+                                                <field name="cargo_desc" placeholder="Commodity description (e.g. Steel bearings, hydraulic pump)" widget="biziship_commodity"/>
                                             </div>
                                             <div class="biziship-cargo-nmfc-box">
                                                 <i class="fa fa-barcode me-2 text-muted" title="NMFC Code Icon"/>
@@ -525,7 +526,7 @@
                     <div class="alert alert-info py-1 mb-2 d-flex justify-content-between align-items-center" role="status" style="border-radius: 4px; border-left: 4px solid #00b14f;" invisible="not biziship_is_connected">
                         <div class="d-flex align-items-center">
                             <i class="fa fa-user-circle text-primary me-2" style="font-size: 1.1rem;"/>
-                            <span>Logged in biziShip.ai as: <field name="biziship_connected_email" class="fw-bold ms-1"/></span>
+                            <span>Logged in biziShip.ai as: <field name="biziship_connected_email_display" class="fw-bold ms-1"/></span>
                         </div>
                         <div class="d-flex align-items-center gap-2">
                             <button name="action_biziship_refresh_profile_rpc" type="object" icon="fa-refresh" class="btn btn-link p-0 text-muted" title="Sync your BiziShip account details (name, environment) without re-authenticating" style="font-size: 0.95rem; line-height: 1;"/>

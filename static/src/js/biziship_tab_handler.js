@@ -51,17 +51,35 @@ patch(FormController.prototype, {
         const record = this.model.root;
         const recordId = (record && record.resId) || (record && record.data && record.data.id);
         if (!recordId) return;
-        this.orm.call('sale.order', 'action_biziship_refresh_profile_rpc', [[recordId]])
-            .then((result) => this._bizishipApplyProfileResult(result))
-            .catch((err) => console.warn('BiziShip refresh error:', err));
+
+        // Debounce: collapse rapid back-to-back calls (e.g. onMounted + tab click)
+        // into a single server request to prevent SERIALIZATION_FAILURE on concurrent writes.
+        if (this._bizishipRefreshTimer) clearTimeout(this._bizishipRefreshTimer);
+        this._bizishipRefreshTimer = setTimeout(() => {
+            this._bizishipRefreshTimer = null;
+            if (this._bizishipRefreshPending) return;
+            this._bizishipRefreshPending = true;
+            this.orm.call('sale.order', 'action_biziship_refresh_profile_rpc', [[recordId]])
+                .then((result) => this._bizishipApplyProfileResult(result))
+                .catch((err) => console.warn('BiziShip refresh error:', err))
+                .finally(() => { this._bizishipRefreshPending = false; });
+        }, 300);
     },
 
     _bizishipApplyProfileResult(result) {
-        if (!result || !this.model.root || !this.model.root.data) return;
-        const data = this.model.root.data;
-        data.biziship_priority1_env = result.biziship_priority1_env;
-        data.biziship_demo_tries = result.biziship_demo_tries;
-        data.biziship_connected_email = result.biziship_connected_email;
+        if (!result || !this.model.root) return;
+        const root = this.model.root;
+        // root.data.id is falsy until the form's own initial web_read has finished
+        // populating the RelationalModel. Calling root.load() before that completes
+        // creates two concurrent web_read calls that race and corrupt the model state,
+        // causing Odoo to try fetching One2many IDs that no longer exist →
+        // "Can't fetch record(s) X. They might have been deleted."
+        // When the initial load is still in-flight, skip the reload — the form's own
+        // web_read will already read the just-written profile values from DB.
+        if (!root.data || !root.data.id) return;
+        if (typeof root.load === 'function' && !root.dirty) {
+            root.load().catch(() => {});
+        }
     },
 
     _checkBiziShipTabSwitch() {

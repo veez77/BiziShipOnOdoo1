@@ -143,14 +143,11 @@ patch(KanbanRecord.prototype, {
         if (manual || !match) {
             this.nmfcState.isProcessing = true;
             try {
-                const result = await this.rpc("/web/dataset/call_button", {
+                await this.rpc("/web/dataset/call_button", {
                     model: "biziship.sale.cargo.line",
                     method: "action_biziship_nmfc_suggest",
                     args: [[this.props.record.resId]],
                 });
-                
-                // Result is handled by write() in Python, but we refresh local state
-                // Odoo's KanbanRecord usually re-renders on record change
             } finally {
                 this.nmfcState.isProcessing = false;
             }

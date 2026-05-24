@@ -236,17 +236,12 @@ export class BiziShipCommodityAutocomplete extends CharField {
         }
 
         // 2. AI Fallback via Proxy
-        await this.props.record.update({ is_processing: true });
-        try {
-            await this.rpc("/web/dataset/call_button", {
-                model: "biziship.sale.cargo.line",
-                method: "action_biziship_nmfc_suggest",
-                args: [[this.props.record.resId]],
-                kwargs: {},
-            });
-        } finally {
-            await this.props.record.update({ is_processing: false });
-        }
+        await this.rpc("/web/dataset/call_button", {
+            model: "biziship.sale.cargo.line",
+            method: "action_biziship_nmfc_suggest",
+            args: [[this.props.record.resId]],
+            kwargs: {},
+        });
     }
 
     _findRuleMatch(desc) {

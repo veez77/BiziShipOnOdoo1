@@ -120,7 +120,7 @@ class BizishipSaleCargoLine(models.Model):
     used = fields.Boolean(string="Used / Reconditioned", default=False)
     machinery = fields.Boolean(string="Machinery", default=False)
     nmfc_suggestion_data = fields.Text(string="NMFC Suggestion Data")
-    cargo_desc = fields.Char(string="Cargo Description", default="General Freight")
+    cargo_desc = fields.Char(string="Cargo Description")
     
     # NMFC Suggestion Fields
     nmfc_suggested_code = fields.Char(string="Suggested NMFC")

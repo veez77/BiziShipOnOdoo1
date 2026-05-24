@@ -31,6 +31,7 @@ class SaleOrder(models.Model):
 
     biziship_is_connected = fields.Boolean(compute='_compute_biziship_connection_status')
     biziship_connected_user_name = fields.Char(compute='_compute_biziship_connection_status')
+    biziship_connected_email_display = fields.Char(compute='_compute_biziship_connection_status')
 
     biziship_documents_json = fields.Text(string='Shipment Documents JSON', readonly=True, copy=False)
     biziship_documents_html = fields.Html(string='Shipment Documents', compute='_compute_biziship_documents_html', readonly=True)
@@ -64,10 +65,11 @@ class SaleOrder(models.Model):
             'width': 40.0,
             'height': 48.0,
             'dim_unit': 'in',
-            'cargo_desc': 'General Freight'
+            'cargo_desc': ''
         })
         return True
 
+    @api.depends_context('uid')
     def _compute_biziship_connection_status(self):
         for order in self:
             user = self.env.user
@@ -77,8 +79,10 @@ class SaleOrder(models.Model):
                     order.biziship_connected_user_name = user.biziship_user_name.split('|')[0]
                 else:
                     order.biziship_connected_user_name = user.login or "Connected User"
+                order.biziship_connected_email_display = user.biziship_email or user.email or ""
             else:
                 order.biziship_connected_user_name = ""
+                order.biziship_connected_email_display = ""
 
     @api.depends('biziship_documents_json', 'biziship_bol_url')
     def _compute_biziship_documents_html(self):

@@ -219,7 +219,7 @@ class SaleOrder(models.Model):
     )
 
     # Destination
-    biziship_dest_company = fields.Char(string="Destination Company", store=True)
+    biziship_dest_company = fields.Char(string="Destination Company", compute='_compute_biziship_dest_company', inverse='_inverse_biziship_dest_company_noop', store=True, readonly=False)
 
     biziship_priority1_env = fields.Char(string="Priority1 Environment", help="DEV, PROD, or DEMO", readonly=True)
     biziship_demo_tries = fields.Integer(string="Demo Tries Remaining", default=-1)
@@ -405,6 +405,9 @@ class SaleOrder(models.Model):
         if partner.parent_id:
             self.biziship_dest_company = partner.commercial_company_name or partner.parent_id.name or partner.name
             self.biziship_dest_contact_name = partner.name
+        elif partner.company_name:
+            self.biziship_dest_company = partner.company_name
+            self.biziship_dest_contact_name = partner.name
         else:
             self.biziship_dest_company = partner.name
         if partner.phone or partner.mobile:
@@ -482,6 +485,24 @@ class SaleOrder(models.Model):
     def _onchange_biziship_dest_residential(self):
         if self.biziship_dest_residential:
             self.biziship_dest_liftgate = True
+
+    @api.depends('partner_shipping_id', 'partner_shipping_id.name',
+                 'partner_shipping_id.parent_id', 'partner_shipping_id.commercial_company_name',
+                 'partner_shipping_id.company_name')
+    def _compute_biziship_dest_company(self):
+        for order in self:
+            partner = order.partner_shipping_id
+            if not partner:
+                continue
+            if partner.parent_id:
+                order.biziship_dest_company = partner.commercial_company_name or partner.parent_id.name or partner.name
+            elif partner.company_name:
+                order.biziship_dest_company = partner.company_name
+            else:
+                order.biziship_dest_company = partner.name
+
+    def _inverse_biziship_dest_company_noop(self):
+        pass
 
     @api.depends('partner_shipping_id', 'partner_shipping_id.country_id')
     def _compute_biziship_dest_country_id(self):
@@ -697,6 +718,9 @@ class SaleOrder(models.Model):
             partner = self.partner_id
             if partner.parent_id:
                 dest_company = partner.commercial_company_name or partner.parent_id.name or partner.name
+                dest_contact = partner.name
+            elif partner.company_name:
+                dest_company = partner.company_name
                 dest_contact = partner.name
             else:
                 dest_company = partner.name

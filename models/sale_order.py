@@ -223,11 +223,11 @@ class SaleOrder(models.Model):
 
     biziship_priority1_env = fields.Char(string="Priority1 Environment", help="DEV, PROD, or DEMO", readonly=True)
     biziship_demo_tries = fields.Integer(string="Demo Tries Remaining", default=-1)
-    biziship_dest_address = fields.Char(string="Destination Address Line 1", related="partner_shipping_id.street", readonly=False, store=True)
-    biziship_dest_address2 = fields.Char(string="Destination Address Line 2", related="partner_shipping_id.street2", readonly=False, store=True)
-    biziship_dest_city = fields.Char(string="Destination City", related="partner_shipping_id.city", readonly=False, store=True)
-    biziship_dest_state_id = fields.Many2one('res.country.state', string="Destination State", related="partner_shipping_id.state_id", readonly=False, store=True)
-    biziship_dest_zip = fields.Char(string="Destination Zip Code", size=5, related="partner_shipping_id.zip", readonly=False, store=True)
+    biziship_dest_address = fields.Char(string="Destination Address Line 1")
+    biziship_dest_address2 = fields.Char(string="Destination Address Line 2")
+    biziship_dest_city = fields.Char(string="Destination City")
+    biziship_dest_state_id = fields.Many2one('res.country.state', string="Destination State")
+    biziship_dest_zip = fields.Char(string="Destination Zip Code", size=5)
     biziship_dest_zip_invalid = fields.Boolean(compute='_compute_zip_validity', store=False)
     biziship_dest_country_id = fields.Many2one('res.country', string="Destination Country", compute='_compute_biziship_dest_country_id', readonly=False, store=True)
     

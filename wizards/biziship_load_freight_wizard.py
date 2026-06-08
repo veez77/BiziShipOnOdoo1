@@ -351,6 +351,21 @@ class BizishipLoadFreightWizard(models.TransientModel):
             accs_dest = self.env['biziship.accessorial'].search([('code', 'in', lookup_codes), ('type', '=', 'destination')])
             vals['biziship_dest_accessorial_ids'] = [(6, 0, accs_dest.ids)]
 
+            # Recurring weekly hours — rebuild the JSON fields from saved keys,
+            # falling back to defaults so older templates without them still load.
+            def _build_hours(start_key, end_key, days_key):
+                start = details.get(start_key) or '08:00'
+                end = details.get(end_key) or '17:00'
+                days = details.get(days_key)
+                if not isinstance(days, list) or not days:
+                    days = ['MON', 'TUE', 'WED', 'THU', 'FRI']
+                return json.dumps({'start': start, 'end': end, 'days': days})
+
+            vals['biziship_origin_pickup_hours'] = _build_hours(
+                'origin_pickup_start', 'origin_pickup_end', 'origin_pickup_days')
+            vals['biziship_dest_delivery_hours'] = _build_hours(
+                'destination_pickup_start', 'destination_pickup_end', 'destination_pickup_days')
+
             _logger.info("BiziShip: Values to write to Order: %s", json.dumps(vals, indent=2))
             order.write(vals)
 

@@ -284,7 +284,7 @@ class BizishipFreightQuoteWizard(models.TransientModel):
             "destination_country": self.destination_country_id.code if self.destination_country_id else "US",
             "destination_phone": self._format_phone(self.destination_phone),
             "cargo_description": self.cargo_description or "",
-            "special_instructions": self.special_instructions or "",
+            "special_instructions": self.order_id._biziship_merge_schedule_instructions(self.special_instructions) if self.order_id else (self.special_instructions or ""),
             "weight": round(total_payload_weight, 2),
             "weight_unit": "lbs",
             "line_items": payload_items,

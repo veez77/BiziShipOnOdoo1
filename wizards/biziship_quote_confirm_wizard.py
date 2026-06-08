@@ -131,7 +131,9 @@ class BizishipQuoteConfirmWizard(models.TransientModel):
                     'destination_contact_name': so.biziship_dest_contact_name,
                     'destination_contact_phone': so.biziship_dest_contact_phone,
                     'destination_contact_email': so.biziship_dest_contact_email,
-                    'biziship_special_instructions': so.biziship_special_instructions,
+                    # Show the merged schedule prefix + user text so the booking dialog
+                    # displays the pickup/delivery hours that will be sent.
+                    'biziship_special_instructions': so._biziship_merge_schedule_instructions(so.biziship_special_instructions),
                 })
         return res
 
@@ -334,6 +336,7 @@ class BizishipQuoteConfirmWizard(models.TransientModel):
             "shipper": shipper,
             "consignee": consignee,
             "pickup_date": pickup_date,
+            # Already merged (and possibly edited) in the booking dialog — send verbatim.
             "pickup_note": self.biziship_special_instructions or "",
             "line_items": line_items
         }

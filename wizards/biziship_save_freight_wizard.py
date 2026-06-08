@@ -47,6 +47,14 @@ class BizishipSaveFreightWizard(models.TransientModel):
         if pickup_date_str < today_str:
             pickup_date_str = today_str
 
+        def _parse_hours(raw):
+            try:
+                return json.loads(raw or '{}') or {}
+            except (ValueError, TypeError):
+                return {}
+        _origin_hours = _parse_hours(order.biziship_origin_pickup_hours)
+        _dest_hours = _parse_hours(order.biziship_dest_delivery_hours)
+
         freight_details = {
             "origin_company":       order.biziship_origin_company or None,
             "origin_address":       order.biziship_origin_address or None,
@@ -98,6 +106,14 @@ class BizishipSaveFreightWizard(models.TransientModel):
             # Accessorial Arrays
             "origin_more": order.biziship_origin_accessorial_ids.mapped('code'),
             "dest_more":   order.biziship_dest_accessorial_ids.mapped('code'),
+
+            # Recurring weekly pickup / delivery hours (round-trips as plain keys)
+            "origin_pickup_start":      _origin_hours.get('start'),
+            "origin_pickup_end":        _origin_hours.get('end'),
+            "origin_pickup_days":       _origin_hours.get('days'),
+            "destination_pickup_start": _dest_hours.get('start'),
+            "destination_pickup_end":   _dest_hours.get('end'),
+            "destination_pickup_days":  _dest_hours.get('days'),
 
             # Stringified Cargo JSON - critical for web app compatibility
             "cargo_lines_json": json.dumps(cargo_lines)

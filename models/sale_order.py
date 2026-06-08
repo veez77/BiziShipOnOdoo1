@@ -230,7 +230,14 @@ class SaleOrder(models.Model):
     biziship_dest_zip = fields.Char(string="Destination Zip Code", size=5)
     biziship_dest_zip_invalid = fields.Boolean(compute='_compute_zip_validity', store=False)
     biziship_dest_country_id = fields.Many2one('res.country', string="Destination Country", compute='_compute_biziship_dest_country_id', readonly=False, store=True)
-    
+
+    # Recurring weekly operating hours (warehouse-recurring, not shipment-specific).
+    # Stored as a JSON string: {"start": "HH:MM", "end": "HH:MM", "days": ["MON", ...]}.
+    # These are frontend-only: on quote/book they are formatted into a human-readable
+    # sentence and prepended to special_instructions — the backend API never sees new fields.
+    biziship_origin_pickup_hours = fields.Char(string="Pickup Hours", default=lambda self: self._biziship_default_hours())
+    biziship_dest_delivery_hours = fields.Char(string="Delivery Hours", default=lambda self: self._biziship_default_hours())
+
     biziship_dest_appointment = fields.Boolean(string="Delivery Appointment")
     biziship_dest_residential = fields.Boolean(string="Residential Delivery")
     biziship_dest_notify = fields.Boolean(string="Notify Consignee")
@@ -503,6 +510,83 @@ class SaleOrder(models.Model):
 
     def _inverse_biziship_dest_company_noop(self):
         pass
+
+    # ------------------------------------------------------------------
+    # Recurring pickup / delivery hours → special_instructions helpers
+    # ------------------------------------------------------------------
+    BIZISHIP_DAY_ORDER = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN']
+    BIZISHIP_DAY_LABEL = {
+        'MON': 'Mon', 'TUE': 'Tue', 'WED': 'Wed', 'THU': 'Thu',
+        'FRI': 'Fri', 'SAT': 'Sat', 'SUN': 'Sun',
+    }
+
+    @api.model
+    def _biziship_default_hours(self):
+        return json.dumps({
+            'start': '08:00',
+            'end': '17:00',
+            'days': ['MON', 'TUE', 'WED', 'THU', 'FRI'],
+        })
+
+    def _biziship_fmt_time12(self, hhmm):
+        """'08:00' -> '8:00 AM'. Returns the input unchanged if unparseable."""
+        try:
+            h_str, m_str = (hhmm or '').split(':')
+            h, m = int(h_str), int(m_str)
+        except (ValueError, AttributeError):
+            return hhmm or ''
+        suffix = 'AM' if h < 12 else 'PM'
+        h12 = h % 12 or 12
+        return f"{h12}:{m:02d} {suffix}"
+
+    def _biziship_fmt_days(self, days):
+        """Format a list of day codes into 'Mon–Fri' / 'weekends' / 'every day' / 'Mon, Wed, Fri'."""
+        selected = [d for d in self.BIZISHIP_DAY_ORDER if d in (days or [])]
+        if not selected:
+            return ''
+        if selected == ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN']:
+            return 'every day'
+        if selected == ['SAT', 'SUN']:
+            return 'weekends'
+        if selected == ['MON', 'TUE', 'WED', 'THU', 'FRI']:
+            return 'Mon–Fri'
+        return ', '.join(self.BIZISHIP_DAY_LABEL[d] for d in selected)
+
+    def _biziship_schedule_prefix(self):
+        """Build 'Pickup hours: ... . Delivery hours: ... .' from the two JSON hour fields.
+
+        Skips a side whose day list is empty. Returns '' when both are empty.
+        """
+        self.ensure_one()
+        parts = []
+        for label, raw in (
+            ('Pickup hours', self.biziship_origin_pickup_hours),
+            ('Delivery hours', self.biziship_dest_delivery_hours),
+        ):
+            # An empty/NULL field (e.g. orders created before this feature) falls back to
+            # the same defaults the widget displays, so what the user sees is what is sent.
+            try:
+                data = json.loads(raw) if raw else {}
+            except (ValueError, TypeError):
+                data = {}
+            if not data:
+                data = json.loads(self._biziship_default_hours())
+            days = self._biziship_fmt_days(data.get('days'))
+            start, end = data.get('start'), data.get('end')
+            if days and start and end:
+                parts.append(
+                    f"{label}: {days} {self._biziship_fmt_time12(start)} – {self._biziship_fmt_time12(end)}."
+                )
+        return ' '.join(parts)
+
+    def _biziship_merge_schedule_instructions(self, base_text):
+        """Prepend the schedule prefix to the user's special instructions text."""
+        self.ensure_one()
+        prefix = self._biziship_schedule_prefix()
+        base_text = base_text or ''
+        if prefix and base_text:
+            return f"{prefix} {base_text}"
+        return prefix or base_text
 
     @api.depends('partner_shipping_id', 'partner_shipping_id.country_id')
     def _compute_biziship_dest_country_id(self):
@@ -1002,7 +1086,7 @@ class SaleOrder(models.Model):
             "line_items": payload_items,
             "accessorial_codes": accessorials_list,
             "pickup_date": str(self.biziship_pickup_date) if self.biziship_pickup_date else "",
-            "special_instructions": self.biziship_special_instructions or "",
+            "special_instructions": self._biziship_merge_schedule_instructions(self.biziship_special_instructions),
             "is_biziship": True
         }
         

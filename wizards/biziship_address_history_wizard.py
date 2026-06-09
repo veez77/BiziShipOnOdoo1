@@ -1,3 +1,4 @@
+import json
 import logging
 from odoo import models, fields, api
 from odoo.exceptions import UserError
@@ -22,6 +23,11 @@ class BizishipAddressHistoryLine(models.TransientModel):
     contact_name = fields.Char()
     contact_phone = fields.Char()
     contact_email = fields.Char()
+    # Recurring weekly hours JSON used on the source order (pickup for origin, delivery for dest)
+    hours_json = fields.Char()
+    # Accessorial codes (comma-joined) and checkbox flags (JSON) from the source order
+    accessorial_codes = fields.Char()
+    flags_json = fields.Char()
     source_order_name = fields.Char(string='From Quote')
     source_date = fields.Char(string='Date')
 
@@ -89,6 +95,25 @@ class BizishipAddressHistoryWizard(models.TransientModel):
                 continue
             seen.add(key)
 
+            # Capture accessorial codes + checkbox flags from the source order for this side.
+            if is_dest:
+                acc_codes = order.biziship_dest_accessorial_ids.mapped('code')
+                flags = {
+                    'appointment':    order.biziship_dest_appointment,
+                    'residential':    order.biziship_dest_residential,
+                    'notify':         order.biziship_dest_notify,
+                    'limited_access': order.biziship_dest_limited_access,
+                    'liftgate':       order.biziship_dest_liftgate,
+                    'hazmat':         order.biziship_dest_hazmat,
+                }
+            else:
+                acc_codes = order.biziship_origin_accessorial_ids.mapped('code')
+                flags = {
+                    'residential':    order.biziship_origin_residential,
+                    'liftgate':       order.biziship_origin_liftgate,
+                    'limited_access': order.biziship_origin_limited_access,
+                }
+
             if search_query:
                 q = search_query.strip().lower()
                 state_rec = getattr(order, 'biziship_dest_state_id' if is_dest else 'biziship_origin_state_id', False)
@@ -112,6 +137,9 @@ class BizishipAddressHistoryWizard(models.TransientModel):
                 'contact_name': _val(order, 'biziship_origin_contact_name', 'biziship_dest_contact_name'),
                 'contact_phone':_val(order, 'biziship_origin_contact_phone','biziship_dest_contact_phone'),
                 'contact_email':_val(order, 'biziship_origin_contact_email','biziship_dest_contact_email'),
+                'hours_json':   _val(order, 'biziship_origin_pickup_hours', 'biziship_dest_delivery_hours'),
+                'accessorial_codes': ','.join(acc_codes),
+                'flags_json':   json.dumps(flags),
                 'source_order_name': order.name or '',
                 'source_date': order.date_order.strftime('%b %d, %Y') if order.date_order else '',
             })
@@ -137,6 +165,23 @@ class BizishipAddressHistoryWizard(models.TransientModel):
             'target': 'new',
         }
 
+    @staticmethod
+    def _parse_flags(raw):
+        try:
+            return json.loads(raw or '{}') or {}
+        except (ValueError, TypeError):
+            return {}
+
+    def _match_accessorials(self, codes_csv, acc_type):
+        """Resolve comma-joined accessorial codes to records of the given type ('origin'/'destination')."""
+        codes = [c for c in (codes_csv or '').split(',') if c]
+        if not codes:
+            return self.env['biziship.accessorial']
+        return self.env['biziship.accessorial'].search([
+            ('code', 'in', codes),
+            ('type', '=', acc_type),
+        ])
+
     def action_apply_address(self):
         self.ensure_one()
         selected = self.address_line_ids.filtered('is_selected')
@@ -147,7 +192,7 @@ class BizishipAddressHistoryWizard(models.TransientModel):
         is_dest = self.address_type == 'destination'
 
         if is_dest:
-            so.write({
+            dest_vals = {
                 'biziship_dest_company':       sel.company_name,
                 'biziship_dest_address':       sel.address,
                 'biziship_dest_address2':      sel.address2,
@@ -158,14 +203,29 @@ class BizishipAddressHistoryWizard(models.TransientModel):
                 'biziship_dest_contact_name':  sel.contact_name,
                 'biziship_dest_contact_phone': sel.contact_phone,
                 'biziship_dest_contact_email': sel.contact_email,
+            }
+            # Restore the delivery hours + weekdays used on that previous booking (skip if none saved).
+            if sel.hours_json:
+                dest_vals['biziship_dest_delivery_hours'] = sel.hours_json
+            # Restore the checkbox flags + accessorial services from that previous booking.
+            flags = self._parse_flags(sel.flags_json)
+            dest_vals.update({
+                'biziship_dest_appointment':    bool(flags.get('appointment')),
+                'biziship_dest_residential':    bool(flags.get('residential')),
+                'biziship_dest_notify':         bool(flags.get('notify')),
+                'biziship_dest_limited_access': bool(flags.get('limited_access')),
+                'biziship_dest_liftgate':       bool(flags.get('liftgate')),
+                'biziship_dest_hazmat':         bool(flags.get('hazmat')),
+                'biziship_dest_accessorial_ids': [(6, 0, self._match_accessorials(sel.accessorial_codes, 'destination').ids)],
             })
+            so.write(dest_vals)
             so._biziship_run_address_validation(
                 sel.address, sel.city,
                 sel.state_id.code if sel.state_id else '',
                 sel.zip_code, 'destination',
             )
         else:
-            so.write({
+            origin_vals = {
                 'biziship_origin_company':       sel.company_name,
                 'biziship_origin_address':       sel.address,
                 'biziship_origin_address2':      sel.address2,
@@ -176,7 +236,19 @@ class BizishipAddressHistoryWizard(models.TransientModel):
                 'biziship_origin_contact_name':  sel.contact_name,
                 'biziship_origin_contact_phone': sel.contact_phone,
                 'biziship_origin_contact_email': sel.contact_email,
+            }
+            # Restore the pickup hours + weekdays used on that previous booking (skip if none saved).
+            if sel.hours_json:
+                origin_vals['biziship_origin_pickup_hours'] = sel.hours_json
+            # Restore the checkbox flags + accessorial services from that previous booking.
+            flags = self._parse_flags(sel.flags_json)
+            origin_vals.update({
+                'biziship_origin_residential':    bool(flags.get('residential')),
+                'biziship_origin_liftgate':       bool(flags.get('liftgate')),
+                'biziship_origin_limited_access': bool(flags.get('limited_access')),
+                'biziship_origin_accessorial_ids': [(6, 0, self._match_accessorials(sel.accessorial_codes, 'origin').ids)],
             })
+            so.write(origin_vals)
             so._biziship_run_address_validation(
                 sel.address, sel.city,
                 sel.state_id.code if sel.state_id else '',

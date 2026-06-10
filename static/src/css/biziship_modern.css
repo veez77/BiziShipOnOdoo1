@@ -880,3 +880,237 @@ div[name="biziship_dest_country_id"] input {
     color: #ffffff;
     font-weight: 600;
 }
+
+/* ============================================================
+   Shipment notifications (booking dialog) — email chip input
+   ============================================================ */
+.biziship-notif {
+    border-top: 1px solid #e5e7eb;
+    padding-top: 14px;
+    margin-top: 6px;
+    width: 100%;
+}
+
+.biziship-notif-header {
+    display: flex;
+    align-items: center;
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: #0f172a;
+}
+
+.biziship-notif-header .fa {
+    color: #714B67;
+}
+
+.biziship-notif-help {
+    font-size: 0.8rem;
+    color: #94a3b8;
+    margin: 2px 0 10px;
+}
+
+.biziship-notif-loading {
+    font-size: 0.82rem;
+    color: #94a3b8;
+    font-style: italic;
+    margin-bottom: 10px;
+}
+
+.biziship-notif-block {
+    margin-bottom: 10px;
+}
+
+.biziship-notif-sublabel {
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    color: #94a3b8;
+    margin-bottom: 5px;
+}
+
+/* Read-only company-default chips */
+.biziship-chip-readonly-wrap {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.biziship-chip-readonly {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 10px;
+    border-radius: 9999px;
+    background: #f3f4f6;       /* gray-100 */
+    color: #6b7280;            /* gray-500 */
+    box-shadow: inset 0 0 0 1px #e5e7eb;  /* gray-200 ring */
+    font-size: 0.8rem;
+}
+
+/* Editable chip input container */
+.biziship-chip-input {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    min-height: 38px;
+    padding: 5px 8px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    background: #ffffff;
+    cursor: text;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.biziship-chip-input.is-invalid {
+    border-color: #dc2626;
+    box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.15);
+}
+
+.biziship-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 8px;
+    border-radius: 9999px;
+    background: #faf5fb;       /* primary-50 (purple tint) */
+    color: #5b3a52;            /* primary-700 */
+    box-shadow: inset 0 0 0 1px #e7d4e4;  /* primary-100 ring */
+    font-size: 0.8rem;
+}
+
+.biziship-chip-x {
+    border: none;
+    background: transparent;
+    color: #9b7790;
+    font-size: 1rem;
+    line-height: 1;
+    padding: 0 0 0 2px;
+    cursor: pointer;
+}
+
+.biziship-chip-x:hover {
+    color: #5b3a52;
+}
+
+.biziship-chip-field {
+    flex: 1 1 120px;
+    min-width: 120px;
+    border: none;
+    outline: none;
+    background: transparent;
+    font-size: 0.85rem;
+    color: #0f172a;
+    padding: 2px 0;
+}
+
+/* Salesperson recipient row + toggle */
+.biziship-sp-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    background: #f8fafc;
+    transition: opacity 0.15s ease;
+}
+
+.biziship-sp-row.excluded {
+    opacity: 0.5;
+}
+
+.biziship-sp-avatar {
+    font-size: 1.5rem;
+    color: #94a3b8;
+    flex: 0 0 auto;
+}
+
+.biziship-sp-info {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.2;
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.biziship-sp-name {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #0f172a;
+}
+
+.biziship-sp-row.excluded .biziship-sp-name {
+    text-decoration: line-through;
+}
+
+.biziship-sp-email {
+    font-size: 0.76rem;
+    color: #94a3b8;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Toggle switch (iOS-style) */
+.biziship-switch {
+    position: relative;
+    display: inline-block;
+    width: 40px;
+    height: 22px;
+    flex: 0 0 auto;
+    margin: 0;
+    cursor: pointer;
+}
+
+.biziship-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+    position: absolute;
+}
+
+.biziship-switch-slider {
+    position: absolute;
+    inset: 0;
+    background: #cbd5e1;
+    border-radius: 9999px;
+    transition: background 0.2s ease;
+}
+
+.biziship-switch-slider::before {
+    content: "";
+    position: absolute;
+    height: 16px;
+    width: 16px;
+    left: 3px;
+    top: 3px;
+    background: #ffffff;
+    border-radius: 50%;
+    transition: transform 0.2s ease;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.biziship-switch input:checked + .biziship-switch-slider {
+    background: #16a34a;
+}
+
+.biziship-switch input:checked + .biziship-switch-slider::before {
+    transform: translateX(18px);
+}
+
+.biziship-switch input:focus-visible + .biziship-switch-slider {
+    box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.25);
+}
+
+.biziship-notif-error {
+    font-size: 0.78rem;
+    color: #dc2626;
+    margin-top: 5px;
+}
+
+.biziship-notif-help2 {
+    font-size: 0.75rem;
+    color: #94a3b8;
+    margin-top: 5px;
+}

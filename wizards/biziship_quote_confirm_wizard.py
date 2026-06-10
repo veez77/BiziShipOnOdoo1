@@ -1,9 +1,14 @@
 import json
+import re
 import requests
 import logging
 from odoo import models, fields, api, _
 from odoo.exceptions import UserError
 from odoo.addons.biziship import api_utils
+
+# Shipment-notification CC email validation (mirrors the client-side regex).
+BIZISHIP_EMAIL_RE = re.compile(r'^[^\s@]+@[^\s@]+\.[^\s@]+$')
+BIZISHIP_CC_MAX = 10
 
 _logger = logging.getLogger(__name__)
 
@@ -91,6 +96,14 @@ class BizishipQuoteConfirmWizard(models.TransientModel):
     currency_id = fields.Many2one(related="quote_id.currency_id", readonly=True)
     quote_id_ref = fields.Char(related="quote_id.quote_id_ref", readonly=True)
     biziship_special_instructions = fields.Text(string="Special Instructions")
+    # Sales Order reference — read-only display on the booking dialog (related, not stored).
+    biziship_sales_order_name = fields.Char(related="sale_order_id.name", string="Sales Order", readonly=True)
+    # Per-shipment extra notification recipients (editable chips), stored as a JSON array string.
+    biziship_cc_emails_json = fields.Char(string="Shipment Notifications", default='[]')
+    # Salesperson notification — shown on the booking dialog, included by default, toggleable.
+    biziship_salesperson_name = fields.Char(string="Salesperson", readonly=True)
+    biziship_salesperson_email = fields.Char(string="Salesperson Email", readonly=True)
+    biziship_notify_salesperson = fields.Boolean(string="Notify Salesperson", default=True)
     priority1_env = fields.Char(related="sale_order_id.biziship_priority1_env", readonly=True)
     po_number = fields.Char(string="PO Number", compute='_compute_po_number', store=True, readonly=False)
 
@@ -135,7 +148,70 @@ class BizishipQuoteConfirmWizard(models.TransientModel):
                     # displays the pickup/delivery hours that will be sent.
                     'biziship_special_instructions': so._biziship_merge_schedule_instructions(so.biziship_special_instructions),
                 })
+                # Salesperson notification recipient — included by default when they have an email.
+                salesperson = so.user_id
+                if salesperson:
+                    res['biziship_salesperson_name'] = salesperson.name or ''
+                    res['biziship_salesperson_email'] = salesperson.email or ''
+                    res['biziship_notify_salesperson'] = bool(salesperson.email)
         return res
+
+    @api.model
+    def biziship_get_default_cc_emails(self):
+        """Fetch the company's default notification recipients from the ERP Gateway.
+
+        Caller-company scoping is handled server-side via X-User-Email; we never pass
+        a company id. Always returns a list — on any error/timeout, returns [] so the
+        booking dialog is never blocked.
+        """
+        try:
+            base_url = get_biziship_api_url().rstrip('/')
+            user = self.env.user
+            headers = {
+                "X-ERP-API-Key": get_erp_api_key(self.env),
+                "X-User-Email": (user.biziship_email if user.biziship_token and user.biziship_email else user.email) or "",
+            }
+            resp = requests.get(
+                f"{base_url}/erp/company/default-copy-to-emails",
+                headers=headers,
+                timeout=6,
+            )
+            resp.raise_for_status()
+            data = resp.json()
+            emails = data.get('defaultCopyToEmails') or []
+            return [e for e in emails if isinstance(e, str)]
+        except Exception as e:
+            _logger.warning("BiziShip: failed to fetch default CC emails: %s", str(e))
+            return []
+
+    def _biziship_clean_cc_emails(self):
+        """Parse, trim, validate, dedupe (case-insensitive) and cap the editable CC chips.
+
+        Raises UserError on an invalid entry or when the cap is exceeded. Returns a list.
+        """
+        self.ensure_one()
+        try:
+            raw = json.loads(self.biziship_cc_emails_json or '[]')
+        except (ValueError, TypeError):
+            raw = []
+        if not isinstance(raw, list):
+            raw = []
+        cleaned = []
+        seen = set()
+        for item in raw:
+            email = (item or '').strip() if isinstance(item, str) else ''
+            if not email:
+                continue
+            if not BIZISHIP_EMAIL_RE.match(email):
+                raise UserError(_('"%s" is not a valid email address.') % email)
+            key = email.lower()
+            if key in seen:
+                continue
+            seen.add(key)
+            cleaned.append(email)
+        if len(cleaned) > BIZISHIP_CC_MAX:
+            raise UserError(_("Maximum %s notification addresses allowed.") % BIZISHIP_CC_MAX)
+        return cleaned
 
     @api.depends('is_hazmat', 'hazmat_contact_name', 'hazmat_contact_phone', 'hazmat_un_number', 'hazmat_proper_shipping_name', 'hazmat_hazard_class', 'hazmat_packing_group', 'hazmat_pieces_packaging')
     def _compute_is_hazmat_valid(self):
@@ -340,6 +416,30 @@ class BizishipQuoteConfirmWizard(models.TransientModel):
             "pickup_note": self.biziship_special_instructions or "",
             "line_items": line_items
         }
+
+        # Sales Order reference (additive — single string, omitted when empty). The Odoo
+        # sale order's own name is the authoritative Sales Order number.
+        sales_order_ref = (sale_order.name or '').strip() if sale_order else ''
+        if sales_order_ref:
+            payload["sales_order"] = sales_order_ref
+
+        # Per-shipment extra notification recipients. The backend unions these with the
+        # company defaults. Include the salesperson (unless excluded via the dialog toggle).
+        # Read the salesperson email straight from the order — the wizard's readonly
+        # salesperson_email field is display-only and is NOT persisted on web_save.
+        cc_emails = self._biziship_clean_cc_emails()
+        sp_email = ''
+        if self.biziship_notify_salesperson and sale_order and sale_order.user_id:
+            sp_email = (sale_order.user_id.email or '').strip()
+            if sp_email and BIZISHIP_EMAIL_RE.match(sp_email) and sp_email.lower() not in {e.lower() for e in cc_emails}:
+                cc_emails.append(sp_email)
+        _logger.info(
+            "BiziShip cc_emails → editable_json=%r | notify_salesperson=%r | sp_email=%r | final=%r",
+            self.biziship_cc_emails_json, self.biziship_notify_salesperson, sp_email, cc_emails,
+        )
+        # Only include the field when there is at least one extra recipient.
+        if cc_emails:
+            payload["cc_emails"] = cc_emails
 
         if self.is_hazmat:
             if not all([self.hazmat_contact_name, self.hazmat_contact_phone, self.hazmat_un_number, self.hazmat_proper_shipping_name, self.hazmat_hazard_class, self.hazmat_packing_group, self.hazmat_pieces_packaging]):

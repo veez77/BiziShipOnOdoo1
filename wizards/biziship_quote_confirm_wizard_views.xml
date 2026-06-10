@@ -98,6 +98,7 @@
                     <group>
                         <!-- Left column -->
                         <field name="delivery_date"/>
+                        <field name="biziship_sales_order_name" string="Sales Order" readonly="1"/>
                         <field name="po_number" required="1" placeholder="Required"/>
                         <field name="has_accessorials" invisible="1"/>
                     </group>
@@ -237,6 +238,13 @@
                         <field name="quote_details" readonly="1" widget="text" style="font-family: monospace; white-space: pre; padding: 10px; background-color: #f9f9f9; border-radius: 4px;"/>
                     </page>
                 </notebook>
+
+                <div class="biziship-quote-help-group mt-2">
+                    <field name="biziship_salesperson_name" invisible="1"/>
+                    <field name="biziship_salesperson_email" invisible="1"/>
+                    <field name="biziship_notify_salesperson" invisible="1"/>
+                    <field name="biziship_cc_emails_json" widget="biziship_email_chips" nolabel="1"/>
+                </div>
 
                 <div class="biziship-quote-progress-container">
                     <div class="biziship-quote-progress-text">Booking Quote... (~20s)</div>

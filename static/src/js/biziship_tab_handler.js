@@ -11,14 +11,40 @@ patch(FormController.prototype, {
         this.orm = useService("orm");
         this.lastHandledNonce = null;
 
+        this._bizishipPickupCheckedId = null;
+
         onMounted(() => {
             this._checkBiziShipTabSwitch();
             this._setupBiziShipHandlers();
             this._bizishipRefreshProfile();
+            this._bizishipEnsurePickupToday();
         });
         onPatched(() => {
             this._checkBiziShipTabSwitch();
+            this._bizishipEnsurePickupToday();
         });
+    },
+
+    // When opening a sale order whose BiziShip pickup date is in the past, advance it to
+    // today right on the form — a past pickup date is never valid for a new quote/booking.
+    // Touches ONLY biziship_pickup_date; the value is saved with the order's next save
+    // (e.g. automatically when "Get Quotes" runs).
+    _bizishipEnsurePickupToday() {
+        if (!this.props || this.props.resModel !== "sale.order") return;
+        const root = this.model.root;
+        if (!root || !root.data) return;
+        const resId = root.resId; // database id of the saved record (false for new records)
+        if (!resId) return;
+        // Only evaluate once per record so the update below doesn't re-trigger itself.
+        if (this._bizishipPickupCheckedId === resId) return;
+        const pickup = root.data.biziship_pickup_date;
+        if (!pickup || typeof pickup.startOf !== "function") return; // wait for the field
+        this._bizishipPickupCheckedId = resId;
+        // Derive "today" from the field value's own luxon class — no extra import needed.
+        const today = pickup.constructor.now().startOf("day");
+        if (pickup.startOf("day") < today) {
+            root.update({ biziship_pickup_date: today }).catch(() => {});
+        }
     },
 
     _setupBiziShipHandlers() {

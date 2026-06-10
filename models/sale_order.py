@@ -22,6 +22,50 @@ from odoo.addons.biziship.api_utils import (
 class SaleOrder(models.Model):
     _inherit = 'sale.order'
 
+    # Columns added after the module's first install, keyed by table. Self-healed on every
+    # startup so the app never crashes with UndefinedColumn when an Odoo.sh build loads the
+    # module without running the schema upgrade (observed on the staging_local branch).
+    _biziship_self_heal_columns = {
+        'sale_order': [
+            ('biziship_origin_pickup_hours', 'VARCHAR'),
+            ('biziship_dest_delivery_hours', 'VARCHAR'),
+        ],
+        'biziship_quote_confirm_wizard': [
+            ('biziship_cc_emails_json', 'VARCHAR'),
+            ('biziship_salesperson_name', 'VARCHAR'),
+            ('biziship_salesperson_email', 'VARCHAR'),
+            ('biziship_notify_salesperson', 'BOOLEAN'),
+        ],
+        'biziship_address_history_line': [
+            ('hours_json', 'VARCHAR'),
+            ('accessorial_codes', 'VARCHAR'),
+            ('flags_json', 'VARCHAR'),
+        ],
+    }
+
+    @api.model
+    def _register_hook(self):
+        """Create any BiziShip columns missing from the DB (e.g. when an Odoo.sh build
+        loaded the module without running the schema upgrade). Runs on every registry load."""
+        res = super()._register_hook()
+        for table, columns in self._biziship_self_heal_columns.items():
+            for column, sql_type in columns:
+                try:
+                    self.env.cr.execute(
+                        "SELECT 1 FROM information_schema.columns "
+                        "WHERE table_name = %s AND column_name = %s",
+                        (table, column),
+                    )
+                    if not self.env.cr.fetchone():
+                        _logger.warning("BiziShip: column %s.%s missing — creating it now", table, column)
+                        self.env.cr.execute(
+                            'ALTER TABLE "%s" ADD COLUMN "%s" %s' % (table, column, sql_type)
+                        )
+                        _logger.info("BiziShip: column %s.%s created", table, column)
+                except Exception as e:
+                    _logger.error("BiziShip: could not create column %s.%s: %s", table, column, e)
+        return res
+
     biziship_quote_ids = fields.One2many('biziship.quote', 'sale_order_id', string='Freight Quotes')
     biziship_extracted_json = fields.Text(string='BiziShip Extracted JSON', readonly=True)
     biziship_bol_number = fields.Char(string='BiziShip BOL Number', readonly=True, copy=False)
@@ -136,6 +180,9 @@ class SaleOrder(models.Model):
             rows = ''
             if order.biziship_shipment_id:
                 rows += plain_row('Shipment ID', _html.escape(order.biziship_shipment_id))
+            # Sales Order — the Odoo order name is authoritative; shown alongside BOL/PO/PRO.
+            if order.name:
+                rows += plain_row('Sales Order', _html.escape(order.name))
             if order.biziship_ref_json:
                 try:
                     data = json.loads(order.biziship_ref_json)
@@ -145,6 +192,9 @@ class SaleOrder(models.Model):
                         label = _html.escape(label_raw)
                         value = _html.escape(value_raw)
                         if not (label and value):
+                            continue
+                        # Skip a Sales Order coming from BOL extraction — already shown above.
+                        if label_raw.strip().lower() in ('sales order', 'salesorder', 'sales_order'):
                             continue
                         if label_raw.lower() == 'bol':
                             value_cell = (

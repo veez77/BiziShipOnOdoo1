@@ -100,6 +100,8 @@
                                 <button name="action_sync_po_from_destination" type="object" icon="fa-refresh" string="" class="btn btn-sm btn-link text-primary p-0" title="Copy from Destination PO"/>
                                 <field name="biziship_po_number" nolabel="1" class="flex-grow-1"/>
                             </div>
+                            <label for="biziship_references_json" string="Reference Number"/>
+                            <field name="biziship_references_json" widget="biziship_references" nolabel="1"/>
                             <field name="biziship_pickup_date"/>
                         </group>
                     <group>

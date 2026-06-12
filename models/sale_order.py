@@ -29,6 +29,7 @@ class SaleOrder(models.Model):
         'sale_order': [
             ('biziship_origin_pickup_hours', 'VARCHAR'),
             ('biziship_dest_delivery_hours', 'VARCHAR'),
+            ('biziship_references_json', 'VARCHAR'),
         ],
         'biziship_quote_confirm_wizard': [
             ('biziship_cc_emails_json', 'VARCHAR'),
@@ -83,6 +84,9 @@ class SaleOrder(models.Model):
     biziship_booking_id = fields.Char(string='BiziShip Booking ID', readonly=True, copy=False)
     biziship_connected_email = fields.Char(string='Connected BiziShip Email', readonly=True, copy=False)
     biziship_po_number = fields.Char(string="PO Number")
+    # Reference numbers as a JSON array string: index 0 = primary (reference_number),
+    # the rest = additional_references (UI-capped at 2). Edited via the biziship_references widget.
+    biziship_references_json = fields.Char(string="Reference Numbers", default='[]')
     biziship_last_fetch_nonce = fields.Char(string='Last Fetch Nonce', readonly=True, copy=False)
 
     # BOL Reference section — raw JSON from /erp/bol/reference, rendered dynamically
@@ -176,6 +180,13 @@ class SaleOrder(models.Model):
                 f'</tr>'
             )
 
+        def copyable(value_escaped):
+            """Wrap an already-HTML-escaped value in a click-to-copy span."""
+            return (
+                f'<span class="biziship-ref-copyable" title="Click to copy" '
+                f'data-copy-text="{value_escaped}">{value_escaped}</span>'
+            )
+
         for order in self:
             rows = ''
             if order.biziship_shipment_id:
@@ -183,6 +194,16 @@ class SaleOrder(models.Model):
             # Sales Order — the Odoo order name is authoritative; shown alongside BOL/PO/PRO.
             if order.name:
                 rows += plain_row('Sales Order', _html.escape(order.name))
+            # Reference numbers: primary first, then any additional references (one per line).
+            try:
+                _refs = json.loads(order.biziship_references_json or '[]')
+            except (ValueError, TypeError):
+                _refs = []
+            _refs = [str(r).strip() for r in _refs if isinstance(r, str) and str(r).strip()]
+            if _refs:
+                rows += plain_row('Reference Number', copyable(_html.escape(_refs[0])))
+                for _i, _extra in enumerate(_refs[1:], start=1):
+                    rows += plain_row('Additional Reference %s' % _i, copyable(_html.escape(_extra)))
             if order.biziship_ref_json:
                 try:
                     data = json.loads(order.biziship_ref_json)
@@ -193,8 +214,12 @@ class SaleOrder(models.Model):
                         value = _html.escape(value_raw)
                         if not (label and value):
                             continue
-                        # Skip a Sales Order coming from BOL extraction — already shown above.
-                        if label_raw.strip().lower() in ('sales order', 'salesorder', 'sales_order'):
+                        # Skip Sales Order / Customer Reference coming from BOL extraction —
+                        # both are already shown above as Sales Order / Reference Number rows.
+                        if label_raw.strip().lower() in (
+                            'sales order', 'salesorder', 'sales_order',
+                            'customer reference', 'customer references', 'customer_reference',
+                        ):
                             continue
                         if label_raw.lower() == 'bol':
                             value_cell = (

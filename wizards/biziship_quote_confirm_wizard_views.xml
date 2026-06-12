@@ -115,6 +115,11 @@
                     </group>
                 </group>
 
+                <div class="biziship-quote-help-group d-flex align-items-start gap-3 mb-2">
+                    <label for="biziship_references_json" string="Reference Number" class="o_form_label" style="white-space:nowrap;padding-top:6px;"/>
+                    <field name="biziship_references_json" widget="biziship_references" nolabel="1" class="flex-grow-1"/>
+                </div>
+
                 <group class="biziship-quote-help-group" string="Routing (Origin to Destination)">
                     <group string="Origin">
                         <field name="origin_company" nolabel="1" class="fw-bold mb-0" style="font-size: 1.1em; display: block;" colspan="2"/>

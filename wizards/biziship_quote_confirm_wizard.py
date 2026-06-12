@@ -100,6 +100,8 @@ class BizishipQuoteConfirmWizard(models.TransientModel):
     biziship_sales_order_name = fields.Char(related="sale_order_id.name", string="Sales Order", readonly=True)
     # Per-shipment extra notification recipients (editable chips), stored as a JSON array string.
     biziship_cc_emails_json = fields.Char(string="Shipment Notifications", default='[]')
+    # Reference numbers (primary + additional) — carried from the quote, editable here.
+    biziship_references_json = fields.Char(related="sale_order_id.biziship_references_json", readonly=False)
     # Salesperson notification — shown on the booking dialog, included by default, toggleable.
     biziship_salesperson_name = fields.Char(string="Salesperson", readonly=True)
     biziship_salesperson_email = fields.Char(string="Salesperson Email", readonly=True)
@@ -422,6 +424,19 @@ class BizishipQuoteConfirmWizard(models.TransientModel):
         sales_order_ref = (sale_order.name or '').strip() if sale_order else ''
         if sales_order_ref:
             payload["sales_order"] = sales_order_ref
+
+        # Reference numbers: first entry = primary reference_number, the rest =
+        # additional_references. Trim, drop empties; omit either field entirely when empty.
+        try:
+            _refs = json.loads(self.biziship_references_json or '[]')
+        except (ValueError, TypeError):
+            _refs = []
+        _refs = [(r or '').strip() for r in _refs if isinstance(r, str)]
+        if _refs and _refs[0]:
+            payload["reference_number"] = _refs[0][:64]
+        _additional = [r for r in _refs[1:] if r]
+        if _additional:
+            payload["additional_references"] = _additional
 
         # Per-shipment extra notification recipients. The backend unions these with the
         # company defaults. Include the salesperson (unless excluded via the dialog toggle).

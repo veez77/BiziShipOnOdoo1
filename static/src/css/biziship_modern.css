@@ -1004,6 +1004,91 @@ div[name="biziship_dest_country_id"] input {
     padding: 2px 0;
 }
 
+/* ============================================================
+   Reference numbers widget (REF1 primary + additional)
+   ============================================================ */
+.biziship-refs {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+}
+
+.biziship-ref-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex: 0 0 auto;
+}
+
+.biziship-ref-badge {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 42px;
+    padding: 4px 8px;
+    border-radius: 6px;
+    background: #f1f5f9;
+    color: #64748b;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+}
+
+.biziship-ref-input {
+    flex: 0 0 auto;
+    width: 150px;
+    padding: 6px 10px;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    background: #ffffff;
+    font-size: 0.85rem;
+    color: #0f172a;
+    outline: none;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.biziship-ref-input:focus {
+    border-color: #714B67;
+    box-shadow: 0 0 0 3px rgba(113, 75, 103, 0.12);
+}
+
+.biziship-ref-remove {
+    flex: 0 0 auto;
+    border: none;
+    background: transparent;
+    color: #94a3b8;
+    font-size: 1.25rem;
+    line-height: 1;
+    padding: 0 4px;
+    cursor: pointer;
+}
+
+.biziship-ref-remove:hover {
+    color: #dc2626;
+}
+
+.biziship-ref-add {
+    align-self: center;
+    flex: 0 0 auto;
+    white-space: nowrap;
+    border: none;
+    background: transparent;
+    color: #714B67;
+    font-size: 0.8rem;
+    font-weight: 600;
+    padding: 2px 4px;
+    cursor: pointer;
+}
+
+.biziship-ref-add:hover {
+    text-decoration: underline;
+}
+
 /* Salesperson recipient row + toggle */
 .biziship-sp-row {
     display: flex;

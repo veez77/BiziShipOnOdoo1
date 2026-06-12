@@ -2,7 +2,7 @@
 <templates xml:space="preserve">
 
     <t t-name="biziship.References">
-        <div class="biziship-refs">
+        <div class="biziship-refs" t-ref="root">
             <t t-foreach="references" t-as="ref" t-key="ref_index">
                 <div class="biziship-ref-row">
                     <span class="biziship-ref-badge" t-esc="badge(ref_index)"/>
@@ -13,7 +13,7 @@
                         t-att-placeholder="placeholder(ref_index)"
                         t-att-maxlength="64"
                         t-att-readonly="readonly"
-                        t-on-change="(ev) => this.onChange(ref_index, ev)"/>
+                        t-on-change="() => this.onChange()"/>
                     <button t-if="ref_index > 0 and !readonly"
                             type="button"
                             class="biziship-ref-remove"

@@ -9,11 +9,15 @@
  *
  * UI: the primary row (REF1) is always shown; the user can add up to 2 more
  * (REF2, REF3) via "+ Add another reference" and remove the extras. The cap of
- * 2 additional (3 total) is enforced here in the UI only. Values are committed
- * on change (blur) to avoid focus loss while typing.
+ * 2 additional (3 total) is enforced here in the UI only.
+ *
+ * Every mutation (typing, add, remove) reads the CURRENT value of all inputs
+ * from the DOM and commits the whole array in one update. This avoids a race
+ * where a per-input blur-commit and an add/remove commit clobber each other
+ * (which previously wiped REF1 when adding a second reference).
  */
 
-import { Component } from "@odoo/owl";
+import { Component, useRef } from "@odoo/owl";
 import { registry } from "@web/core/registry";
 import { standardFieldProps } from "@web/views/fields/standard_field_props";
 
@@ -23,6 +27,10 @@ const MAX_LEN = 64;
 export class BizishipReferences extends Component {
     static template = "biziship.References";
     static props = { ...standardFieldProps };
+
+    setup() {
+        this.rootRef = useRef("root");
+    }
 
     // Always returns an array of at least one element (the primary row).
     get references() {
@@ -43,8 +51,18 @@ export class BizishipReferences extends Component {
         return !this.readonly && this.references.length < MAX_ADDITIONAL + 1;
     }
 
+    // Live values of every reference input currently in the DOM.
+    _readInputs() {
+        const root = this.rootRef.el;
+        if (!root) {
+            return this.references;
+        }
+        return Array.from(root.querySelectorAll(".biziship-ref-input")).map((i) =>
+            (i.value || "").slice(0, MAX_LEN)
+        );
+    }
+
     _commit(arr) {
-        // Drop nothing here (preserve order/empties for editing); trimming happens server-side.
         this.props.record.update({ [this.props.name]: JSON.stringify(arr) });
     }
 
@@ -56,15 +74,13 @@ export class BizishipReferences extends Component {
         return index === 0 ? "e.g. REF-12345" : "Additional reference";
     }
 
-    onChange(index, ev) {
-        const arr = this.references.slice();
-        arr[index] = (ev.target.value || "").slice(0, MAX_LEN);
-        this._commit(arr);
+    onChange() {
+        this._commit(this._readInputs());
     }
 
     addRow() {
         if (this.canAdd) {
-            this._commit([...this.references, ""]);
+            this._commit([...this._readInputs(), ""]);
         }
     }
 
@@ -72,7 +88,7 @@ export class BizishipReferences extends Component {
         if (index === 0) {
             return; // the primary row is never removed
         }
-        const arr = this.references.slice();
+        const arr = this._readInputs();
         arr.splice(index, 1);
         this._commit(arr.length ? arr : [""]);
     }

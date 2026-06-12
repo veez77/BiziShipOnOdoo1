@@ -167,6 +167,10 @@ class SaleOrder(models.Model):
             else:
                 order.biziship_documents_html = ""
 
+    # NB: deliberately does NOT depend on biziship_references_json / pickup / delivery hours.
+    # Those are edited pre-booking and adding them here fires an onchange RPC (the global
+    # "Loading" flash) on every keystroke. The card recomputes when biziship_ref_json /
+    # shipment_id are set at booking time and reads the current references/hours then.
     @api.depends('biziship_ref_json', 'biziship_shipment_id', 'biziship_pro_number')
     def _compute_biziship_ref_html(self):
         import html as _html
@@ -186,6 +190,17 @@ class SaleOrder(models.Model):
                 f'<span class="biziship-ref-copyable" title="Click to copy" '
                 f'data-copy-text="{value_escaped}">{value_escaped}</span>'
             )
+
+        def hours_window(hours_json):
+            """'{"start":"09:30","end":"16:00"}' -> '9:30 AM - 4:00 PM' (or '' if unset)."""
+            try:
+                h = json.loads(hours_json or '{}')
+            except (ValueError, TypeError):
+                h = {}
+            start, end = h.get('start'), h.get('end')
+            if start and end:
+                return '%s - %s' % (self._biziship_fmt_time12(start), self._biziship_fmt_time12(end))
+            return ''
 
         for order in self:
             rows = ''
@@ -253,7 +268,21 @@ class SaleOrder(models.Model):
                                 f'</tr>'
                             )
                         else:
-                            rows += plain_row(label, value)
+                            # Show the pickup/delivery windows the user actually entered
+                            # (recurring hours) instead of the carrier-default windows on the BOL.
+                            ll = label_raw.strip().lower()
+                            if ll == 'pickup date' and order.biziship_origin_pickup_hours:
+                                win = hours_window(order.biziship_origin_pickup_hours)
+                                if win:
+                                    date_part = value_raw.split()[0] if value_raw.split() else ''
+                                    rows += plain_row(label, _html.escape((date_part + ' ' + win).strip()))
+                                else:
+                                    rows += plain_row(label, value)
+                            elif ll in ('delivery window', 'delivery date') and order.biziship_dest_delivery_hours:
+                                win = hours_window(order.biziship_dest_delivery_hours)
+                                rows += plain_row(label, _html.escape(win) if win else value)
+                            else:
+                                rows += plain_row(label, value)
                 except Exception:
                     pass
             # Customer-specific custom fields (safe getattr — may not exist in all environments)

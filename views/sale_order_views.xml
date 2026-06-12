@@ -444,16 +444,16 @@
                                 transition-delay: 0s;
                             }
 
-                            .o_form_view:has(button[name="action_biziship_fetch_live_quotes"]:disabled) .biziship-fetch-progress-container,
-                            .o_form_view:has(button[name="action_biziship_fetch_live_quotes"].disabled) .biziship-fetch-progress-container,
-                            .o_form_view:has(button[name="action_biziship_fetch_live_quotes"].o_disabled) .biziship-fetch-progress-container {
+                            /* Shown only while a quote fetch is actually running — the
+                               biziship-quote-fetching class is added by JS on the Get Live
+                               Quotes click and removed when the form reloads. (Using the
+                               button's :disabled state was too broad: Odoo also disables it
+                               when the record is dirty/invalid, e.g. after adding a cargo line.) */
+                            .o_form_view.biziship-quote-fetching .biziship-fetch-progress-container {
                                 opacity: 1;
                                 visibility: visible;
-                                transition-delay: 0.8s; /* Only show if disabled for more than 0.8s */
                             }
-                            .o_form_view:has(button[name="action_biziship_fetch_live_quotes"]:disabled) .biziship-fetch-progress-bar,
-                            .o_form_view:has(button[name="action_biziship_fetch_live_quotes"].disabled) .biziship-fetch-progress-bar,
-                            .o_form_view:has(button[name="action_biziship_fetch_live_quotes"].o_disabled) .biziship-fetch-progress-bar {
+                            .o_form_view.biziship-quote-fetching .biziship-fetch-progress-bar {
                                 animation: biziship-fetch-fill 15s cubic-bezier(0.1, 0.7, 1.0, 0.1) forwards, biziship-fetch-stripes 1s linear infinite;
                             }
 

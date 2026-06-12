@@ -62,6 +62,20 @@ patch(FormController.prototype, {
             }
         }, true);
 
+        // 1b. Show the "Fetching Live Quotes" progress bar only on a real Get-Quotes click.
+        //     (Tying it to the button's :disabled state was too broad — Odoo also disables
+        //     the button when the record is dirty/invalid, e.g. after adding a cargo line.)
+        document.addEventListener('click', (ev) => {
+            const btn = ev.target.closest('.biziship-btn-get-quotes');
+            if (!btn) return;
+            const formView = btn.closest('.o_form_view');
+            if (!formView) return;
+            formView.classList.add('biziship-quote-fetching');
+            // Safety net: the form reloads after a successful fetch (new DOM, no class),
+            // but on a validation error it won't — clear the class after the fetch window.
+            setTimeout(() => formView.classList.remove('biziship-quote-fetching'), 18000);
+        }, true);
+
         // 2. Refresh BiziShip user profile when either freight tab is clicked
         document.addEventListener('click', (ev) => {
             const navLink = ev.target.closest('.o_notebook .nav-link');

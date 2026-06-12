@@ -7,7 +7,7 @@ import json
 # Set to 'DEV' to connect to local backend
 # ==========================================
 BIZISHIP_ENV = 'PROD'
-BIZISHIP_MODULE_VERSION = '1.1.1.117'
+BIZISHIP_MODULE_VERSION = '1.1.1.107'
 BIZISHIP_APP_NAME = 'BiziShip Odoo'
 BIZISHIP_FALLBACK_KEY = '116b2056ca09c1006119ec548cff60a66a1182b579b86f0f6168ec44e74a1409=Odoo'
 

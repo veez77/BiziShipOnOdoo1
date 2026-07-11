@@ -625,16 +625,16 @@
                         </div>
                     </group>
                     <field name="biziship_quote_ids" nolabel="1">
-                        <tree string="Quotes" create="false" edit="false">
+                        <tree string="Quotes" create="false" edit="false" class="biziship-quotes-tree">
                             <field name="is_selected" column_invisible="True"/>
                             <button name="action_select_quote_toggle" type="object" icon="fa-lg fa-toggle-on text-success" invisible="not is_selected" class="btn btn-link p-0" title="Selected" aria-label="Selected"/>
                             <button name="action_select_quote_toggle" type="object" icon="fa-lg fa-toggle-off text-muted" invisible="is_selected" class="btn btn-link p-0" title="Select" aria-label="Not Selected"/>
                             <field name="carrier_logo" widget="image" options="{'size': [30, 30]}" class="me-2" nolabel="1" readonly="1" optional="show"/>
                             <field name="carrier_name" readonly="1"/>
                             <field name="service_level" readonly="1"/>
+                            <field name="total_charge" widget="monetary" options="{'currency_field': 'currency_id'}" readonly="1"/>
                             <field name="transit_days" readonly="1"/>
                             <field name="delivery_date" readonly="1"/>
-                            <field name="total_charge" widget="monetary" options="{'currency_field': 'currency_id'}" readonly="1"/>
                             <field name="carrier_liability_new" widget="monetary" options="{'currency_field': 'currency_id'}" readonly="1" string="Carrier Liability New" invisible="carrier_liability_new == 0" optional="show"/>
                             <field name="carrier_liability_used" widget="monetary" options="{'currency_field': 'currency_id'}" readonly="1" string="Carrier Liability Used" invisible="carrier_liability_used == 0" optional="show"/>
                             <field name="currency" column_invisible="True" readonly="1"/>

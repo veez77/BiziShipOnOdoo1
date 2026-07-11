@@ -1004,6 +1004,14 @@ div[name="biziship_dest_country_id"] input {
     padding: 2px 0;
 }
 
+/* Center the Total Charge and Transit Days columns in the quotes list */
+.biziship-quotes-tree th[data-name="total_charge"],
+.biziship-quotes-tree th[data-name="transit_days"],
+.biziship-quotes-tree td[name="total_charge"],
+.biziship-quotes-tree td[name="transit_days"] {
+    text-align: center !important;
+}
+
 /* ============================================================
    Reference numbers widget (REF1 primary + additional)
    ============================================================ */

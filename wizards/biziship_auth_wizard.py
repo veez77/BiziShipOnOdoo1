@@ -34,7 +34,7 @@ class BizishipAuthWizard(models.TransientModel):
 
     def action_request_pin(self):
         erp_api_key = get_erp_api_key(self.env)
-        base_url = api_utils.get_biziship_api_url()
+        base_url = api_utils.get_biziship_api_url(self.env)
         url = f"{base_url}/erp/auth/login"
         payload = {'email': self.email}
         headers = {
@@ -73,7 +73,7 @@ class BizishipAuthWizard(models.TransientModel):
 
     def action_verify_pin(self):
         erp_api_key = get_erp_api_key(self.env)
-        base_url = api_utils.get_biziship_api_url()
+        base_url = api_utils.get_biziship_api_url(self.env)
         url = f"{base_url}/erp/auth/verify-pin"
         payload = {
             'email': self.email,

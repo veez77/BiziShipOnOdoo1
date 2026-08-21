@@ -121,7 +121,7 @@ class BizishipSaveFreightWizard(models.TransientModel):
 
 
         erp_api_key = get_erp_api_key(self.env)
-        base_url = api_utils.get_biziship_api_url()
+        base_url = api_utils.get_biziship_api_url(self.env)
         url = f"{base_url}/erp/saved-freights"
         headers = {
             "Authorization": f"Bearer {token}",

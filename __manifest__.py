@@ -9,10 +9,17 @@
         AI-driven BOL extraction to optimize your bottom line.
     """,
     'author': 'BiziShip',
+    'website': 'https://www.biziship.ai',
+    'support': 'zeev@biziship.ai,avner@biziship.ai',
+    'images': ['static/description/banner.png'],
     'depends': ['base', 'sale'],
+    'external_dependencies': {
+        'python': ['requests', 'PyPDF2'],
+    },
     'data': [
         'security/ir.model.access.csv',
         'data/accessorial_data.xml',
+        'views/res_config_settings_views.xml',
         'wizards/biziship_bol_wizard_views.xml',
         'wizards/biziship_quote_confirm_wizard_views.xml',
         'wizards/biziship_booking_warning_wizard_views.xml',
@@ -24,11 +31,13 @@
         'wizards/biziship_address_history_wizard_views.xml',
         'wizards/biziship_not_connected_wizard_views.xml',
         'wizards/biziship_logout_wizard_views.xml',
+        'wizards/biziship_quotes_report_wizard_views.xml',
         'views/sale_order_views.xml',
         'views/res_users_views.xml',
     ],
     'assets': {
         'web.assets_backend': [
+            'biziship/static/src/js/sale_order_auto_tab.js',
             'biziship/static/src/js/biziship_tab_handler.js',
             'biziship/static/src/js/biziship_places_autocomplete.js',
             'biziship/static/src/js/biziship_commodity_autocomplete.js',
@@ -46,7 +55,6 @@
             'biziship/static/src/css/biziship_modern.css',
         ],
     },
-    'installable': True,
     'application': True,
     'license': 'LGPL-3',
 }

@@ -7,6 +7,8 @@ class BizishipQuote(models.Model):
     _description = 'BiziShip Freight Quote'
     _order = 'total_charge asc'
 
+    display_name = fields.Char(compute='_compute_display_name')
+
     sale_order_id = fields.Many2one('sale.order', string='Sales Order', required=True, ondelete='cascade')
     carrier_name = fields.Char(string='Carrier')
     carrier_code = fields.Char(string='Carrier Code')
@@ -127,9 +129,7 @@ class BizishipQuote(models.Model):
                     other_quotes.write({'is_selected': False})
         return super().write(vals)
 
-    def name_get(self):
-        result = []
+    @api.depends('carrier_name', 'total_charge', 'currency')
+    def _compute_display_name(self):
         for record in self:
-            name = f"{record.carrier_name} - {record.total_charge} {record.currency}"
-            result.append((record.id, name))
-        return result
+            record.display_name = f"{record.carrier_name} - {record.total_charge} {record.currency}"

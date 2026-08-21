@@ -3,6 +3,7 @@ import requests
 import re
 import os
 import uuid
+from psycopg2 import sql as pg_sql
 from odoo import models, fields, api, _
 from odoo.exceptions import UserError
 import logging
@@ -59,8 +60,14 @@ class SaleOrder(models.Model):
                     )
                     if not self.env.cr.fetchone():
                         _logger.warning("BiziShip: column %s.%s missing — creating it now", table, column)
+                        # table/column are always identifiers from our own hardcoded dict above
+                        # (never user input); still built via psycopg2.sql for safe identifier
+                        # quoting rather than raw string formatting.
                         self.env.cr.execute(
-                            'ALTER TABLE "%s" ADD COLUMN "%s" %s' % (table, column, sql_type)
+                            pg_sql.SQL('ALTER TABLE {} ADD COLUMN {} ' + sql_type).format(
+                                pg_sql.Identifier(table),
+                                pg_sql.Identifier(column),
+                            )
                         )
                         _logger.info("BiziShip: column %s.%s created", table, column)
                 except Exception as e:
@@ -374,7 +381,7 @@ class SaleOrder(models.Model):
         erp_api_key = get_erp_api_key(self.env)
         if not erp_api_key: return None
         import requests
-        url = f"{get_biziship_api_url()}/erp/config"
+        url = f"{get_biziship_api_url(self.env)}/erp/config"
         try:
             r = requests.get(url, headers={'X-ERP-API-Key': erp_api_key}, timeout=5)
             if r.status_code == 200:
@@ -419,7 +426,7 @@ class SaleOrder(models.Model):
             import requests
             import logging
             _logger = logging.getLogger(__name__)
-            url = f"{get_biziship_api_url()}/erp/validate-address"
+            url = f"{get_biziship_api_url(self.env)}/erp/validate-address"
             erp_api_key = get_erp_api_key(self.env)
             headers = {"X-ERP-API-Key": erp_api_key}
             payload = {
@@ -838,6 +845,14 @@ class SaleOrder(models.Model):
 
         self._biziship_fetch_and_store_user_profile()
 
+        # Demo-tier accounts cannot book — enforced here too (not just via the disabled
+        # button in the view) so a direct call to this action can't bypass the restriction.
+        if self.biziship_priority1_env == 'DEMO':
+            raise UserError(_(
+                "Demo mode — to activate booking, contact our sales team at "
+                "zeev@biziship.ai or avner@biziship.ai, or call / WhatsApp +1 (678) 772-2785."
+            ))
+
         if self.biziship_priority1_env == 'PROD':
             return {
                 'name': 'Live Freight Booking',
@@ -890,7 +905,7 @@ class SaleOrder(models.Model):
             erp_api_key = get_erp_api_key(self.env)
             if not erp_api_key:
                 return
-            url = f"{get_biziship_api_url()}/erp/validate-address"
+            url = f"{get_biziship_api_url(self.env)}/erp/validate-address"
             payload = {"street": street or "", "city": city or "", "state": state_code or "", "zip": zip_code or ""}
             response = requests.post(url, headers={"X-ERP-API-Key": erp_api_key}, json=payload, timeout=5)
             if response.status_code == 200:
@@ -1009,7 +1024,7 @@ class SaleOrder(models.Model):
         if not self.biziship_bol_number:
             raise UserError(_("No BOL number found on this record."))
         bol_number = self.biziship_bol_number
-        url = f"{get_biziship_api_url().rstrip('/')}/erp/shipments/documents"
+        url = f"{get_biziship_api_url(self.env).rstrip('/')}/erp/shipments/documents"
         user = self.env.user
         headers = {
             "X-ERP-API-Key": get_erp_api_key(self.env),
@@ -1107,7 +1122,7 @@ class SaleOrder(models.Model):
             if line.pieces <= 0 or line.weight <= 0 or line.length <= 0 or line.width <= 0 or line.height <= 0:
                 raise UserError(_("Cargo Line #%s has a missing or zero value. All cargo lines must have Pieces, Weight, Length, Width, and Height greater than 0.") % idx)
 
-        email2quote_api_url = get_biziship_api_url()
+        email2quote_api_url = get_biziship_api_url(self.env)
         erp_api_key = get_erp_api_key(self.env)
         
         api_url = f"{email2quote_api_url.rstrip('/')}/erp/quote"
@@ -1284,4 +1299,28 @@ class SaleOrder(models.Model):
             'view_mode': 'form',
             'target': 'current',
             'context': dict(self.env.context, biziship_switch_tab=True),
+        }
+
+    def action_export_quotes_report(self):
+        """Open export quotes report wizard."""
+        return {
+            'type': 'ir.actions.act_window',
+            'res_model': 'biziship.quotes.report.export.wizard',
+            'view_mode': 'form',
+            'target': 'new',
+            'context': {
+                'default_sale_order_id': self.id,
+            },
+        }
+
+    def action_email_quotes_report(self):
+        """Open email quotes report wizard."""
+        return {
+            'type': 'ir.actions.act_window',
+            'res_model': 'biziship.quotes.report.email.wizard',
+            'view_mode': 'form',
+            'target': 'new',
+            'context': {
+                'default_sale_order_id': self.id,
+            },
         }

@@ -167,7 +167,7 @@ class BizishipQuoteConfirmWizard(models.TransientModel):
         booking dialog is never blocked.
         """
         try:
-            base_url = get_biziship_api_url().rstrip('/')
+            base_url = get_biziship_api_url(self.env).rstrip('/')
             user = self.env.user
             headers = {
                 "X-ERP-API-Key": get_erp_api_key(self.env),
@@ -291,7 +291,7 @@ class BizishipQuoteConfirmWizard(models.TransientModel):
         if not self.po_number:
             raise UserError(_("Please provide a PO Number before submitting the quote."))
             
-        email2quote_api_url = get_biziship_api_url()
+        email2quote_api_url = get_biziship_api_url(self.env)
         erp_api_key = get_erp_api_key(self.env)
         
         local_api_book_url = f"{email2quote_api_url.rstrip('/')}/erp/book"
@@ -541,7 +541,7 @@ class BizishipQuoteConfirmWizard(models.TransientModel):
             return {}
 
         try:
-            base_url = get_biziship_api_url().rstrip('/')
+            base_url = get_biziship_api_url(self.env).rstrip('/')
             erp_api_key = get_erp_api_key(self.env)
             headers = {
                 "X-ERP-API-Key": erp_api_key,

@@ -157,7 +157,7 @@ class BizishipTrackingWizard(models.TransientModel):
             self.write({'error_message': 'No BOL number found on this shipment.'})
             return False
 
-        base_url = get_biziship_api_url().rstrip('/')
+        base_url = get_biziship_api_url(self.env).rstrip('/')
         url = f'{base_url}/erp/tracking/status'
         headers = self._get_api_headers()
         payload = {'bol': self.bol_number}
@@ -219,7 +219,7 @@ class BizishipTrackingWizard(models.TransientModel):
             self.ai_error_message = 'No BOL number found on this shipment.'
             return self._reopen()
 
-        base_url = get_biziship_api_url().rstrip('/')
+        base_url = get_biziship_api_url(self.env).rstrip('/')
         url = f'{base_url}/erp/tracking/summary'
         headers = self._get_api_headers()
         history = json.loads(self.tracking_history_json) if self.tracking_history_json else []

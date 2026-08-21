@@ -42,7 +42,7 @@ class BizishipLoadFreightWizard(models.TransientModel):
             self.status_message = "Please connect your BiziShip account in the User settings."
             return
         erp_api_key = get_erp_api_key(self.env)
-        base_url = api_utils.get_biziship_api_url()
+        base_url = api_utils.get_biziship_api_url(self.env)
         url = f"{base_url}/erp/saved-freights"
         headers = {
             "Authorization": f"Bearer {token}",
@@ -182,7 +182,7 @@ class BizishipLoadFreightWizard(models.TransientModel):
         if not token:
             raise UserError(_("Please connect your BiziShip account first."))
         erp_api_key = get_erp_api_key(self.env)
-        base_url = api_utils.get_biziship_api_url()
+        base_url = api_utils.get_biziship_api_url(self.env)
         url = f"{base_url}/erp/saved-freights"
         headers = {
             "Authorization": f"Bearer {token}",
@@ -431,7 +431,7 @@ class BizishipLoadFreightWizard(models.TransientModel):
             
             # ── Smarty Residential Detection (run automatically after load) ──
             try:
-                smarty_url = f"{api_utils.get_biziship_api_url()}/erp/validate-address"
+                smarty_url = f"{api_utils.get_biziship_api_url(self.env)}/erp/validate-address"
                 erp_api_key = self.env['ir.config_parameter'].sudo().get_param('biziship.erp_api_key', '')
                 smarty_headers = {"X-ERP-API-Key": erp_api_key}
 

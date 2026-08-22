@@ -445,7 +445,7 @@ class BizishipQuotesReportEmailWizard(models.TransientModel):
 
             api_url = get_biziship_api_url(self.env)
             request_id = self.sale_order_id.id
-            url = f"{api_url.rstrip('/')}/quote/{request_id}/email-report"
+            url = f"{api_url.rstrip('/')}/erp/quote/{request_id}/email-report"
 
             headers = {
                 "Authorization": f"Bearer {self.env.user.biziship_token}",

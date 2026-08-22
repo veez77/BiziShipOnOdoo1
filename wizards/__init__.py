@@ -11,3 +11,4 @@ from . import biziship_address_history_wizard
 from . import biziship_not_connected_wizard
 from . import biziship_logout_wizard
 from . import biziship_quotes_report_wizard  # Import the module (both models are defined there)
+from . import biziship_email_quotes_simple_wizard

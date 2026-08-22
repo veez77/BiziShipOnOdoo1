@@ -33,6 +33,7 @@
         'wizards/biziship_logout_wizard_views.xml',
         'wizards/biziship_quotes_report_wizard_views.xml',
         'wizards/biziship_email_quotes_simple_wizard_views.xml',
+        'wizards/biziship_email_quotes_confirm_wizard_views.xml',
         'views/sale_order_views.xml',
         'views/res_users_views.xml',
     ],

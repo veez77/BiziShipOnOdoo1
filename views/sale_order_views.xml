@@ -736,9 +736,9 @@
                         <div style="margin: 0 auto;">
                             <field name="biziship_has_selected_quote" invisible="1"/>
                             <button name="action_open_biziship_quote_confirm" type="object" string="Submit the chosen quote" class="btn-primary" invisible="not biziship_has_selected_quote or biziship_priority1_env == 'DEMO'"/>
-                            <button name="action_open_biziship_quote_confirm" type="object" string="Submit the chosen quote" class="btn-secondary" invisible="biziship_has_selected_quote or biziship_priority1_env == 'DEMO'" title="Please select a quote first to submit it."/>
+                            <button name="action_open_biziship_quote_confirm" type="object" string="Submit the chosen quote" class="btn-primary" invisible="biziship_has_selected_quote or biziship_priority1_env == 'DEMO'" title="Please select a quote first to submit it."/>
                             <div class="d-inline-flex align-items-center gap-3" invisible="biziship_priority1_env != 'DEMO'">
-                                <button name="action_open_biziship_quote_confirm" type="object" string="Submit the chosen quote" class="btn-secondary" disabled="1"/>
+                                <button name="action_open_biziship_quote_confirm" type="object" string="Submit the chosen quote" class="btn-primary" disabled="1"/>
                                 <div class="text-muted text-start" style="max-width: 340px; font-size: 13px;">
                                     Demo mode — to activate booking, contact our sales team at
                                     <a href="mailto:zeev@biziship.ai">zeev@biziship.ai</a> or

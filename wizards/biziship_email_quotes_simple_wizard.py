@@ -1,7 +1,6 @@
 import requests
 import logging
 from odoo import models, fields, api, _
-from odoo.exceptions import UserError
 
 _logger = logging.getLogger(__name__)
 
@@ -25,7 +24,6 @@ class BizishipEmailQuotesSimpleWizard(models.TransientModel):
     html_report = fields.Text(compute='_compute_html_report')  # Text, not Html, to avoid Odoo sanitization
 
     # State tracking
-    send_error = fields.Char(readonly=True)
     send_success = fields.Boolean(readonly=True, default=False)
     success_recipients = fields.Text(readonly=True)
 
@@ -335,97 +333,32 @@ class BizishipEmailQuotesSimpleWizard(models.TransientModel):
             record.html_report = html
 
     def action_send_report(self):
-        """Send the report to recipients via email."""
+        """Open confirmation dialog to review emails before sending."""
+        _logger.info("action_send_report called: to_emails='%s'", self.to_emails)
+
         if not self.to_emails or not self.to_emails.strip():
-            self.send_error = _('Please enter at least one recipient email address.')
             return
 
-        # Parse emails: handle comma, semicolon, and space separators
-        emails = [e.strip() for e in self.to_emails.replace(';', ',').replace(' ', ',').split(',')]
-        emails = [e for e in emails if e]
+        # Clean up any old confirmation wizard records to ensure fresh state
+        self.env['biziship.email.quotes.confirm.wizard'].search([]).unlink()
 
-        if not emails:
-            self.send_error = _('Please enter valid email addresses.')
-            return
+        # Create fresh confirmation wizard with current emails and markup setting
+        confirm_wizard = self.env['biziship.email.quotes.confirm.wizard'].create({
+            'sale_order_id': self.sale_order_id.id,
+            'to_emails': self.to_emails,
+            'apply_markup': self.apply_markup,
+        })
 
-        # Validate email format
-        import re
-        # Strict email validation: user@domain.extension
-        email_pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9]+(\.[a-zA-Z0-9-]+)*\.[a-zA-Z]{2,}$'
-        invalid_emails = [e for e in emails if not re.match(email_pattern, e)]
-        if invalid_emails:
-            self.send_error = _('Invalid email format: %s. Please enter valid email addresses (e.g., user@company.com)') % ', '.join(invalid_emails)
-            _logger.warning("Invalid emails rejected: %s", invalid_emails)
-            return
-
-        so = self.sale_order_id
-        if not so:
-            self.send_error = _('Sale Order not found.')
-            return
-
-        # Get the quote request UUID (saved when quotes were fetched, valid for ~10 minutes)
-        request_id = so.biziship_quote_request_id
-        if not request_id:
-            self.send_error = _('No quotes found or quote session expired. Please fetch quotes again.')
-            return
-
-        # Check user authentication
-        user = self.env.user
-        if not user.biziship_token:
-            self.send_error = _('You must connect your BiziShip account first. Please use the "Connect BiziShip Account" button on the Sale Order.')
-            return
-
-        api_url = self._get_api_url()
-        headers = {
-            'X-ERP-API-Key': self._get_erp_api_key(),
-            'Authorization': f'Bearer {user.biziship_token}',
-            'Content-Type': 'application/json',
+        # Open confirmation dialog
+        return {
+            'type': 'ir.actions.act_window',
+            'name': 'Confirm Recipients',
+            'res_model': 'biziship.email.quotes.confirm.wizard',
+            'res_id': confirm_wizard.id,
+            'view_mode': 'form',
+            'views': [[False, 'form']],
+            'target': 'new',
         }
-
-        url = f"{api_url.rstrip('/')}/erp/quote/{request_id}/email-report"
-        payload = {
-            'to_emails': emails,
-            'html_report': str(self.html_report),  # Convert Odoo Markup to plain string
-        }
-
-        try:
-            _logger.info("Sending quote report to %s", emails)
-            _logger.info("Report HTML first 500 chars: %s", self.html_report[:500] if self.html_report else "EMPTY")
-            _logger.info("Request body (first 1000 chars): %s", str(payload)[:1000])
-            response = requests.post(url, json=payload, headers=headers, timeout=15)
-
-            if response.status_code == 200:
-                # Success—close dialog
-                self.send_success = True
-                self.success_recipients = ', '.join(emails)
-                self.send_error = ''
-                _logger.info("Quote report sent successfully to %s", emails)
-                return {
-                    'type': 'ir.actions.client',
-                    'tag': 'reload',
-                }
-
-            # Handle errors—stay on dialog and show error
-            error_data = response.json() if response.text else {}
-            _logger.warning("Quote report send failed: status=%d, response=%s", response.status_code, error_data)
-
-            if response.status_code == 403:
-                blocked = error_data.get('blocked_emails', [])
-                if blocked:
-                    self.send_error = _('Not allowed to send to: %s') % ', '.join(blocked)
-                else:
-                    self.send_error = _('You can only send to users in your company.')
-            elif 'unverified_emails' in error_data:
-                unverified = error_data.get('unverified_emails', [])
-                self.send_error = _('Unverified addresses: %s') % ', '.join(unverified)
-            else:
-                self.send_error = error_data.get('detail') or error_data.get('message') or _('Failed to send the report. Please try again.')
-
-            # Stay on dialog to show error—don't return anything
-
-        except Exception as e:
-            self.send_error = _('Failed to send the report: %s') % str(e)
-            _logger.error("Quote report send exception: %s", str(e), exc_info=True)
 
     def _get_api_url(self):
         from odoo.addons.biziship.api_utils import get_biziship_api_url

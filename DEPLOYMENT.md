@@ -8,7 +8,6 @@ This guide outlines the steps required to install and configure the BiziShip Odo
 *   **Access**: Terminal/SSH access to the Odoo server.
 *   **Dependencies**: The following Python libraries must be installed on the Odoo server's Python environment:
     *   `requests`
-    *   `PyPDF2`
 
 ## 2. Installation Steps
 

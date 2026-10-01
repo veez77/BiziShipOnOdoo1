@@ -103,6 +103,10 @@ class SaleOrder(models.Model):
         string='BOL Reference', compute='_compute_biziship_ref_html',
         sanitize=False, readonly=True
     )
+    biziship_booking_numbers_html = fields.Html(
+        string='Booking Numbers', compute='_compute_biziship_booking_numbers_html',
+        sanitize=False, readonly=True
+    )
 
     def action_add_cargo_line(self):
         """Adds a blank cargo line to the current sale order."""
@@ -303,6 +307,28 @@ class SaleOrder(models.Model):
                 if val:
                     rows += plain_row(label, _html.escape(str(val)))
             order.biziship_ref_html = f'<table class="biziship-reference-table">{rows}</table>' if rows else False
+
+    @api.depends('biziship_bol_number', 'biziship_pro_number')
+    def _compute_biziship_booking_numbers_html(self):
+        import html as _html
+
+        def row(label, value):
+            if not value:
+                return ''
+            esc = _html.escape(value)
+            return (
+                f'<tr>'
+                f'<td style="font-weight:600;color:#4c4c4c;font-size:13px;'
+                f'padding:2px 16px 2px 0;white-space:nowrap;vertical-align:top;">{label}</td>'
+                f'<td style="font-size:13px;color:#1a1a2e;">'
+                f'<span class="biziship-ref-copyable" title="Click to copy" '
+                f'data-copy-text="{esc}">{esc}</span></td>'
+                f'</tr>'
+            )
+
+        for order in self:
+            rows = row('BOL Number', order.biziship_bol_number) + row('PRO Number', order.biziship_pro_number)
+            order.biziship_booking_numbers_html = f'<table>{rows}</table>' if rows else False
 
     # --- LTL Freight Fields ---
     # Origin & Pickup

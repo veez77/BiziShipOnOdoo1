@@ -901,6 +901,38 @@ class SaleOrder(models.Model):
                 "zeev@biziship.ai or avner@biziship.ai, or call / WhatsApp +1 (678) 772-2785."
             ))
 
+        # Residential address check — re-evaluated fresh on every single booking attempt.
+        # Reset any stale acknowledgment from a previous (closed/abandoned) attempt first,
+        # so it can never silently suppress this check on a later attempt.
+        quote = selected_quote[0]
+        quote.write({
+            'origin_residential_risk_acknowledged': False,
+            'destination_residential_risk_acknowledged': False,
+        })
+        origin_flagged = bool(self.biziship_origin_residential_warning and not self.biziship_origin_residential)
+        dest_flagged = bool(self.biziship_dest_residential_warning and not self.biziship_dest_residential)
+        if origin_flagged or dest_flagged:
+            return {
+                'name': 'Residential Address Warning',
+                'type': 'ir.actions.act_window',
+                'res_model': 'biziship.residential.warning.wizard',
+                'view_mode': 'form',
+                'target': 'new',
+                'context': {
+                    'default_quote_id': quote.id,
+                    'default_origin_flagged': origin_flagged,
+                    'default_destination_flagged': dest_flagged,
+                }
+            }
+
+        return self._biziship_quote_confirm_next_step(quote)
+
+    def _biziship_quote_confirm_next_step(self, quote):
+        """The booking-confirmation step after all pre-booking checks have passed
+        (or been explicitly acknowledged). Shared by the normal path and by
+        biziship.residential.warning.wizard's override-and-continue action.
+        """
+        self.ensure_one()
         if self.biziship_priority1_env == 'PROD':
             return {
                 'name': 'Live Freight Booking',
@@ -909,7 +941,7 @@ class SaleOrder(models.Model):
                 'view_mode': 'form',
                 'target': 'new',
                 'context': {
-                    'default_quote_id': selected_quote[0].id,
+                    'default_quote_id': quote.id,
                 }
             }
 
@@ -920,7 +952,7 @@ class SaleOrder(models.Model):
             'view_mode': 'form',
             'target': 'new',
             'context': {
-                'default_quote_id': selected_quote[0].id,
+                'default_quote_id': quote.id,
             }
         }
 

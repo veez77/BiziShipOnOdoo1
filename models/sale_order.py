@@ -862,6 +862,27 @@ class SaleOrder(models.Model):
                 self.write(vals)
         return profile
 
+    def _biziship_apply_quote_recommendation(self, recommended_quote_id, recommendation_reason=None):
+        """Mark the matching quote as AI-recommended and pre-select it, but only if
+        nothing is already selected - never override an existing/active selection.
+        Both args are null whenever a recommendation isn't available; that's the
+        normal, unremarkable default and this is a no-op in that case.
+        """
+        self.ensure_one()
+        if not recommended_quote_id:
+            return
+        quotes = self.biziship_quote_ids
+        recommended = quotes.filtered(lambda q: q.quote_id_ref == recommended_quote_id)
+        if not recommended:
+            return
+        recommended = recommended[0]
+        recommended.write({
+            'is_recommended': True,
+            'recommendation_reason': recommendation_reason or False,
+        })
+        if not quotes.filtered('is_selected'):
+            recommended.is_selected = True
+
     def action_open_biziship_quote_confirm(self):
         self.ensure_one()
         if not self.env.user.biziship_token:
@@ -1306,6 +1327,11 @@ class SaleOrder(models.Model):
                     'destination_terminal_phone': extracted_details.get('destination_terminal_phone'),
                     'quote_details': details_text,
                 })
+
+            self._biziship_apply_quote_recommendation(
+                response_json.get('recommended_quote_id'),
+                response_json.get('recommendation_reason'),
+            )
 
         except requests.exceptions.HTTPError as e:
             err_msg = str(e)

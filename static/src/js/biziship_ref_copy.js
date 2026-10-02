@@ -12,6 +12,18 @@ function rpc(model, method, args, kwargs) {
 }
 
 document.addEventListener('click', function (e) {
+    // AI recommendation "Why?" toggle — collapsed by default, click to reveal the reason
+    var whyEl = e.target.closest('.biziship-why-toggle');
+    if (whyEl) {
+        e.preventDefault();
+        var reasonEl = whyEl.parentElement && whyEl.parentElement.querySelector('.biziship-why-reason');
+        if (reasonEl) {
+            var isOpen = reasonEl.classList.toggle('biziship-why-open');
+            whyEl.textContent = isOpen ? 'Hide why' : 'Why?';
+        }
+        return;
+    }
+
     // BOL copy-to-clipboard
     var copyEl = e.target.closest('.biziship-ref-copyable');
     if (copyEl) {

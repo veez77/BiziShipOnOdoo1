@@ -42,6 +42,31 @@ class BizishipQuote(models.Model):
     quote_details = fields.Text(string='Quote Details')
     carrier_logo = fields.Binary(string="Carrier Logo", compute="_compute_carrier_logo")
 
+    # AI carrier recommendation (from /erp/quote's recommended_quote_id + recommendation_reason,
+    # when present - null whenever a recommendation isn't available, which is the normal default).
+    is_recommended = fields.Boolean(string='Recommended', default=False, copy=False)
+    recommendation_reason = fields.Char(string='Recommendation Reason', copy=False)
+    biziship_recommendation_html = fields.Html(
+        string='Recommendation', compute='_compute_biziship_recommendation_html',
+        sanitize=False, readonly=True,
+    )
+
+    @api.depends('is_recommended', 'recommendation_reason')
+    def _compute_biziship_recommendation_html(self):
+        import html as _html
+        for rec in self:
+            if not rec.is_recommended:
+                rec.biziship_recommendation_html = False
+                continue
+            reason = _html.escape(rec.recommendation_reason or '')
+            rec.biziship_recommendation_html = (
+                '<div class="biziship-rec-wrap">'
+                '<span class="biziship-rec-badge">Recommended</span>'
+                '<a href="#" class="biziship-why-toggle">Why?</a>'
+                f'<div class="biziship-why-reason">{reason}</div>'
+                '</div>'
+            )
+
     biziship_cargo_line_ids = fields.One2many(related='sale_order_id.biziship_cargo_line_ids', string='Cargo Lines')
     biziship_total_weight = fields.Float(related='sale_order_id.biziship_total_weight', string='Total Weight')
     biziship_total_weight_unit = fields.Selection(related='sale_order_id.biziship_total_weight_unit', string='Weight Unit')

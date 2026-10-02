@@ -67,6 +67,14 @@ class BizishipQuote(models.Model):
                 '</div>'
             )
 
+    # Residential address booking-time acknowledgment - reset fresh on every booking
+    # attempt (see sale.order.action_open_biziship_quote_confirm), only set True via
+    # biziship.residential.warning.wizard's explicit override. Sent to /erp/book as
+    # origin_residential_risk_acknowledged / destination_residential_risk_acknowledged,
+    # omitted entirely when False.
+    origin_residential_risk_acknowledged = fields.Boolean(default=False, copy=False)
+    destination_residential_risk_acknowledged = fields.Boolean(default=False, copy=False)
+
     biziship_cargo_line_ids = fields.One2many(related='sale_order_id.biziship_cargo_line_ids', string='Cargo Lines')
     biziship_total_weight = fields.Float(related='sale_order_id.biziship_total_weight', string='Total Weight')
     biziship_total_weight_unit = fields.Selection(related='sale_order_id.biziship_total_weight_unit', string='Weight Unit')

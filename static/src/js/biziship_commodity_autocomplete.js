@@ -2,7 +2,7 @@
 
 import { registry } from "@web/core/registry";
 import { CharField } from "@web/views/fields/char/char_field";
-import { useService } from "@web/core/utils/hooks";
+import { rpc } from "@web/core/network/rpc";
 import { onMounted, proxy, signal } from "@odoo/owl";
 
 const COMMODITIES = [
@@ -122,7 +122,6 @@ export class BiziShipCommodityAutocomplete extends CharField {
             isProcessing: false,
             currentValue: this.props.record.data[this.props.name] || ""
         });
-        this.rpc = useService("rpc");
         this.debounceTimer = null;
         
         onMounted(() => {
@@ -238,7 +237,7 @@ export class BiziShipCommodityAutocomplete extends CharField {
         }
 
         // 2. AI Fallback via Proxy
-        await this.rpc("/web/dataset/call_button", {
+        await rpc("/web/dataset/call_button", {
             model: "biziship.sale.cargo.line",
             method: "action_biziship_nmfc_suggest",
             args: [[this.props.record.resId]],

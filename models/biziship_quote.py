@@ -1,5 +1,4 @@
 from odoo import models, fields, api, tools
-import base64
 import os
 
 class BizishipQuote(models.Model):
@@ -128,7 +127,7 @@ class BizishipQuote(models.Model):
                     if img_path and os.path.exists(img_path):
                         try:
                             with open(img_path, 'rb') as f:
-                                logo_data = base64.b64encode(f.read())
+                                logo_data = tools.BinaryBytes(f.read())
                         except Exception:
                             pass
                 except Exception:

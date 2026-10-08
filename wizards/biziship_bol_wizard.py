@@ -1,5 +1,4 @@
 import json
-import base64
 import requests
 import os
 from datetime import datetime
@@ -28,8 +27,9 @@ class BizishipBolImportWizard(models.TransientModel):
         if not self.bol_file:
             raise UserError(_("Please upload a BOL PDF file."))
 
-        # 1. Base64 file string (Odoo Binary fields are already base64 encoded bytes)
-        file_base64 = self.bol_file.decode('utf-8')
+        # 1. Base64 file string (Odoo Binary field values are now BinaryValue objects
+        # wrapping raw bytes, not base64 bytes - use to_base64() to get the string)
+        file_base64 = self.bol_file.to_base64()
         file_name = self.file_name or "document.pdf"
         
         is_pdf = file_name.lower().endswith('.pdf')
@@ -54,8 +54,8 @@ class BizishipBolImportWizard(models.TransientModel):
             "X-Client-Version": BIZISHIP_MODULE_VERSION,
         }
 
-        # Decode base64 PDF/Image bytes from Odoo
-        file_bytes = base64.b64decode(self.bol_file)
+        # BinaryValue already exposes the raw PDF/Image bytes directly
+        file_bytes = self.bol_file.content
 
         _logger.info("BiziShip BOL Extraction API Request Headers: %s", api_key_header)
 

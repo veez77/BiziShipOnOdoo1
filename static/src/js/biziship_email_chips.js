@@ -12,7 +12,7 @@
  * the defaults list is simply empty.
  */
 
-import { Component, useState, useRef, onWillStart, status, useProps } from "@odoo/owl";
+import { Component, proxy, signal, onWillStart, status, useProps } from "@odoo/owl";
 import { registry } from "@web/core/registry";
 import { useService } from "@web/core/utils/hooks";
 import { standardFieldProps } from "@web/views/fields/standard_field_props";
@@ -24,12 +24,12 @@ const FETCH_TIMEOUT_MS = 6000;
 export class BizishipEmailChips extends Component {
     static template = "biziship.EmailChips";
     props = useProps({ ...standardFieldProps });
+    inputRef = signal.ref();
 
     setup() {
         this.orm = useService("orm");
-        this.inputRef = useRef("input");
         this.max = MAX_CHIPS;
-        this.state = useState({
+        this.state = proxy({
             defaults: [],
             loadingDefaults: true,
             draft: "",
@@ -107,8 +107,8 @@ export class BizishipEmailChips extends Component {
     }
 
     _focusInput() {
-        if (this.inputRef.el) {
-            this.inputRef.el.focus();
+        if (this.inputRef()) {
+            this.inputRef().focus();
         }
     }
 

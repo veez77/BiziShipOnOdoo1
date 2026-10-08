@@ -1,6 +1,6 @@
 /** @odoo-module **/
 
-import { Component, useState, onWillStart, useProps } from "@odoo/owl";
+import { Component, proxy, onWillStart, useProps } from "@odoo/owl";
 import { Dialog } from "@web/core/dialog/dialog";
 import { registry } from "@web/core/registry";
 import { useService } from "@web/core/utils/hooks";
@@ -16,7 +16,7 @@ class NmfcFavoritesDialog extends Component {
 
     setup() {
         this.orm = useService("orm");
-        this.state = useState({
+        this.state = proxy({
             favorites: [],
             loading: true,
             filter: "",

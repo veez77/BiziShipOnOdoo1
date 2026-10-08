@@ -2,7 +2,7 @@
 <templates xml:space="preserve">
 
     <t t-name="biziship.References">
-        <div class="biziship-refs" t-ref="root">
+        <div class="biziship-refs" t-ref="this.rootRef">
             <t t-foreach="references" t-as="ref" t-key="ref_index">
                 <div class="biziship-ref-row">
                     <span class="biziship-ref-badge" t-out="badge(ref_index)"/>

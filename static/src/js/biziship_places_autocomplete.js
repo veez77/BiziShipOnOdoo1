@@ -3,7 +3,7 @@
 import { registry } from "@web/core/registry";
 import { CharField } from "@web/views/fields/char/char_field";
 import { useService } from "@web/core/utils/hooks";
-import { onMounted, useRef } from "@odoo/owl";
+import { onMounted } from "@odoo/owl";
 
 export class BiziShipPlacesAutocomplete extends CharField {
     setup() {
@@ -165,7 +165,9 @@ export class BiziShipPlacesAutocomplete extends CharField {
 
 BiziShipPlacesAutocomplete.template = "web.CharField";
 BiziShipPlacesAutocomplete.components = { ...CharField.components };
-BiziShipPlacesAutocomplete.props = CharField.props;
+// props inherited as-is from CharField's own `props = useProps(charFieldProps)` instance
+// field - Owl 3 ignores a static "props" assignment entirely, and an instance field
+// declared on the parent class already applies to subclass instances unchanged.
 
 export const biziShipPlacesField = {
     ...registry.category("fields").get("char"),  // inherit all properties from the standard Char field

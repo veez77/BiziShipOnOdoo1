@@ -3,7 +3,7 @@
 import { registry } from "@web/core/registry";
 import { CharField } from "@web/views/fields/char/char_field";
 import { useService } from "@web/core/utils/hooks";
-import { onMounted, useState, useRef } from "@odoo/owl";
+import { onMounted, proxy, signal } from "@odoo/owl";
 
 const COMMODITIES = [
     "Computer desktops", "Computer laptops / notebooks", "Computer monitors / displays", "Computer servers / rack units", 
@@ -111,15 +111,17 @@ const NMFC_RULES = [
 const GENERIC_TERMS = ['freight', 'goods', 'cargo', 'shipment', 'items', 'general freight'];
 
 export class BiziShipCommodityAutocomplete extends CharField {
+    inputRef = signal.ref();
+    dropdownRef = signal.ref();
+
     setup() {
         super.setup();
-        this.state = useState({
+        this.state = proxy({
             suggestions: [],
             showDropdown: false,
             isProcessing: false,
             currentValue: this.props.record.data[this.props.name] || ""
         });
-        this.inputRef = useRef("input");
         this.rpc = useService("rpc");
         this.debounceTimer = null;
         
@@ -281,7 +283,9 @@ export class BiziShipCommodityAutocomplete extends CharField {
 
 BiziShipCommodityAutocomplete.template = "biziship.CommodityAutocomplete";
 BiziShipCommodityAutocomplete.components = { ...CharField.components };
-BiziShipCommodityAutocomplete.props = { ...CharField.props };
+// props inherited as-is from CharField's own `props = useProps(charFieldProps)` instance
+// field - Owl 3 ignores a static "props" assignment entirely, and an instance field
+// declared on the parent class already applies to subclass instances unchanged.
 
 registry.category("fields").add("biziship_commodity", {
     ...registry.category("fields").get("char"),

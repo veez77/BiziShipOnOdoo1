@@ -2,7 +2,7 @@
 <templates xml:space="preserve">
 
     <t t-name="biziship.HoursPicker">
-        <div class="biziship-hours-picker" t-ref="root">
+        <div class="biziship-hours-picker" t-ref="this.rootRef">
 
             <!-- Label row: title + live summary -->
             <div class="biziship-hp-header">
@@ -40,7 +40,7 @@
                         <span t-out="startDisplay"/>
                         <i class="fa fa-chevron-down biziship-hp-chev"/>
                     </button>
-                    <div t-if="state.openPicker === 'start'" class="biziship-hp-dropdown" role="listbox" t-ref="list">
+                    <div t-if="state.openPicker === 'start'" class="biziship-hp-dropdown" role="listbox" t-ref="this.listRef">
                         <t t-foreach="timeOptions" t-as="opt" t-key="opt">
                             <div
                                 class="biziship-hp-opt"
@@ -68,7 +68,7 @@
                         <span t-out="endDisplay"/>
                         <i class="fa fa-chevron-down biziship-hp-chev"/>
                     </button>
-                    <div t-if="state.openPicker === 'end'" class="biziship-hp-dropdown" role="listbox" t-ref="list">
+                    <div t-if="state.openPicker === 'end'" class="biziship-hp-dropdown" role="listbox" t-ref="this.listRef">
                         <t t-foreach="endOptions" t-as="opt" t-key="opt">
                             <div
                                 class="biziship-hp-opt"

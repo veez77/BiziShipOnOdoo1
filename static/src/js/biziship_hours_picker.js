@@ -14,7 +14,7 @@
  * and two custom 30-minute time dropdowns ("8:00 AM" to "5:00 PM").
  */
 
-import { Component, useState, useRef, useEffect, useExternalListener, useProps } from "@odoo/owl";
+import { Component, proxy, signal, useEffect, useListener, useProps } from "@odoo/owl";
 import { registry } from "@web/core/registry";
 import { standardFieldProps } from "@web/views/fields/standard_field_props";
 
@@ -68,22 +68,22 @@ function fmtDaysSummary(days) {
 export class BizishipHoursPicker extends Component {
     static template = "biziship.HoursPicker";
     props = useProps({ ...standardFieldProps });
+    rootRef = signal.ref();
+    listRef = signal.ref();
 
     setup() {
         this.allDays = BIZISHIP_DAYS;
         this.timeOptions = BIZISHIP_TIME_OPTIONS;
         this.fmtTime12 = fmtTime12;
-        this.state = useState({ openPicker: null }); // 'start' | 'end' | null
-        this.rootRef = useRef("root");
-        this.listRef = useRef("list");
+        this.state = proxy({ openPicker: null }); // 'start' | 'end' | null
 
         // Close on outside click or Escape.
-        useExternalListener(window, "mousedown", (ev) => {
-            if (this.rootRef.el && !this.rootRef.el.contains(ev.target)) {
+        useListener(window, "mousedown", (ev) => {
+            if (this.rootRef() && !this.rootRef().contains(ev.target)) {
                 this.state.openPicker = null;
             }
         });
-        useExternalListener(window, "keydown", (ev) => {
+        useListener(window, "keydown", (ev) => {
             if (ev.key === "Escape" && this.state.openPicker) {
                 this.state.openPicker = null;
             }
@@ -92,8 +92,8 @@ export class BizishipHoursPicker extends Component {
         // When a dropdown opens, center the currently-selected option.
         useEffect(
             (open) => {
-                if (open && this.listRef.el) {
-                    const sel = this.listRef.el.querySelector(".biziship-hp-opt.selected");
+                if (open && this.listRef()) {
+                    const sel = this.listRef().querySelector(".biziship-hp-opt.selected");
                     if (sel) {
                         sel.scrollIntoView({ block: "center" });
                     }

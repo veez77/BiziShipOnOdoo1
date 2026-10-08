@@ -17,7 +17,7 @@
  * (which previously wiped REF1 when adding a second reference).
  */
 
-import { Component, useRef, useProps } from "@odoo/owl";
+import { Component, signal, useProps } from "@odoo/owl";
 import { registry } from "@web/core/registry";
 import { standardFieldProps } from "@web/views/fields/standard_field_props";
 
@@ -27,10 +27,7 @@ const MAX_LEN = 64;
 export class BizishipReferences extends Component {
     static template = "biziship.References";
     props = useProps({ ...standardFieldProps });
-
-    setup() {
-        this.rootRef = useRef("root");
-    }
+    rootRef = signal.ref();
 
     // Always returns an array of at least one element (the primary row).
     get references() {
@@ -53,7 +50,7 @@ export class BizishipReferences extends Component {
 
     // Live values of every reference input currently in the DOM.
     _readInputs() {
-        const root = this.rootRef.el;
+        const root = this.rootRef();
         if (!root) {
             return this.references;
         }

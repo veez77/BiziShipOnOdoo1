@@ -64,7 +64,7 @@
                     <input
                         type="text"
                         class="biziship-chip-field"
-                        t-ref="input"
+                        t-ref="this.inputRef"
                         placeholder="alice@example.com"
                         t-att-value="state.draft"
                         t-on-input="onInput"

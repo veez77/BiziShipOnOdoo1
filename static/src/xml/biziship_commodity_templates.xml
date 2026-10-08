@@ -10,10 +10,10 @@
                 t-on-input="_onInput"
                 t-on-keydown="_onKeyDown"
                 t-on-blur="_onBlur"
-                t-ref="input"
+                t-ref="this.inputRef"
             />
             
-            <ul t-if="state.showDropdown" class="dropdown-menu show biziship-autocomplete-dropdown" t-ref="dropdown">
+            <ul t-if="state.showDropdown" class="dropdown-menu show biziship-autocomplete-dropdown" t-ref="this.dropdownRef">
                 <li t-foreach="state.suggestions" t-as="suggestion" t-key="suggestion">
                     <a class="dropdown-item" href="#" t-on-click.prevent="() => this._onSuggestionClick(suggestion)">
                         <t t-out="suggestion"/>

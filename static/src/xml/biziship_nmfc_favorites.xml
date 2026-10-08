@@ -5,7 +5,7 @@
     <t t-name="biziship.NmfcStarWidget">
         <button
             class="btn btn-sm btn-link p-0 ms-1 biziship-nmfc-fav-btn"
-            t-on-click="openFavorites"
+            t-on-click="this.openFavorites"
             title="NMFC Favorites">
             <i class="fa fa-star" style="color: #f59e0b; font-size: 1.1em;"/>
         </button>
@@ -21,27 +21,27 @@
                     type="text"
                     class="form-control form-control-sm"
                     placeholder="Filter by description or NMFC…"
-                    t-att-value="state.filter"
-                    t-on-input="onFilterInput"
+                    t-att-value="this.state.filter"
+                    t-on-input="this.onFilterInput"
                     autofocus="true"
                 />
             </div>
 
             <!-- Favorites list -->
             <div class="biziship-nmfc-fav-list mb-2" style="max-height: 300px; overflow-y: auto;">
-                <t t-if="state.loading">
+                <t t-if="this.state.loading">
                     <div class="text-center text-muted py-4">
                         <i class="fa fa-spinner fa-spin me-2"/>Loading favorites…
                     </div>
                 </t>
-                <t t-elif="filteredFavorites.length === 0">
+                <t t-elif="this.filteredFavorites.length === 0">
                     <div class="text-center text-muted py-4 fst-italic">
-                        <t t-if="state.filter">No matches found.</t>
+                        <t t-if="this.state.filter">No matches found.</t>
                         <t t-else="">No favorites saved yet.</t>
                     </div>
                 </t>
                 <t t-else="">
-                    <t t-foreach="filteredFavorites" t-as="fav" t-key="fav.id">
+                    <t t-foreach="this.filteredFavorites" t-as="fav" t-key="fav.id">
                         <div class="d-flex align-items-center justify-content-between py-2 border-bottom">
                             <div class="flex-grow-1 me-3">
                                 <div class="fw-semibold text-primary" style="font-size: 0.95em;">
@@ -52,7 +52,7 @@
                                 </div>
                             </div>
                             <div class="d-flex align-items-center gap-2 flex-shrink-0">
-                                <t t-if="state.confirmDeleteId === fav.id">
+                                <t t-if="this.state.confirmDeleteId === fav.id">
                                     <span class="text-danger fw-bold" style="font-size: 0.85em;">Delete?</span>
                                     <button
                                         class="btn btn-sm btn-danger py-0 px-2"
@@ -61,7 +61,7 @@
                                     </button>
                                     <button
                                         class="btn btn-sm btn-outline-secondary py-0 px-2"
-                                        t-on-click="onDeleteCancel">
+                                        t-on-click="this.onDeleteCancel">
                                         No
                                     </button>
                                 </t>
@@ -95,8 +95,8 @@
                         type="text"
                         class="form-control form-control-sm"
                         placeholder="Description"
-                        t-att-value="state.addDesc"
-                        t-on-input="onAddDescInput"
+                        t-att-value="this.state.addDesc"
+                        t-on-input="this.onAddDescInput"
                     />
                 </div>
                 <div class="mb-2">
@@ -104,21 +104,21 @@
                         type="text"
                         class="form-control form-control-sm"
                         placeholder="NMFC Code (e.g. 181940)"
-                        t-att-value="state.addNmfc"
-                        t-on-input="onAddNmfcInput"
+                        t-att-value="this.state.addNmfc"
+                        t-on-input="this.onAddNmfcInput"
                     />
                 </div>
-                <t t-if="state.addError">
+                <t t-if="this.state.addError">
                     <div class="text-danger mb-2" style="font-size: 0.85em;">
                         <i class="fa fa-exclamation-circle me-1"/>
-                        <t t-out="state.addError"/>
+                        <t t-out="this.state.addError"/>
                     </div>
                 </t>
                 <button
                     class="btn btn-sm btn-success"
-                    t-on-click="onSave"
-                    t-att-disabled="state.saving">
-                    <i t-if="state.saving" class="fa fa-spinner fa-spin me-1"/>
+                    t-on-click="this.onSave"
+                    t-att-disabled="this.state.saving">
+                    <i t-if="this.state.saving" class="fa fa-spinner fa-spin me-1"/>
                     <i t-else="" class="fa fa-plus me-1"/>
                     Save Favorite
                 </button>

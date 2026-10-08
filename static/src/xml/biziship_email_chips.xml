@@ -14,14 +14,14 @@
             </div>
 
             <!-- Read-only: company defaults -->
-            <t t-if="state.loadingDefaults">
+            <t t-if="this.state.loadingDefaults">
                 <div class="biziship-notif-loading">Loading company recipients…</div>
             </t>
-            <t t-elif="hasDefaults">
+            <t t-elif="this.hasDefaults">
                 <div class="biziship-notif-block">
                     <div class="biziship-notif-sublabel">ALWAYS NOTIFIED BY YOUR COMPANY</div>
                     <div class="biziship-chip-readonly-wrap">
-                        <t t-foreach="state.defaults" t-as="email" t-key="email">
+                        <t t-foreach="this.state.defaults" t-as="email" t-key="email">
                             <span class="biziship-chip-readonly">
                                 <i class="fa fa-envelope-o me-1"/>
                                 <t t-out="email"/>
@@ -32,18 +32,18 @@
             </t>
 
             <!-- Salesperson recipient — included by default, toggleable -->
-            <div t-if="hasSalesperson" class="biziship-notif-block">
+            <div t-if="this.hasSalesperson" class="biziship-notif-block">
                 <div class="biziship-notif-sublabel">SALESPERSON</div>
-                <div class="biziship-sp-row" t-att-class="{ 'excluded': !notifySalesperson }">
+                <div class="biziship-sp-row" t-att-class="{ 'excluded': !this.notifySalesperson }">
                     <i class="fa fa-user-circle-o biziship-sp-avatar"/>
                     <div class="biziship-sp-info">
-                        <span class="biziship-sp-name" t-out="salespersonName"/>
-                        <span class="biziship-sp-email" t-out="salespersonEmail"/>
+                        <span class="biziship-sp-name" t-out="this.salespersonName"/>
+                        <span class="biziship-sp-email" t-out="this.salespersonEmail"/>
                     </div>
-                    <label class="biziship-switch" t-att-title="notifySalesperson ? 'Salesperson will be notified' : 'Salesperson excluded'">
-                        <input type="checkbox" t-att-checked="notifySalesperson"
+                    <label class="biziship-switch" t-att-title="this.notifySalesperson ? 'Salesperson will be notified' : 'Salesperson excluded'">
+                        <input type="checkbox" t-att-checked="this.notifySalesperson"
                                t-on-change="() => this.toggleSalesperson()"
-                               t-att-aria-label="'Notify salesperson ' + salespersonName"/>
+                               t-att-aria-label="'Notify salesperson ' + this.salespersonName"/>
                         <span class="biziship-switch-slider"/>
                     </label>
                 </div>
@@ -51,9 +51,9 @@
 
             <!-- Editable: per-shipment extras -->
             <div class="biziship-notif-block">
-                <div t-if="hasDefaults" class="biziship-notif-sublabel">ADD RECIPIENTS FOR THIS SHIPMENT</div>
-                <div class="biziship-chip-input" t-att-class="{ 'is-invalid': state.invalid }" t-on-click="() => this._focusInput()">
-                    <t t-foreach="chips" t-as="chip" t-key="chip_index">
+                <div t-if="this.hasDefaults" class="biziship-notif-sublabel">ADD RECIPIENTS FOR THIS SHIPMENT</div>
+                <div class="biziship-chip-input" t-att-class="{ 'is-invalid': this.state.invalid }" t-on-click="() => this._focusInput()">
+                    <t t-foreach="this.chips" t-as="chip" t-key="chip_index">
                         <span class="biziship-chip">
                             <t t-out="chip"/>
                             <button type="button" class="biziship-chip-x"
@@ -66,14 +66,14 @@
                         class="biziship-chip-field"
                         t-ref="this.inputRef"
                         placeholder="alice@example.com"
-                        t-att-value="state.draft"
-                        t-on-input="onInput"
-                        t-on-keydown="onKeydown"
-                        t-on-paste="onPaste"
-                        t-on-blur="onBlur"/>
+                        t-att-value="this.state.draft"
+                        t-on-input="this.onInput"
+                        t-on-keydown="this.onKeydown"
+                        t-on-paste="this.onPaste"
+                        t-on-blur="this.onBlur"/>
                 </div>
-                <div t-if="state.error" class="biziship-notif-error" t-out="state.error"/>
-                <div t-else="" class="biziship-notif-help2" t-out="helperText"/>
+                <div t-if="this.state.error" class="biziship-notif-error" t-out="this.state.error"/>
+                <div t-else="" class="biziship-notif-help2" t-out="this.helperText"/>
             </div>
 
         </div>

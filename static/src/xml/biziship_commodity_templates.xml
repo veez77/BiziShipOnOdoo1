@@ -4,17 +4,17 @@
         <div class="biziship-commodity-container position-relative">
             <input type="text"
                 class="o_input"
-                t-att-id="props.id"
-                t-att-placeholder="props.placeholder"
-                t-att-value="state.currentValue"
-                t-on-input="_onInput"
-                t-on-keydown="_onKeyDown"
-                t-on-blur="_onBlur"
+                t-att-id="this.props.id"
+                t-att-placeholder="this.props.placeholder"
+                t-att-value="this.state.currentValue"
+                t-on-input="this._onInput"
+                t-on-keydown="this._onKeyDown"
+                t-on-blur="this._onBlur"
                 t-ref="this.inputRef"
             />
             
-            <ul t-if="state.showDropdown" class="dropdown-menu show biziship-autocomplete-dropdown" t-ref="this.dropdownRef">
-                <li t-foreach="state.suggestions" t-as="suggestion" t-key="suggestion">
+            <ul t-if="this.state.showDropdown" class="dropdown-menu show biziship-autocomplete-dropdown" t-ref="this.dropdownRef">
+                <li t-foreach="this.state.suggestions" t-as="suggestion" t-key="suggestion">
                     <a class="dropdown-item" href="#" t-on-click.prevent="() => this._onSuggestionClick(suggestion)">
                         <t t-out="suggestion"/>
                     </a>
@@ -22,33 +22,33 @@
             </ul>
 
             <!-- Suggestion UI: Blue Information Box -->
-            <div t-if="props.record.data.nmfc_suggested_code &amp;&amp; props.record.data.nmfc_suggestion_label !== 'low' &amp;&amp; props.record.data.nmfc_applied_desc !== props.record.data.cargo_desc" class="biziship-nmfc-suggestion-box">
+            <div t-if="this.props.record.data.nmfc_suggested_code &amp;&amp; this.props.record.data.nmfc_suggestion_label !== 'low' &amp;&amp; this.props.record.data.nmfc_applied_desc !== this.props.record.data.cargo_desc" class="biziship-nmfc-suggestion-box">
                 <div class="biziship-nmfc-suggestion-header">
-                    <span class="biziship-nmfc-suggested-label">AI Suggested: <t t-out="props.record.data.nmfc_suggested_code"/></span>
+                    <span class="biziship-nmfc-suggested-label">AI Suggested: <t t-out="this.props.record.data.nmfc_suggested_code"/></span>
                     
-                    <span t-if="props.record.data.nmfc_suggestion_label === 'high'" class="biziship-badge-high">High confidence</span>
-                    <span t-if="props.record.data.nmfc_suggestion_label === 'medium'" class="biziship-badge-medium">Medium confidence</span>
+                    <span t-if="this.props.record.data.nmfc_suggestion_label === 'high'" class="biziship-badge-high">High confidence</span>
+                    <span t-if="this.props.record.data.nmfc_suggestion_label === 'medium'" class="biziship-badge-medium">Medium confidence</span>
                     
-                    <button t-if="props.record.data.nmfc_suggestion_label === 'medium'" 
+                    <button t-if="this.props.record.data.nmfc_suggestion_label === 'medium'" 
                             class="biziship-nmfc-btn-apply" 
-                            t-on-click="_applySuggestion">Apply</button>
+                            t-on-click="this._applySuggestion">Apply</button>
                     
-                    <button class="biziship-nmfc-btn-dismiss" t-on-click="_dismissSuggestion">Dismiss</button>
+                    <button class="biziship-nmfc-btn-dismiss" t-on-click="this._dismissSuggestion">Dismiss</button>
                 </div>
                 <div class="biziship-nmfc-rationale">
-                    <t t-out="props.record.data.nmfc_suggestion_rationale"/>
+                    <t t-out="this.props.record.data.nmfc_suggestion_rationale"/>
                 </div>
             </div>
 
             <!-- Success: NMFC Applied -->
-            <div t-if="props.record.data.nmfc &amp;&amp; props.record.data.nmfc_applied_desc === props.record.data.cargo_desc" class="mt-1 biziship-nmfc-applied-text d-flex align-items-center">
+            <div t-if="this.props.record.data.nmfc &amp;&amp; this.props.record.data.nmfc_applied_desc === this.props.record.data.cargo_desc" class="mt-1 biziship-nmfc-applied-text d-flex align-items-center">
                 <i class="fa fa-check me-1"/>
                 <span>NMFC applied from suggestion</span>
-                <button class="biziship-nmfc-btn-clear" t-on-click="_clearAppliedNMFC">Clear</button>
+                <button class="biziship-nmfc-btn-clear" t-on-click="this._clearAppliedNMFC">Clear</button>
             </div>
 
             <!-- No Results / Low Confidence Message -->
-            <div t-if="props.record.data.nmfc_suggestion_label === 'low' &amp;&amp; !props.record.data.nmfc" class="mt-1 biziship-nmfc-warning-text d-flex align-items-center">
+            <div t-if="this.props.record.data.nmfc_suggestion_label === 'low' &amp;&amp; !this.props.record.data.nmfc" class="mt-1 biziship-nmfc-warning-text d-flex align-items-center">
                 <i class="fa fa-info-circle me-1"/>
                 <span>A more specific commodity description will improve NMFC suggestion.</span>
             </div>

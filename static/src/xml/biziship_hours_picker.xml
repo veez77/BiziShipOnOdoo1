@@ -6,18 +6,18 @@
 
             <!-- Label row: title + live summary -->
             <div class="biziship-hp-header">
-                <span class="biziship-hp-title" t-out="title"/>
-                <span class="biziship-hp-summary" t-out="summary"/>
+                <span class="biziship-hp-title" t-out="this.title"/>
+                <span class="biziship-hp-summary" t-out="this.summary"/>
             </div>
 
             <!-- Day-of-week pills -->
             <div class="biziship-hp-days" role="group">
-                <t t-foreach="allDays" t-as="day" t-key="day.key">
+                <t t-foreach="this.allDays" t-as="day" t-key="day.key">
                     <button
                         type="button"
                         class="biziship-hp-pill"
-                        t-att-class="{ 'active': isDaySelected(day.key) }"
-                        t-att-aria-pressed="isDaySelected(day.key) ? 'true' : 'false'"
+                        t-att-class="{ 'active': this.isDaySelected(day.key) }"
+                        t-att-aria-pressed="this.isDaySelected(day.key) ? 'true' : 'false'"
                         t-att-aria-label="day.full"
                         t-att-title="day.full"
                         t-on-click="() => this.toggleDay(day.key)">
@@ -34,21 +34,21 @@
                         type="button"
                         class="biziship-hp-time-btn"
                         aria-haspopup="listbox"
-                        t-att-aria-expanded="state.openPicker === 'start' ? 'true' : 'false'"
+                        t-att-aria-expanded="this.state.openPicker === 'start' ? 'true' : 'false'"
                         t-on-click="() => this.togglePicker('start')">
                         <i class="fa fa-clock-o biziship-hp-clock"/>
-                        <span t-out="startDisplay"/>
+                        <span t-out="this.startDisplay"/>
                         <i class="fa fa-chevron-down biziship-hp-chev"/>
                     </button>
-                    <div t-if="state.openPicker === 'start'" class="biziship-hp-dropdown" role="listbox" t-ref="this.listRef">
-                        <t t-foreach="timeOptions" t-as="opt" t-key="opt">
+                    <div t-if="this.state.openPicker === 'start'" class="biziship-hp-dropdown" role="listbox" t-ref="this.listRef">
+                        <t t-foreach="this.timeOptions" t-as="opt" t-key="opt">
                             <div
                                 class="biziship-hp-opt"
-                                t-att-class="{ 'selected': opt === start }"
-                                t-att-aria-selected="opt === start ? 'true' : 'false'"
+                                t-att-class="{ 'selected': opt === this.start }"
+                                t-att-aria-selected="opt === this.start ? 'true' : 'false'"
                                 role="option"
                                 t-on-click="() => this.selectStart(opt)">
-                                <t t-out="fmtTime12(opt)"/>
+                                <t t-out="this.fmtTime12(opt)"/>
                             </div>
                         </t>
                     </div>
@@ -62,21 +62,21 @@
                         type="button"
                         class="biziship-hp-time-btn"
                         aria-haspopup="listbox"
-                        t-att-aria-expanded="state.openPicker === 'end' ? 'true' : 'false'"
+                        t-att-aria-expanded="this.state.openPicker === 'end' ? 'true' : 'false'"
                         t-on-click="() => this.togglePicker('end')">
                         <i class="fa fa-clock-o biziship-hp-clock"/>
-                        <span t-out="endDisplay"/>
+                        <span t-out="this.endDisplay"/>
                         <i class="fa fa-chevron-down biziship-hp-chev"/>
                     </button>
-                    <div t-if="state.openPicker === 'end'" class="biziship-hp-dropdown" role="listbox" t-ref="this.listRef">
-                        <t t-foreach="endOptions" t-as="opt" t-key="opt">
+                    <div t-if="this.state.openPicker === 'end'" class="biziship-hp-dropdown" role="listbox" t-ref="this.listRef">
+                        <t t-foreach="this.endOptions" t-as="opt" t-key="opt">
                             <div
                                 class="biziship-hp-opt"
-                                t-att-class="{ 'selected': opt === end }"
-                                t-att-aria-selected="opt === end ? 'true' : 'false'"
+                                t-att-class="{ 'selected': opt === this.end }"
+                                t-att-aria-selected="opt === this.end ? 'true' : 'false'"
                                 role="option"
                                 t-on-click="() => this.selectEnd(opt)">
-                                <t t-out="fmtTime12(opt)"/>
+                                <t t-out="this.fmtTime12(opt)"/>
                             </div>
                         </t>
                     </div>

@@ -70,11 +70,11 @@ export class BizishipHoursPicker extends Component {
     props = useProps({ ...standardFieldProps });
     rootRef = signal.ref();
     listRef = signal.ref();
+    allDays = BIZISHIP_DAYS;
+    timeOptions = BIZISHIP_TIME_OPTIONS;
+    fmtTime12 = fmtTime12;
 
     setup() {
-        this.allDays = BIZISHIP_DAYS;
-        this.timeOptions = BIZISHIP_TIME_OPTIONS;
-        this.fmtTime12 = fmtTime12;
         this.state = proxy({ openPicker: null }); // 'start' | 'end' | null
 
         // Close on outside click or Escape.

@@ -1,6 +1,6 @@
 /** @odoo-module **/
 
-import { Component, useState, onWillStart } from "@odoo/owl";
+import { Component, useState, onWillStart, useProps } from "@odoo/owl";
 import { Dialog } from "@web/core/dialog/dialog";
 import { registry } from "@web/core/registry";
 import { useService } from "@web/core/utils/hooks";
@@ -9,10 +9,10 @@ import { standardFieldProps } from "@web/views/fields/standard_field_props";
 class NmfcFavoritesDialog extends Component {
     static template = "biziship.NmfcFavoritesDialog";
     static components = { Dialog };
-    static props = {
+    props = useProps({
         record: { type: Object },
         close: { type: Function },
-    };
+    });
 
     setup() {
         this.orm = useService("orm");
@@ -134,7 +134,7 @@ class NmfcFavoritesDialog extends Component {
 
 class BizishipNmfcStarWidget extends Component {
     static template = "biziship.NmfcStarWidget";
-    static props = { ...standardFieldProps };
+    props = useProps({ ...standardFieldProps });
 
     setup() {
         this.dialog = useService("dialog");

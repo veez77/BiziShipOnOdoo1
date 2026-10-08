@@ -14,7 +14,7 @@
  * and two custom 30-minute time dropdowns ("8:00 AM" to "5:00 PM").
  */
 
-import { Component, useState, useRef, useEffect, useExternalListener } from "@odoo/owl";
+import { Component, useState, useRef, useEffect, useExternalListener, useProps } from "@odoo/owl";
 import { registry } from "@web/core/registry";
 import { standardFieldProps } from "@web/views/fields/standard_field_props";
 
@@ -67,7 +67,7 @@ function fmtDaysSummary(days) {
 
 export class BizishipHoursPicker extends Component {
     static template = "biziship.HoursPicker";
-    static props = { ...standardFieldProps };
+    props = useProps({ ...standardFieldProps });
 
     setup() {
         this.allDays = BIZISHIP_DAYS;

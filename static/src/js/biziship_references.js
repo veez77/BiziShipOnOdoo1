@@ -17,7 +17,7 @@
  * (which previously wiped REF1 when adding a second reference).
  */
 
-import { Component, useRef } from "@odoo/owl";
+import { Component, useRef, useProps } from "@odoo/owl";
 import { registry } from "@web/core/registry";
 import { standardFieldProps } from "@web/views/fields/standard_field_props";
 
@@ -26,7 +26,7 @@ const MAX_LEN = 64;
 
 export class BizishipReferences extends Component {
     static template = "biziship.References";
-    static props = { ...standardFieldProps };
+    props = useProps({ ...standardFieldProps });
 
     setup() {
         this.rootRef = useRef("root");

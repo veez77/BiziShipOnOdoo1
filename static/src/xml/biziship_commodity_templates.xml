@@ -16,7 +16,7 @@
             <ul t-if="state.showDropdown" class="dropdown-menu show biziship-autocomplete-dropdown" t-ref="dropdown">
                 <li t-foreach="state.suggestions" t-as="suggestion" t-key="suggestion">
                     <a class="dropdown-item" href="#" t-on-click.prevent="() => this._onSuggestionClick(suggestion)">
-                        <t t-esc="suggestion"/>
+                        <t t-out="suggestion"/>
                     </a>
                 </li>
             </ul>
@@ -24,7 +24,7 @@
             <!-- Suggestion UI: Blue Information Box -->
             <div t-if="props.record.data.nmfc_suggested_code &amp;&amp; props.record.data.nmfc_suggestion_label !== 'low' &amp;&amp; props.record.data.nmfc_applied_desc !== props.record.data.cargo_desc" class="biziship-nmfc-suggestion-box">
                 <div class="biziship-nmfc-suggestion-header">
-                    <span class="biziship-nmfc-suggested-label">AI Suggested: <t t-esc="props.record.data.nmfc_suggested_code"/></span>
+                    <span class="biziship-nmfc-suggested-label">AI Suggested: <t t-out="props.record.data.nmfc_suggested_code"/></span>
                     
                     <span t-if="props.record.data.nmfc_suggestion_label === 'high'" class="biziship-badge-high">High confidence</span>
                     <span t-if="props.record.data.nmfc_suggestion_label === 'medium'" class="biziship-badge-medium">Medium confidence</span>
@@ -36,7 +36,7 @@
                     <button class="biziship-nmfc-btn-dismiss" t-on-click="_dismissSuggestion">Dismiss</button>
                 </div>
                 <div class="biziship-nmfc-rationale">
-                    <t t-esc="props.record.data.nmfc_suggestion_rationale"/>
+                    <t t-out="props.record.data.nmfc_suggestion_rationale"/>
                 </div>
             </div>
 

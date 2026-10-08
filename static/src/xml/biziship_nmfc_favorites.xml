@@ -45,10 +45,10 @@
                         <div class="d-flex align-items-center justify-content-between py-2 border-bottom">
                             <div class="flex-grow-1 me-3">
                                 <div class="fw-semibold text-primary" style="font-size: 0.95em;">
-                                    <t t-esc="fav.description"/>
+                                    <t t-out="fav.description"/>
                                 </div>
                                 <div class="text-muted" style="font-family: monospace; font-size: 0.82em;">
-                                    <t t-esc="fav.nmfc_code"/>
+                                    <t t-out="fav.nmfc_code"/>
                                 </div>
                             </div>
                             <div class="d-flex align-items-center gap-2 flex-shrink-0">
@@ -111,7 +111,7 @@
                 <t t-if="state.addError">
                     <div class="text-danger mb-2" style="font-size: 0.85em;">
                         <i class="fa fa-exclamation-circle me-1"/>
-                        <t t-esc="state.addError"/>
+                        <t t-out="state.addError"/>
                     </div>
                 </t>
                 <button

@@ -24,7 +24,7 @@
                         <t t-foreach="state.defaults" t-as="email" t-key="email">
                             <span class="biziship-chip-readonly">
                                 <i class="fa fa-envelope-o me-1"/>
-                                <t t-esc="email"/>
+                                <t t-out="email"/>
                             </span>
                         </t>
                     </div>
@@ -37,8 +37,8 @@
                 <div class="biziship-sp-row" t-att-class="{ 'excluded': !notifySalesperson }">
                     <i class="fa fa-user-circle-o biziship-sp-avatar"/>
                     <div class="biziship-sp-info">
-                        <span class="biziship-sp-name" t-esc="salespersonName"/>
-                        <span class="biziship-sp-email" t-esc="salespersonEmail"/>
+                        <span class="biziship-sp-name" t-out="salespersonName"/>
+                        <span class="biziship-sp-email" t-out="salespersonEmail"/>
                     </div>
                     <label class="biziship-switch" t-att-title="notifySalesperson ? 'Salesperson will be notified' : 'Salesperson excluded'">
                         <input type="checkbox" t-att-checked="notifySalesperson"
@@ -55,7 +55,7 @@
                 <div class="biziship-chip-input" t-att-class="{ 'is-invalid': state.invalid }" t-on-click="() => this._focusInput()">
                     <t t-foreach="chips" t-as="chip" t-key="chip_index">
                         <span class="biziship-chip">
-                            <t t-esc="chip"/>
+                            <t t-out="chip"/>
                             <button type="button" class="biziship-chip-x"
                                     t-on-click.stop="() => this.removeChip(chip_index)"
                                     t-att-aria-label="'Remove ' + chip">×</button>
@@ -72,8 +72,8 @@
                         t-on-paste="onPaste"
                         t-on-blur="onBlur"/>
                 </div>
-                <div t-if="state.error" class="biziship-notif-error" t-esc="state.error"/>
-                <div t-else="" class="biziship-notif-help2" t-esc="helperText"/>
+                <div t-if="state.error" class="biziship-notif-error" t-out="state.error"/>
+                <div t-else="" class="biziship-notif-help2" t-out="helperText"/>
             </div>
 
         </div>

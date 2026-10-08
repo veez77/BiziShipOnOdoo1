@@ -6,8 +6,8 @@
 
             <!-- Label row: title + live summary -->
             <div class="biziship-hp-header">
-                <span class="biziship-hp-title" t-esc="title"/>
-                <span class="biziship-hp-summary" t-esc="summary"/>
+                <span class="biziship-hp-title" t-out="title"/>
+                <span class="biziship-hp-summary" t-out="summary"/>
             </div>
 
             <!-- Day-of-week pills -->
@@ -21,7 +21,7 @@
                         t-att-aria-label="day.full"
                         t-att-title="day.full"
                         t-on-click="() => this.toggleDay(day.key)">
-                        <t t-esc="day.short"/>
+                        <t t-out="day.short"/>
                     </button>
                 </t>
             </div>
@@ -37,7 +37,7 @@
                         t-att-aria-expanded="state.openPicker === 'start' ? 'true' : 'false'"
                         t-on-click="() => this.togglePicker('start')">
                         <i class="fa fa-clock-o biziship-hp-clock"/>
-                        <span t-esc="startDisplay"/>
+                        <span t-out="startDisplay"/>
                         <i class="fa fa-chevron-down biziship-hp-chev"/>
                     </button>
                     <div t-if="state.openPicker === 'start'" class="biziship-hp-dropdown" role="listbox" t-ref="list">
@@ -48,7 +48,7 @@
                                 t-att-aria-selected="opt === start ? 'true' : 'false'"
                                 role="option"
                                 t-on-click="() => this.selectStart(opt)">
-                                <t t-esc="fmtTime12(opt)"/>
+                                <t t-out="fmtTime12(opt)"/>
                             </div>
                         </t>
                     </div>
@@ -65,7 +65,7 @@
                         t-att-aria-expanded="state.openPicker === 'end' ? 'true' : 'false'"
                         t-on-click="() => this.togglePicker('end')">
                         <i class="fa fa-clock-o biziship-hp-clock"/>
-                        <span t-esc="endDisplay"/>
+                        <span t-out="endDisplay"/>
                         <i class="fa fa-chevron-down biziship-hp-chev"/>
                     </button>
                     <div t-if="state.openPicker === 'end'" class="biziship-hp-dropdown" role="listbox" t-ref="list">
@@ -76,7 +76,7 @@
                                 t-att-aria-selected="opt === end ? 'true' : 'false'"
                                 role="option"
                                 t-on-click="() => this.selectEnd(opt)">
-                                <t t-esc="fmtTime12(opt)"/>
+                                <t t-out="fmtTime12(opt)"/>
                             </div>
                         </t>
                     </div>

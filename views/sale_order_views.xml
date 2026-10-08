@@ -626,7 +626,7 @@
                         </div>
                     </group>
                     <field name="biziship_quote_ids" nolabel="1">
-                        <tree string="Quotes" create="false" edit="false" class="biziship-quotes-tree" decoration-info="is_recommended and not is_selected">
+                        <list string="Quotes" create="false" edit="false" class="biziship-quotes-tree" decoration-info="is_recommended and not is_selected">
                             <field name="is_selected" column_invisible="True"/>
                             <field name="is_recommended" column_invisible="True"/>
                             <button name="action_select_quote_toggle" type="object" icon="fa-lg fa-toggle-on text-success" invisible="not is_selected" class="btn btn-link p-0" title="Selected" aria-label="Selected"/>
@@ -643,7 +643,7 @@
                             <field name="currency" column_invisible="True" readonly="1"/>
                             <field name="currency_id" column_invisible="True"/>
                             <field name="quote_id_ref" readonly="1"/>
-                        </tree>
+                        </list>
                         <form string="Quote Details" create="false" edit="false">
                             <sheet>
                                 <div class="d-flex align-items-center justify-content-between mb-3">
@@ -691,7 +691,7 @@
                                 <notebook>
                                     <page string="Cargo Details" name="cargo_details">
                                         <field name="biziship_cargo_line_ids" nolabel="1" create="false" delete="false">
-                                            <tree>
+                                            <list>
                                                 <field name="pieces" string="UNITS" readonly="1"/>
                                                 <field name="packaging_type" string="TYPE" readonly="1"/>
                                                 <field name="weight" string="WEIGHT" readonly="1"/>
@@ -703,7 +703,7 @@
                                                 <field name="cargo_desc" string="DESCRIPTION" readonly="1"/>
                                                 <field name="computed_freight_class" string="CLASS" readonly="1"/>
                                                 <field name="nmfc" string="NMFC" optional="show"/>
-                                            </tree>
+                                            </list>
                                         </field>
                                         <group col="6" class="mt-2">
                                             <group colspan="4"/>

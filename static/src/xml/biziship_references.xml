@@ -5,7 +5,7 @@
         <div class="biziship-refs" t-ref="root">
             <t t-foreach="references" t-as="ref" t-key="ref_index">
                 <div class="biziship-ref-row">
-                    <span class="biziship-ref-badge" t-esc="badge(ref_index)"/>
+                    <span class="biziship-ref-badge" t-out="badge(ref_index)"/>
                     <input
                         type="text"
                         class="biziship-ref-input"

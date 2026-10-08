@@ -50,19 +50,19 @@
                                         </div>
                                         <div class="biziship-card-content">
                                             <div class="biziship-card-title">
-                                                <t t-esc="record.name.value"/>
+                                                <t t-out="record.name.value"/>
                                             </div>
                                             <div class="biziship-card-summary">
                                                 <i class="fa fa-truck me-2" title="Truck Icon"/> 
-                                                <t t-esc="record.origin_info.value"/>
+                                                <t t-out="record.origin_info.value"/>
                                             </div>
                                             <div class="biziship-card-summary" style="font-weight: 500;">
                                                 <i class="fa fa-cube me-2" title="Cargo Icon"/>
-                                                <t t-esc="record.summary_info.value"/>
+                                                <t t-out="record.summary_info.value"/>
                                             </div>
                                             <div class="biziship-card-creator mt-1">
                                                 <i class="fa fa-user-circle-o me-2" title="User Icon"/>
-                                                <t t-esc="record.creator_info.value"/>
+                                                <t t-out="record.creator_info.value"/>
                                             </div>
                                         </div>
                                         <div>

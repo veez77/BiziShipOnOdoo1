@@ -550,8 +550,8 @@ class SaleOrder(models.Model):
         if partner.parent_id:
             self.biziship_dest_company = partner.commercial_company_name or partner.parent_id.name or partner.name
             self.biziship_dest_contact_name = partner.name
-        elif partner.company_name:
-            self.biziship_dest_company = partner.company_name
+        elif partner.parent_name:
+            self.biziship_dest_company = partner.parent_name
             self.biziship_dest_contact_name = partner.name
         else:
             self.biziship_dest_company = partner.name
@@ -633,7 +633,7 @@ class SaleOrder(models.Model):
 
     @api.depends('partner_shipping_id', 'partner_shipping_id.name',
                  'partner_shipping_id.parent_id', 'partner_shipping_id.commercial_company_name',
-                 'partner_shipping_id.company_name')
+                 'partner_shipping_id.parent_name')
     def _compute_biziship_dest_company(self):
         for order in self:
             partner = order.partner_shipping_id
@@ -641,8 +641,8 @@ class SaleOrder(models.Model):
                 continue
             if partner.parent_id:
                 order.biziship_dest_company = partner.commercial_company_name or partner.parent_id.name or partner.name
-            elif partner.company_name:
-                order.biziship_dest_company = partner.company_name
+            elif partner.parent_name:
+                order.biziship_dest_company = partner.parent_name
             else:
                 order.biziship_dest_company = partner.name
 
@@ -1002,8 +1002,8 @@ class SaleOrder(models.Model):
             if partner.parent_id:
                 dest_company = partner.commercial_company_name or partner.parent_id.name or partner.name
                 dest_contact = partner.name
-            elif partner.company_name:
-                dest_company = partner.company_name
+            elif partner.parent_name:
+                dest_company = partner.parent_name
                 dest_contact = partner.name
             else:
                 dest_company = partner.name

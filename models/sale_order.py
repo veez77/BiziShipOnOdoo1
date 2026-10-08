@@ -421,7 +421,7 @@ class SaleOrder(models.Model):
 
     @api.model
     def biziship_get_maps_key(self):
-        return self.env['ir.config_parameter'].sudo().get_param('biziship.google_maps_api_key', '') or ''
+        return self.env['ir.config_parameter'].sudo().get_str('biziship.google_maps_api_key', '') or ''
 
     @api.model
     def biziship_resolve_address(self, order_id, street, city, state_code, zip_code, country_code, prefix):
@@ -490,7 +490,7 @@ class SaleOrder(models.Model):
     @api.depends('biziship_origin_zip', 'biziship_dest_zip')
     def _compute_route_miles(self):
         import requests as req
-        api_key = self.env['ir.config_parameter'].sudo().get_param('biziship.google_maps_api_key')
+        api_key = self.env['ir.config_parameter'].sudo().get_str('biziship.google_maps_api_key')
         for order in self:
             try:
                 origin_zip = (order.biziship_origin_zip or '').strip()

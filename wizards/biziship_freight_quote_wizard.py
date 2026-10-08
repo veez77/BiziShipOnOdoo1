@@ -207,7 +207,7 @@ class BizishipFreightQuoteWizard(models.TransientModel):
                 raise UserError(_("Cargo Line #%s has a missing or zero value. All cargo lines must have a Weight, Length, Width, and Height greater than 0.") % idx)
         
         email2quote_api_url = get_biziship_api_url(self.env)
-        erp_api_key = self.env['ir.config_parameter'].sudo().get_param('biziship.erp_api_key', '')
+        erp_api_key = self.env['ir.config_parameter'].sudo().get_str('biziship.erp_api_key', '')
         
         api_url = f"{email2quote_api_url.rstrip('/')}/erp/quote"
         headers = {

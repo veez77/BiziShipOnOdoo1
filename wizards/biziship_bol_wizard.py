@@ -46,7 +46,7 @@ class BizishipBolImportWizard(models.TransientModel):
         # 2. Send to Local API (Email2Quote)
         email2quote_api_url = get_biziship_api_url(self.env)
         local_api_bol_url = f"{email2quote_api_url.rstrip('/')}/erp/bol/extract"
-        erp_api_key = self.env['ir.config_parameter'].sudo().get_param('biziship.erp_api_key', '')
+        erp_api_key = self.env['ir.config_parameter'].sudo().get_str('biziship.erp_api_key', '')
         api_key_header = {
             "X-ERP-API-Key": erp_api_key,
             "X-User-Email": (self.env.user.biziship_email if self.env.user.biziship_token and self.env.user.biziship_email else self.env.user.email) or "",

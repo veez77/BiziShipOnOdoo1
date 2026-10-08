@@ -57,7 +57,7 @@ def get_biziship_api_url(env=None):
     3. The published default endpoint (BIZISHIP_DEFAULT_API_URL).
     """
     if env:
-        url = env['ir.config_parameter'].sudo().get_param('biziship.api_url')
+        url = env['ir.config_parameter'].sudo().get_str('biziship.api_url')
         if url:
             return url.rstrip('/')
 
@@ -116,7 +116,7 @@ def get_erp_api_key(env=None):
 
     # 1. System Parameters (Best for UI management)
     if env:
-        key = env['ir.config_parameter'].sudo().get_param('biziship.erp_api_key')
+        key = env['ir.config_parameter'].sudo().get_str('biziship.erp_api_key')
 
     # 2. Odoo Config File (odoo.conf)
     if not key:

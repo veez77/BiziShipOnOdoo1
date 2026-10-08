@@ -9,11 +9,11 @@ class BiziShipMapController(http.Controller):
         if not order.exists():
             return "Order not found"
             
-        api_key = request.env['ir.config_parameter'].sudo().get_param('biziship.google_maps_api_key')
+        api_key = request.env['ir.config_parameter'].sudo().get_str('biziship.google_maps_api_key')
         if not api_key:
             api_key = order._fetch_gateway_maps_key()
             if api_key:
-                request.env['ir.config_parameter'].sudo().set_param('biziship.google_maps_api_key', api_key)
+                request.env['ir.config_parameter'].sudo().set_str('biziship.google_maps_api_key', api_key)
         
         if not api_key:
             return "Google Maps API Key not available."

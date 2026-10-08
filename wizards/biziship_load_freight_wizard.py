@@ -432,7 +432,7 @@ class BizishipLoadFreightWizard(models.TransientModel):
             # ── Smarty Residential Detection (run automatically after load) ──
             try:
                 smarty_url = f"{api_utils.get_biziship_api_url(self.env)}/erp/validate-address"
-                erp_api_key = self.env['ir.config_parameter'].sudo().get_param('biziship.erp_api_key', '')
+                erp_api_key = self.env['ir.config_parameter'].sudo().get_str('biziship.erp_api_key', '')
                 smarty_headers = {"X-ERP-API-Key": erp_api_key}
 
                 # Origin check

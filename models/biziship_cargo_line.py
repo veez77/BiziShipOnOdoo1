@@ -148,7 +148,7 @@ class BizishipSaleCargoLine(models.Model):
         _logger = logging.getLogger(__name__)
 
         api_url = f"{api_utils.get_biziship_api_url(self.env).rstrip('/')}/erp/nmfc/suggest"
-        erp_api_key = self.env['ir.config_parameter'].sudo().get_param('biziship.erp_api_key', '')
+        erp_api_key = self.env['ir.config_parameter'].sudo().get_str('biziship.erp_api_key', '')
         
         headers = {
             "X-ERP-API-Key": erp_api_key,
@@ -308,7 +308,7 @@ class BizishipSaleCargoLine(models.Model):
         from odoo.addons.biziship import api_utils
 
         base_url = api_utils.get_biziship_api_url(self.env).rstrip('/')
-        erp_api_key = self.env['ir.config_parameter'].sudo().get_param('biziship.erp_api_key', '')
+        erp_api_key = self.env['ir.config_parameter'].sudo().get_str('biziship.erp_api_key', '')
         user = self.env.user
         user_email = (user.biziship_email if user.biziship_token and user.biziship_email else user.email) or ""
         headers = {
@@ -337,7 +337,7 @@ class BizishipSaleCargoLine(models.Model):
             raise UserError(_("Both description and NMFC code are required."))
 
         base_url = api_utils.get_biziship_api_url(self.env).rstrip('/')
-        erp_api_key = self.env['ir.config_parameter'].sudo().get_param('biziship.erp_api_key', '')
+        erp_api_key = self.env['ir.config_parameter'].sudo().get_str('biziship.erp_api_key', '')
         user = self.env.user
         user_email = (user.biziship_email if user.biziship_token and user.biziship_email else user.email) or ""
         headers = {
@@ -375,7 +375,7 @@ class BizishipSaleCargoLine(models.Model):
         from odoo.addons.biziship import api_utils
 
         base_url = api_utils.get_biziship_api_url(self.env).rstrip('/')
-        erp_api_key = self.env['ir.config_parameter'].sudo().get_param('biziship.erp_api_key', '')
+        erp_api_key = self.env['ir.config_parameter'].sudo().get_str('biziship.erp_api_key', '')
         user = self.env.user
         user_email = (user.biziship_email if user.biziship_token and user.biziship_email else user.email) or ""
         headers = {

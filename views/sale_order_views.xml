@@ -211,7 +211,7 @@
                                 <templates>
                                      <t t-name="card">
                                         <div class="biziship-cargo-card oe_kanban_global_click">
-                                            <a type="delete" class="biziship-cargo-delete" title="Delete Cargo Item"><i class="fa fa-trash-o" title="Delete Icon"/></a>
+                                            <a type="delete" class="biziship-cargo-delete" title="Delete Cargo Item"><i class="oi oi-filled" data-icon="delete" title="Delete Icon"/></a>
                                             
                                             <div class="biziship-cargo-item-label">
                                                 <field name="display_name" class="fw-bold text-primary"/>

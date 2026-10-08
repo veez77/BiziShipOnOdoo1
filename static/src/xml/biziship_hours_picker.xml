@@ -36,9 +36,9 @@
                         aria-haspopup="listbox"
                         t-att-aria-expanded="this.state.openPicker === 'start' ? 'true' : 'false'"
                         t-on-click="() => this.togglePicker('start')">
-                        <i class="fa fa-clock-o biziship-hp-clock"/>
+                        <i class="oi oi-filled biziship-hp-clock" data-icon="schedule"/>
                         <span t-out="this.startDisplay"/>
-                        <i class="fa fa-chevron-down biziship-hp-chev"/>
+                        <i class="oi oi-filled biziship-hp-chev" data-icon="expand_more"/>
                     </button>
                     <div t-if="this.state.openPicker === 'start'" class="biziship-hp-dropdown" role="listbox" t-ref="this.listRef">
                         <t t-foreach="this.timeOptions" t-as="opt" t-key="opt">
@@ -64,9 +64,9 @@
                         aria-haspopup="listbox"
                         t-att-aria-expanded="this.state.openPicker === 'end' ? 'true' : 'false'"
                         t-on-click="() => this.togglePicker('end')">
-                        <i class="fa fa-clock-o biziship-hp-clock"/>
+                        <i class="oi oi-filled biziship-hp-clock" data-icon="schedule"/>
                         <span t-out="this.endDisplay"/>
-                        <i class="fa fa-chevron-down biziship-hp-chev"/>
+                        <i class="oi oi-filled biziship-hp-chev" data-icon="expand_more"/>
                     </button>
                     <div t-if="this.state.openPicker === 'end'" class="biziship-hp-dropdown" role="listbox" t-ref="this.listRef">
                         <t t-foreach="this.endOptions" t-as="opt" t-key="opt">

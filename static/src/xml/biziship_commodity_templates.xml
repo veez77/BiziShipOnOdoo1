@@ -42,14 +42,14 @@
 
             <!-- Success: NMFC Applied -->
             <div t-if="this.props.record.data.nmfc &amp;&amp; this.props.record.data.nmfc_applied_desc === this.props.record.data.cargo_desc" class="mt-1 biziship-nmfc-applied-text d-flex align-items-center">
-                <i class="fa fa-check me-1"/>
+                <i class="oi oi-filled me-1" data-icon="check"/>
                 <span>NMFC applied from suggestion</span>
                 <button class="biziship-nmfc-btn-clear" t-on-click="this._clearAppliedNMFC">Clear</button>
             </div>
 
             <!-- No Results / Low Confidence Message -->
             <div t-if="this.props.record.data.nmfc_suggestion_label === 'low' &amp;&amp; !this.props.record.data.nmfc" class="mt-1 biziship-nmfc-warning-text d-flex align-items-center">
-                <i class="fa fa-info-circle me-1"/>
+                <i class="oi oi-filled me-1" data-icon="info"/>
                 <span>A more specific commodity description will improve NMFC suggestion.</span>
             </div>
         </div>

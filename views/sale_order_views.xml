@@ -67,14 +67,14 @@
                     <field name="biziship_dest_zip_invalid" invisible="1"/>
                     <div class="alert alert-info py-1 mb-2 d-flex justify-content-between align-items-center" role="status" style="border-radius: 4px; border-left: 4px solid #00b14f;" invisible="not biziship_is_connected">
                         <div class="d-flex align-items-center">
-                            <i class="fa fa-user-circle text-primary me-2" style="font-size: 1.1rem;"/>
+                            <i class="oi oi-filled text-primary me-2" data-icon="account_circle" style="font-size: 1.1rem;"/>
                             <span>Logged in biziShip.ai as: <field name="biziship_connected_email_display" class="fw-bold ms-1"/></span>
                         </div>
                         <div class="d-flex align-items-center gap-2">
-                            <button name="action_biziship_refresh_profile_rpc" type="object" icon="fa-refresh" class="btn btn-link p-0 text-muted" title="Sync your BiziShip account details (name, environment) without re-authenticating" style="font-size: 0.95rem; line-height: 1;"/>
+                            <button name="action_biziship_refresh_profile_rpc" type="object" icon="refresh" class="btn btn-link p-0 text-muted" title="Sync your BiziShip account details (name, environment) without re-authenticating" style="font-size: 0.95rem; line-height: 1;"/>
                             <span class="badge rounded-pill bg-success-light text-success fw-bold px-3" style="font-size: 11px; border: 1px solid #00b14f;">ACCOUNT CONNECTED</span>
-                            <button name="%(action_biziship_auth_wizard)d" type="action" icon="fa-sign-in" class="btn btn-link p-0 text-muted" style="font-size: 0.75rem; opacity: 0.35;" title="Sign in again with a different email or refresh your session. You will receive a one-time PIN by email."/>
-                            <button name="%(action_biziship_logout_wizard)d" type="action" icon="fa-sign-out" class="btn btn-link p-0 text-muted" style="font-size: 0.75rem; opacity: 0.35;" title="Sign out from biziShip.ai"/>
+                            <button name="%(action_biziship_auth_wizard)d" type="action" icon="login" class="btn btn-link p-0 text-muted" style="font-size: 0.75rem; opacity: 0.35;" title="Sign in again with a different email or refresh your session. You will receive a one-time PIN by email."/>
+                            <button name="%(action_biziship_logout_wizard)d" type="action" icon="logout" class="btn btn-link p-0 text-muted" style="font-size: 0.75rem; opacity: 0.35;" title="Sign out from biziShip.ai"/>
                         </div>
                     </div>
                     <div class="d-flex align-items-center gap-2 mb-2" invisible="not biziship_is_connected">
@@ -87,17 +87,17 @@
                         </div>
                     </div>
                     <div class="alert alert-warning py-1 mb-2" role="alert" invisible="biziship_is_connected">
-                        <i class="fa fa-exclamation-triangle me-1" title="Warning"/> 
+                        <i class="oi oi-filled me-1" data-icon="warning" title="Warning"/> 
                         <span>biziShip.ai account not connected. Please <button name="%(action_biziship_auth_wizard)d" string="Connect" type="action" class="btn btn-link p-0 align-baseline"/> to enable all features.</span>
                     </div>
                     <group string="Logistics Details">
                             <div class="d-flex align-items-center mb-2" colspan="2">
-                                <button name="action_biziship_load_from_pool" string="Load Saved Freight" type="object" class="biziship-btn-pool-action me-2" icon="fa-folder-open-o"/>
-                                <button name="action_biziship_save_to_pool" string="Save to My Pool" type="object" class="biziship-btn-pool-action" icon="fa-save"/>
+                                <button name="action_biziship_load_from_pool" string="Load Saved Freight" type="object" class="biziship-btn-pool-action me-2" icon="folder_open"/>
+                                <button name="action_biziship_save_to_pool" string="Save to My Pool" type="object" class="biziship-btn-pool-action" icon="save"/>
                             </div>
                             <label for="biziship_po_number" string="PO Number"/>
                             <div class="d-flex align-items-center gap-2">
-                                <button name="action_sync_po_from_destination" type="object" icon="fa-refresh" string="" class="btn btn-sm btn-link text-primary p-0" title="Copy from Destination PO"/>
+                                <button name="action_sync_po_from_destination" type="object" icon="refresh" string="" class="btn btn-sm btn-link text-primary p-0" title="Copy from Destination PO"/>
                                 <field name="biziship_po_number" nolabel="1" class="flex-grow-1"/>
                             </div>
                             <label for="biziship_references_json" string="Reference Number"/>
@@ -109,8 +109,8 @@
                             <div colspan="2" class="d-flex align-items-center justify-content-between o_horizontal_separator mb-2 mt-0">
                                 <span class="fw-bold">ORIGIN &amp; PICKUP</span>
                                 <div class="d-flex align-items-center gap-4">
-                                    <button name="action_open_origin_address_history" string="Previous Addresses" type="object" class="btn btn-sm btn-link text-primary p-0" icon="fa-history"/>
-                                    <button name="action_biziship_refresh_origin_from_warehouse" string="Copy from Warehouse" type="object" class="btn btn-sm btn-link text-primary p-0" icon="fa-copy"/>
+                                    <button name="action_open_origin_address_history" string="Previous Addresses" type="object" class="btn btn-sm btn-link text-primary p-0" icon="history"/>
+                                    <button name="action_biziship_refresh_origin_from_warehouse" string="Copy from Warehouse" type="object" class="btn btn-sm btn-link text-primary p-0" icon="content_copy"/>
                                 </div>
                             </div>
                             <field name="biziship_origin_company" nolabel="1" colspan="2" placeholder="Origin Company Name"/>
@@ -139,11 +139,11 @@
                                 <field name="biziship_origin_limited_access"/>
                             </group>
                             <div colspan="2" class="alert alert-warning py-1 mt-1 mb-2 d-flex align-items-center" role="alert" invisible="not biziship_origin_residential_warning or biziship_origin_residential" style="font-size: 13px;">
-                                <i class="fa fa-exclamation-triangle me-2" title="Warning"></i>
+                                <i class="oi oi-filled me-2" data-icon="warning" title="Warning"></i>
                                 <span>This address appears to be residential. Consider checking "Residential Pickup/Delivery".</span>
                             </div>
                             <div colspan="2" class="alert alert-warning py-1 mt-1 mb-2 d-flex align-items-center" role="alert" invisible="not biziship_origin_address_invalid" style="font-size: 13px;">
-                                <i class="fa fa-exclamation-triangle me-2" title="Warning"></i>
+                                <i class="oi oi-filled me-2" data-icon="warning" title="Warning"></i>
                                 <span>This pickup address could not be validated. Please verify it is correct before requesting quotes.</span>
                             </div>
                             <div class="d-flex justify-content-between align-items-center mt-2 w-100" colspan="2">
@@ -155,8 +155,8 @@
                             <div colspan="2" class="d-flex align-items-center justify-content-between o_horizontal_separator mb-2 mt-0">
                                 <span class="fw-bold">DESTINATION</span>
                                 <div class="d-flex align-items-center gap-4">
-                                    <button name="action_open_dest_address_history" string="Previous Addresses" type="object" class="btn btn-sm btn-link text-primary p-0" icon="fa-history"/>
-                                    <button name="action_biziship_copy_customer_to_dest" string="Copy Customer Details" type="object" class="btn btn-sm btn-link text-primary p-0" icon="fa-copy" invisible="not partner_id"/>
+                                    <button name="action_open_dest_address_history" string="Previous Addresses" type="object" class="btn btn-sm btn-link text-primary p-0" icon="history"/>
+                                    <button name="action_biziship_copy_customer_to_dest" string="Copy Customer Details" type="object" class="btn btn-sm btn-link text-primary p-0" icon="content_copy" invisible="not partner_id"/>
                                 </div>
                             </div>
                             <field name="biziship_dest_company" nolabel="1" colspan="2" placeholder="Destination Company Name"/>
@@ -188,11 +188,11 @@
                                 <field name="biziship_dest_hazmat" colspan="2"/>
                             </group>
                             <div colspan="2" class="alert alert-warning py-1 mt-1 mb-2 d-flex align-items-center" role="alert" invisible="not biziship_dest_residential_warning or biziship_dest_residential" style="font-size: 13px;">
-                                <i class="fa fa-exclamation-triangle me-2" title="Warning"></i>
+                                <i class="oi oi-filled me-2" data-icon="warning" title="Warning"></i>
                                 <span>This address appears to be residential. Consider checking "Residential Pickup/Delivery".</span>
                             </div>
                             <div colspan="2" class="alert alert-warning py-1 mt-1 mb-2 d-flex align-items-center" role="alert" invisible="not biziship_dest_address_invalid" style="font-size: 13px;">
-                                <i class="fa fa-exclamation-triangle me-2" title="Warning"></i>
+                                <i class="oi oi-filled me-2" data-icon="warning" title="Warning"></i>
                                 <span>This destination address could not be validated. Please verify it is correct before requesting quotes.</span>
                             </div>
                             <div class="d-flex justify-content-between align-items-center mt-2 w-100" colspan="2">
@@ -355,11 +355,11 @@
                                                 <field name="cargo_desc" placeholder="Commodity description (e.g. Steel bearings, hydraulic pump)" widget="biziship_commodity"/>
                                             </div>
                                             <div class="biziship-cargo-nmfc-box">
-                                                <i class="fa fa-barcode me-2 text-muted" title="NMFC Code Icon"/>
+                                                <i class="oi oi-filled me-2 text-muted" data-icon="barcode" title="NMFC Code Icon"/>
                                                 <field name="nmfc" placeholder="NMFC Code"/>
                                                 <field name="biziship_nmfc_fav_trigger" widget="biziship_nmfc_star" nolabel="1"/>
                                                 <button name="action_biziship_nmfc_suggest" type="object" class="btn btn-sm btn-link p-0 ms-1" title="AI Suggest NMFC">
-                                                    <i class="fa fa-magic text-primary" style="font-size: 1.1em;"/>
+                                                    <i class="oi oi-filled text-primary" data-icon="auto_fix_high" style="font-size: 1.1em;"/>
                                                 </button>
                                             </div>
                                         </div>
@@ -478,7 +478,7 @@
                         </group>
                         
 
-                        <button name="action_biziship_fetch_live_quotes" string="Get Live Quotes" type="object" class="biziship-btn-get-quotes" icon="fa-bolt" invisible="state not in ['draft', 'sent', 'sale']"/>
+                        <button name="action_biziship_fetch_live_quotes" string="Get Live Quotes" type="object" class="biziship-btn-get-quotes" icon="bolt" invisible="state not in ['draft', 'sent', 'sale']"/>
                     </div>
                 </page>
                 <page string="LTL Freight Quotes" name="biziship_freight_quotes" active="False">
@@ -529,21 +529,21 @@
 
                     <div class="alert alert-info py-1 mb-2 d-flex justify-content-between align-items-center" role="status" style="border-radius: 4px; border-left: 4px solid #00b14f;" invisible="not biziship_is_connected">
                         <div class="d-flex align-items-center">
-                            <i class="fa fa-user-circle text-primary me-2" style="font-size: 1.1rem;"/>
+                            <i class="oi oi-filled text-primary me-2" data-icon="account_circle" style="font-size: 1.1rem;"/>
                             <span>Logged in biziShip.ai as: <field name="biziship_connected_email_display" class="fw-bold ms-1"/></span>
                         </div>
                         <div class="d-flex align-items-center gap-2">
-                            <button name="action_biziship_refresh_profile_rpc" type="object" icon="fa-refresh" class="btn btn-link p-0 text-muted" title="Sync your BiziShip account details (name, environment) without re-authenticating" style="font-size: 0.95rem; line-height: 1;"/>
+                            <button name="action_biziship_refresh_profile_rpc" type="object" icon="refresh" class="btn btn-link p-0 text-muted" title="Sync your BiziShip account details (name, environment) without re-authenticating" style="font-size: 0.95rem; line-height: 1;"/>
                             <span class="badge rounded-pill bg-success-light text-success fw-bold px-3" style="font-size: 11px; border: 1px solid #00b14f;">ACCOUNT CONNECTED</span>
-                            <button name="%(action_biziship_auth_wizard)d" type="action" icon="fa-sign-in" class="btn btn-link p-0 text-muted" style="font-size: 0.75rem; opacity: 0.35;" title="Sign in again with a different email or refresh your session. You will receive a one-time PIN by email."/>
-                            <button name="%(action_biziship_logout_wizard)d" type="action" icon="fa-sign-out" class="btn btn-link p-0 text-muted" style="font-size: 0.75rem; opacity: 0.35;" title="Sign out from biziShip.ai"/>
+                            <button name="%(action_biziship_auth_wizard)d" type="action" icon="login" class="btn btn-link p-0 text-muted" style="font-size: 0.75rem; opacity: 0.35;" title="Sign in again with a different email or refresh your session. You will receive a one-time PIN by email."/>
+                            <button name="%(action_biziship_logout_wizard)d" type="action" icon="logout" class="btn btn-link p-0 text-muted" style="font-size: 0.75rem; opacity: 0.35;" title="Sign out from biziShip.ai"/>
                         </div>
                     </div>
                     <!-- BiziShip Booking Details Group -->
                     <group invisible="not biziship_shipment_id">
                         <div colspan="2" class="d-flex align-items-center o_horizontal_separator mb-2 mt-0">
                             <span class="text-uppercase fw-bold me-2">BiziShip Booking Details</span>
-                            <button name="action_delete_biziship_booking" type="object" icon="fa-trash" class="btn btn-link text-muted p-0" title="Delete Booking Details" confirm="Are you sure you want to delete these booking details?"/>
+                            <button name="action_delete_biziship_booking" type="object" icon="delete" class="btn btn-link text-muted p-0" title="Delete Booking Details" confirm="Are you sure you want to delete these booking details?"/>
                         </div>
                         <field name="biziship_shipment_id" invisible="1"/>
                         <field name="biziship_bol_number" invisible="1"/>
@@ -553,7 +553,7 @@
                         <div colspan="2" class="d-flex align-items-center justify-content-between mt-1 mb-1" invisible="not biziship_bol_url and not biziship_documents_html">
                             <field name="biziship_documents_html" nolabel="1" readonly="1" class="flex-grow-1"/>
                             <button name="action_biziship_refresh_documents" type="object"
-                                    string="Refresh Documents" icon="fa-refresh"
+                                    string="Refresh Documents" icon="refresh"
                                     class="btn btn-sm btn-outline-secondary ms-3 flex-shrink-0"
                                     title="Fetch latest documents and fresh URLs from BiziShip"/>
                         </div>
@@ -576,7 +576,7 @@
                                 <div>
                                     <div class="d-flex align-items-center gap-2">
                                         <span style="font-size:11px;font-weight:700;text-transform:uppercase;color:#888;letter-spacing:0.7px;">Tracking Status</span>
-                                        <button name="action_biziship_refresh_tracking_quick" type="object" icon="fa-refresh" class="btn btn-link p-0 text-muted" title="Refresh tracking status" style="font-size:13px;line-height:1;"/>
+                                        <button name="action_biziship_refresh_tracking_quick" type="object" icon="refresh" class="btn btn-link p-0 text-muted" title="Refresh tracking status" style="font-size:13px;line-height:1;"/>
                                     </div>
                                     <div class="mt-1">
                                         <span style="display:inline-block;background:#e8f5e9;color:#1b7a40;font-weight:700;font-size:12px;border-radius:20px;padding:2px 12px;border:1px solid #a5d6a7;" invisible="not biziship_tracking_status">
@@ -612,7 +612,7 @@
                         <div colspan="2" class="d-flex align-items-center justify-content-between mb-2 mt-4" style="border-bottom: 1px solid #dee2e6; padding-bottom: 8px;">
                             <div class="d-flex align-items-center">
                                 <span class="text-uppercase fw-bold me-2" style="font-size: 0.9rem; color: #495057;">Available Quotes</span>
-                                <button name="action_delete_biziship_quotes" type="object" icon="fa-trash" class="btn btn-link text-muted p-0" title="Delete All Quotes" confirm="Are you sure you want to delete all quotes?"/>
+                                <button name="action_delete_biziship_quotes" type="object" icon="delete" class="btn btn-link text-muted p-0" title="Delete All Quotes" confirm="Are you sure you want to delete all quotes?"/>
                             </div>
                             <div class="d-flex align-items-center" invisible="biziship_priority1_env != 'PROD'">
                                 <span class="badge rounded-pill bg-success text-white px-2 py-1" style="font-size: 11px; font-weight: bold; letter-spacing: 0.5px;">Live!</span>
@@ -629,8 +629,8 @@
                         <list string="Quotes" create="false" edit="false" class="biziship-quotes-tree" decoration-info="is_recommended and not is_selected">
                             <field name="is_selected" column_invisible="True"/>
                             <field name="is_recommended" column_invisible="True"/>
-                            <button name="action_select_quote_toggle" type="object" icon="fa-lg fa-toggle-on text-success" invisible="not is_selected" class="btn btn-link p-0" title="Selected" aria-label="Selected"/>
-                            <button name="action_select_quote_toggle" type="object" icon="fa-lg fa-toggle-off text-muted" invisible="is_selected" class="btn btn-link p-0" title="Select" aria-label="Not Selected"/>
+                            <button name="action_select_quote_toggle" type="object" icon="toggle_on" icon_class="oi-filled oi-lg text-success" invisible="not is_selected" class="btn btn-link p-0" title="Selected" aria-label="Selected"/>
+                            <button name="action_select_quote_toggle" type="object" icon="toggle_off" icon_class="oi-filled oi-lg text-muted" invisible="is_selected" class="btn btn-link p-0" title="Select" aria-label="Not Selected"/>
                             <field name="carrier_logo" widget="image" options="{'size': [30, 30]}" class="me-2" nolabel="1" readonly="1" optional="show"/>
                             <field name="carrier_name" readonly="1"/>
                             <field name="biziship_recommendation_html" nolabel="1" readonly="1"/>

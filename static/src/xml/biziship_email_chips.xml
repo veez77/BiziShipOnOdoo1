@@ -6,7 +6,7 @@
 
             <!-- Header -->
             <div class="biziship-notif-header">
-                <i class="fa fa-bell-o me-2"/>
+                <i class="oi oi-filled me-2" data-icon="notifications"/>
                 <span class="biziship-notif-title">Shipment notifications (optional)</span>
             </div>
             <div class="biziship-notif-help">
@@ -23,7 +23,7 @@
                     <div class="biziship-chip-readonly-wrap">
                         <t t-foreach="this.state.defaults" t-as="email" t-key="email">
                             <span class="biziship-chip-readonly">
-                                <i class="fa fa-envelope-o me-1"/>
+                                <i class="oi oi-filled me-1" data-icon="mail"/>
                                 <t t-out="email"/>
                             </span>
                         </t>
@@ -35,7 +35,7 @@
             <div t-if="this.hasSalesperson" class="biziship-notif-block">
                 <div class="biziship-notif-sublabel">SALESPERSON</div>
                 <div class="biziship-sp-row" t-att-class="{ 'excluded': !this.notifySalesperson }">
-                    <i class="fa fa-user-circle-o biziship-sp-avatar"/>
+                    <i class="oi oi-filled biziship-sp-avatar" data-icon="account_circle"/>
                     <div class="biziship-sp-info">
                         <span class="biziship-sp-name" t-out="this.salespersonName"/>
                         <span class="biziship-sp-email" t-out="this.salespersonEmail"/>

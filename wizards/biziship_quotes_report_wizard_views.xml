@@ -11,7 +11,7 @@
                 <field name="markup_enabled" invisible="1"/>
 
                 <div class="alert alert-info" style="margin-bottom: 16px;">
-                    <i class="fa fa-download me-2"/>
+                    <i class="oi oi-filled me-2" data-icon="download"/>
                     Download carrier quotes as a standalone HTML file to view offline or share.
                 </div>
 
@@ -42,7 +42,7 @@
                 <field name="sale_order_id" invisible="1"/>
 
                 <div class="alert alert-info" style="margin-bottom: 16px;">
-                    <i class="fa fa-envelope me-2"/>
+                    <i class="oi oi-filled me-2" data-icon="mail"/>
                     Send carrier quotes to recipients. They'll receive a link to view the report online.
                 </div>
 

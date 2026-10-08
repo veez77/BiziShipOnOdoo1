@@ -7,7 +7,7 @@
             class="btn btn-sm btn-link p-0 ms-1 biziship-nmfc-fav-btn"
             t-on-click="this.openFavorites"
             title="NMFC Favorites">
-            <i class="fa fa-star" style="color: #f59e0b; font-size: 1.1em;"/>
+            <i class="oi oi-filled" data-icon="star" style="color: #f59e0b; font-size: 1.1em;"/>
         </button>
     </t>
 
@@ -31,7 +31,7 @@
             <div class="biziship-nmfc-fav-list mb-2" style="max-height: 300px; overflow-y: auto;">
                 <t t-if="this.state.loading">
                     <div class="text-center text-muted py-4">
-                        <i class="fa fa-spinner fa-spin me-2"/>Loading favorites…
+                        <i class="oi oi-spin me-2" data-icon="progress_activity"/>Loading favorites…
                     </div>
                 </t>
                 <t t-elif="this.filteredFavorites.length === 0">
@@ -75,7 +75,7 @@
                                         class="btn btn-sm btn-link p-0 text-danger"
                                         t-on-click="() => this.onTrashClick(fav.id)"
                                         title="Delete favorite">
-                                        <i class="fa fa-trash-o"/>
+                                        <i class="oi oi-filled" data-icon="delete"/>
                                     </button>
                                 </t>
                             </div>
@@ -110,7 +110,7 @@
                 </div>
                 <t t-if="this.state.addError">
                     <div class="text-danger mb-2" style="font-size: 0.85em;">
-                        <i class="fa fa-exclamation-circle me-1"/>
+                        <i class="oi oi-filled me-1" data-icon="error"/>
                         <t t-out="this.state.addError"/>
                     </div>
                 </t>
@@ -118,8 +118,8 @@
                     class="btn btn-sm btn-success"
                     t-on-click="this.onSave"
                     t-att-disabled="this.state.saving">
-                    <i t-if="this.state.saving" class="fa fa-spinner fa-spin me-1"/>
-                    <i t-else="" class="fa fa-plus me-1"/>
+                    <i t-if="this.state.saving" class="oi oi-spin me-1" data-icon="progress_activity"/>
+                    <i t-else="" class="oi oi-filled me-1" data-icon="add"/>
                     Save Favorite
                 </button>
             </div>

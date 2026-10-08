@@ -47,7 +47,7 @@ document.addEventListener('click', function (e) {
     var orderId = parseInt(refreshEl.getAttribute('data-order-id'), 10);
     if (!orderId) return;
 
-    refreshEl.classList.add('fa-spin');
+    refreshEl.classList.add('oi-spin');
 
     rpc('sale.order', 'action_biziship_refresh_documents', [[orderId]])
         .then(function (res) {
@@ -56,7 +56,7 @@ document.addEventListener('click', function (e) {
         })
         .then(function (res) {
             if (res.error) throw new Error((res.error.data && res.error.data.message) || 'Read failed.');
-            refreshEl.classList.remove('fa-spin');
+            refreshEl.classList.remove('oi-spin');
             var proNumber = res.result && res.result[0] && res.result[0].biziship_pro_number;
             var proCell = refreshEl.closest('tr').querySelector('.biziship-pro-value');
             if (proCell) {
@@ -69,7 +69,7 @@ document.addEventListener('click', function (e) {
             }
         })
         .catch(function (err) {
-            refreshEl.classList.remove('fa-spin');
+            refreshEl.classList.remove('oi-spin');
             alert(err.message || String(err));
         });
 }, true);

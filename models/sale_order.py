@@ -159,7 +159,7 @@ class SaleOrder(models.Model):
                                 html_links.append(
                                     f'<div class="mb-2">'
                                     f'<a href="{url}" target="_blank" style="color: #0b7a40; font-weight: 500; font-size: 15px; text-decoration: underline; white-space: nowrap; display: inline-block;">'
-                                    f'{label} <i class="fa fa-download ms-1"></i></a>'
+                                    f'{label} <i class="oi oi-filled ms-1" data-icon="download"></i></a>'
                                     f'</div>'
                                 )
                 except Exception:
@@ -170,7 +170,7 @@ class SaleOrder(models.Model):
                 html_links.append(
                     f'<div class="mb-2">'
                     f'<a href="{order.biziship_bol_url}" target="_blank" style="color: #0b7a40; font-weight: 500; font-size: 15px; text-decoration: underline; white-space: nowrap; display: inline-block;">'
-                    f'Bill of Lading <i class="fa fa-download ms-1"></i></a>'
+                    f'Bill of Lading <i class="oi oi-filled ms-1" data-icon="download"></i></a>'
                     f'</div>'
                 )
             
@@ -267,7 +267,7 @@ class SaleOrder(models.Model):
                             else:
                                 pro_display = '<span style="color:#aaa;font-style:italic;">Was not created yet</span>'
                             icon = (
-                                f'<i class="fa fa-refresh biziship-pro-refresh" '
+                                f'<i class="oi oi-filled biziship-pro-refresh" data-icon="refresh" '
                                 f'data-order-id="{order.id}" '
                                 f'title="Refresh PRO number" '
                                 f'style="cursor:pointer;color:#aaa;font-size:10px;"></i>'

@@ -359,7 +359,7 @@
                                                 <field name="nmfc" placeholder="NMFC Code"/>
                                                 <field name="biziship_nmfc_fav_trigger" widget="biziship_nmfc_star" nolabel="1"/>
                                                 <button name="action_biziship_nmfc_suggest" type="object" class="btn btn-sm btn-link p-0 ms-1" title="AI Suggest NMFC">
-                                                    <i class="oi oi-filled text-primary" data-icon="auto_fix_high" style="font-size: 1.1em;"/>
+                                                    <i class="oi oi-filled text-primary" data-icon="wand_stars" style="font-size: 1.1em;"/>
                                                 </button>
                                             </div>
                                         </div>

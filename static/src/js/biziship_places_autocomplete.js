@@ -153,6 +153,13 @@ export class BiziShipPlacesAutocomplete extends CharField {
                 if (result) {
                     result[`${prefix}address_invalid`] = false;
                     result[`${prefix}address2`] = '';
+                    // Many2one fields now need {id, display_name} objects, not [id, name] arrays
+                    for (const key in result) {
+                        const val = result[key];
+                        if (Array.isArray(val) && val.length === 2 && typeof val[0] === "number") {
+                            result[key] = { id: val[0], display_name: val[1] };
+                        }
+                    }
                     this.props.record.update(result);
                 }
             });

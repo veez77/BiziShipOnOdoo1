@@ -1,3 +1,5 @@
+from urllib.parse import urlparse
+
 import requests
 
 from odoo import http
@@ -170,5 +172,36 @@ class BiziShipMapController(http.Controller):
             headers=[
                 ('Content-Type', 'application/zip'),
                 ('Content-Disposition', content_disposition),
+            ],
+        )
+
+    @http.route('/biziship/image_proxy', type='http', auth='user', website=False)
+    def download_single_image(self, url=None, filename=None, **kw):
+        """Forces a real download of a pallet photo. The presigned S3 url is
+        cross-origin, so the browser's native <a download> attribute is ignored
+        for it (browsers only honor "download" on same-origin links) - this
+        proxies the bytes through our own origin with an explicit
+        Content-Disposition instead."""
+        if not url:
+            return request.make_response("Missing url.", status=400)
+
+        host = (urlparse(url).hostname or '').lower()
+        if not host.endswith('.amazonaws.com'):
+            return request.make_response("Invalid image url.", status=400)
+
+        try:
+            response = requests.get(url, timeout=20)
+        except Exception:
+            return request.make_response("Could not reach the image right now.", status=502)
+
+        if response.status_code != 200:
+            return request.make_response("Image not found.", status=404)
+
+        safe_filename = (filename or 'photo.jpg').replace('"', '')
+        return request.make_response(
+            response.content,
+            headers=[
+                ('Content-Type', response.headers.get('Content-Type', 'image/jpeg')),
+                ('Content-Disposition', f'attachment; filename="{safe_filename}"'),
             ],
         )

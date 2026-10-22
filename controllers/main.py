@@ -130,7 +130,7 @@ class BiziShipMapController(http.Controller):
     @http.route('/biziship/shipments/<int:order_id>/pallets/zip', type='http', auth='user', website=False)
     def download_pallet_photos_zip(self, order_id, pallet_id=None, **kw):
         order = request.env['sale.order'].sudo().browse(order_id)
-        if not order.exists() or not order.biziship_shipment_id:
+        if not order.exists() or not order.biziship_booking_id:
             return request.make_response("Shipment not found.", status=404)
 
         user = request.env.user
@@ -147,7 +147,7 @@ class BiziShipMapController(http.Controller):
             headers["Authorization"] = f"Bearer {user.biziship_token}"
 
         base_url = api_utils.get_biziship_api_url(request.env)
-        url = f"{base_url}/erp/shipments/{order.biziship_shipment_id}/images/zip"
+        url = f"{base_url}/erp/shipments/{order.biziship_booking_id}/images/zip"
         params = {"palletId": pallet_id} if pallet_id else {}
 
         try:

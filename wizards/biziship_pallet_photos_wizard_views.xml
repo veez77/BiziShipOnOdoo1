@@ -31,14 +31,14 @@
                     </div>
 
                     <field name="pallet_line_ids" nolabel="1">
-                        <tree editable="bottom" create="0" delete="0">
+                        <list editable="bottom" create="0" delete="0">
                             <field name="name" string="Pallet"/>
                             <field name="photo_count" string="Photos" widget="integer" readonly="1"/>
                             <button name="action_open_upload_dialog" type="object" string="Upload" class="btn-sm btn-outline-primary"/>
                             <button name="action_download_zip" type="object" icon="fa-download" title="Download this pallet's photos"/>
                             <button name="action_delete_pallet" type="object" icon="fa-trash" title="Delete pallet"
                                     confirm="Delete this pallet and all its photos? This cannot be undone."/>
-                        </tree>
+                        </list>
                     </field>
 
                     <!-- Photo thumbnails live here, as a plain form-level field, not a

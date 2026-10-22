@@ -1,4 +1,5 @@
 import base64
+import html
 import io
 import json
 import logging
@@ -44,37 +45,42 @@ class BizishipPalletLine(models.TransientModel):
         for line in self:
             line.photo_count = len(line._photos())
 
+    def _photo_cells_html(self):
+        """The <div> per photo (thumbnail + view/download/delete). Shared by
+        photos_html (kept for debugging) and the wizard-level all_photos_html -
+        the latter is what's actually shown, since a plain form-level Html field
+        doesn't go through the list/tree renderer's cell-tooltip logic that was
+        dumping this field's raw source as a tooltip when it lived in a <tree>
+        column (see biziship.pallet.photos.wizard._compute_all_photos_html)."""
+        self.ensure_one()
+        cells = []
+        for photo in self._photos():
+            image_id = photo.get('id', '')
+            url = photo.get('url', '')
+            filename = quote(f"{image_id}.jpg")
+            download_url = f"/biziship/image_proxy?url={quote(url, safe='')}&filename={filename}"
+            size_bytes = photo.get('sizeBytes') or 0
+            size_label = f"{size_bytes / 1024:.0f} KB" if size_bytes else ''
+            cells.append(f'''
+                <div class="biziship-pallet-photo-thumb-wrap" data-image-id="{image_id}" data-line-id="{self.id}">
+                    <a href="{url}" target="_blank" class="biziship-pallet-photo-view">
+                        <img class="biziship-pallet-photo-thumb" src="{url}"/>
+                    </a>
+                    <a href="#" class="biziship-pallet-photo-delete" title="Delete photo">×</a>
+                    <a href="{download_url}" class="biziship-pallet-photo-download" title="Download this photo">⬇</a>
+                    <div class="biziship-pallet-photo-size">{size_label}</div>
+                </div>
+            ''')
+        return "".join(cells)
+
     @api.depends('photos_json')
     def _compute_photos_html(self):
         for line in self:
-            photos = line._photos()
-            if not photos:
+            cells = line._photo_cells_html()
+            if not cells:
                 line.photos_html = '<span class="text-muted fst-italic">No photos yet</span>'
-                continue
-            cells = []
-            for photo in photos:
-                image_id = photo.get('id', '')
-                url = photo.get('url', '')
-                filename = quote(f"{image_id}.jpg")
-                download_url = f"/biziship/image_proxy?url={quote(url, safe='')}&filename={filename}"
-                size_bytes = photo.get('sizeBytes') or 0
-                size_label = f"{size_bytes / 1024:.0f} KB" if size_bytes else ''
-                # title="" on every element here is deliberate: without it, Odoo's
-                # generic list-cell wrapper sets a native title attribute to this
-                # field's raw (unescaped) HTML source, which the browser then shows
-                # verbatim as a tooltip. Setting our own empty title overrides that
-                # inherited behavior on hover.
-                cells.append(f'''
-                    <div class="biziship-pallet-photo-thumb-wrap" data-image-id="{image_id}" data-line-id="{line.id}" title="">
-                        <a href="{url}" target="_blank" title="" class="biziship-pallet-photo-view">
-                            <img class="biziship-pallet-photo-thumb" src="{url}" title=""/>
-                        </a>
-                        <a href="#" class="biziship-pallet-photo-delete" title="Delete photo">×</a>
-                        <a href="{download_url}" class="biziship-pallet-photo-download" title="Download this photo">⬇</a>
-                        <div class="biziship-pallet-photo-size" title="">{size_label}</div>
-                    </div>
-                ''')
-            line.photos_html = f'<div class="biziship-pallet-photo-grid">{"".join(cells)}</div>'
+            else:
+                line.photos_html = f'<div class="biziship-pallet-photo-grid">{cells}</div>'
 
     def action_save_rename(self):
         self.ensure_one()
@@ -215,6 +221,26 @@ class BizishipPalletPhotosWizard(models.TransientModel):
     pallet_line_ids = fields.One2many('biziship.pallet.line', 'wizard_id', string='Pallets')
     new_pallet_name = fields.Char(string='New Pallet Name')
     status_message = fields.Char(string='Status', readonly=True)
+    all_photos_html = fields.Html(string='Photos', compute='_compute_all_photos_html', sanitize=False)
+
+    @api.depends('pallet_line_ids.photos_json', 'pallet_line_ids.name')
+    def _compute_all_photos_html(self):
+        for wizard in self:
+            sections = []
+            for line in wizard.pallet_line_ids:
+                cells = line._photo_cells_html()
+                body = (
+                    f'<div class="biziship-pallet-photo-grid">{cells}</div>' if cells
+                    else '<span class="text-muted fst-italic">No photos yet</span>'
+                )
+                safe_name = html.escape(line.name or 'Pallet')
+                sections.append(f'''
+                    <div class="biziship-pallet-photo-section">
+                        <div class="biziship-pallet-photo-section-title">{safe_name}</div>
+                        {body}
+                    </div>
+                ''')
+            wizard.all_photos_html = "".join(sections) or ''
 
     # ------------------------------------------------------------------
     # Gateway plumbing

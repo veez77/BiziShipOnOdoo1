@@ -359,6 +359,7 @@ class BizishipPalletPhotosWizard(models.TransientModel):
             for p in pallets
         ])
         self.status_message = '' if pallets else _("No pallets yet. Add one to start uploading photos.")
+        self.sale_order_id.biziship_photo_count = sum(len(p.get('images', [])) for p in pallets)
 
     # ------------------------------------------------------------------
     # Wizard-level actions

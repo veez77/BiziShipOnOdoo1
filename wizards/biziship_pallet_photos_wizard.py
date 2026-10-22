@@ -169,7 +169,13 @@ class BizishipPalletPhotoUploadWizard(models.TransientModel):
     _name = 'biziship.pallet.photo.upload.wizard'
     _description = 'Upload a Pallet Photo'
 
-    pallet_line_id = fields.Many2one('biziship.pallet.line', required=True, ondelete='cascade')
+    # Plain Integer, not a Many2one: _upload_photo() below triggers a full
+    # unlink+recreate refresh of every biziship.pallet.line (see
+    # _populate_pallets), and a real FK with ondelete='cascade' would cascade-
+    # delete THIS record the instant that refresh unlinks the line it points
+    # to - out from under the very action_upload() call still running on it,
+    # which Odoo then can't re-read afterward ("Record does not exist").
+    pallet_line_id = fields.Integer(required=True)
     upload_file = fields.Binary(string='Photo', required=True)
     upload_filename = fields.Char(string='File Name')
 
@@ -177,8 +183,17 @@ class BizishipPalletPhotoUploadWizard(models.TransientModel):
         self.ensure_one()
         if not self.upload_file:
             raise UserError(_("Please choose a photo to upload first."))
-        self.pallet_line_id._upload_photo(self.upload_file, self.upload_filename)
-        return self.pallet_line_id.wizard_id._reopen_action()
+        line = self.env['biziship.pallet.line'].browse(self.pallet_line_id)
+        parent_wizard_id = line.wizard_id.id
+        line._upload_photo(self.upload_file, self.upload_filename)
+        return {
+            'type': 'ir.actions.act_window',
+            'name': 'Shipment Photos',
+            'res_model': 'biziship.pallet.photos.wizard',
+            'res_id': parent_wizard_id,
+            'view_mode': 'form',
+            'target': 'new',
+        }
 
 
 class BizishipPalletPhotosWizard(models.TransientModel):

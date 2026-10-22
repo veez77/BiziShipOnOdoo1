@@ -1,3 +1,4 @@
+import base64
 from urllib.parse import urlparse
 
 import requests
@@ -167,8 +168,19 @@ class BiziShipMapController(http.Controller):
         content_disposition = response.headers.get(
             'Content-Disposition', 'attachment; filename="shipment-photos.zip"'
         )
+        content = response.content
+        if not content.startswith(b'PK'):
+            # The gateway's binary media type config for this route doesn't
+            # decode the Lambda's base64 body before forwarding it, so the
+            # "zip" we got is actually base64 text. Decode it ourselves.
+            try:
+                decoded = base64.b64decode(content, validate=True)
+            except Exception:
+                decoded = None
+            if decoded and decoded.startswith(b'PK'):
+                content = decoded
         return request.make_response(
-            response.content,
+            content,
             headers=[
                 ('Content-Type', 'application/zip'),
                 ('Content-Disposition', content_disposition),

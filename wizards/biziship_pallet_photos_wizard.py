@@ -274,10 +274,24 @@ class BizishipPalletPhotosWizard(models.TransientModel):
     # ------------------------------------------------------------------
     # Wizard-level actions
     # ------------------------------------------------------------------
+    def _reopen_action(self):
+        """Buttons on the wizard's own root record (unlike one2many line buttons,
+        which auto-refresh in place) need to explicitly return an action or Odoo
+        treats a plain True/None return as "done, close the dialog"."""
+        self.ensure_one()
+        return {
+            'type': 'ir.actions.act_window',
+            'name': 'Shipment Photos',
+            'res_model': self._name,
+            'res_id': self.id,
+            'view_mode': 'form',
+            'target': 'new',
+        }
+
     def action_refresh(self):
         self.ensure_one()
         self._populate_pallets()
-        return True
+        return self._reopen_action()
 
     def action_add_pallet(self):
         self.ensure_one()
@@ -285,7 +299,7 @@ class BizishipPalletPhotosWizard(models.TransientModel):
         self._gateway_request('POST', 'pallets', json_body=body)
         self.new_pallet_name = False
         self._populate_pallets()
-        return True
+        return self._reopen_action()
 
     def action_download_zip_all(self):
         self.ensure_one()

@@ -90,6 +90,7 @@ class SaleOrder(models.Model):
     biziship_documents_html = fields.Html(string='Shipment Documents', compute='_compute_biziship_documents_html', readonly=True)
     biziship_pro_number = fields.Char(string='PRO Number', readonly=True, copy=False)
     biziship_booking_id = fields.Char(string='BiziShip Booking ID', readonly=True, copy=False)
+    biziship_photo_count = fields.Integer(string='Shipment Photo Count', readonly=True, copy=False, default=0)
     biziship_connected_email = fields.Char(string='Connected BiziShip Email', readonly=True, copy=False)
     biziship_po_number = fields.Char(string="PO Number")
     # Reference numbers as a JSON array string: index 0 = primary (reference_number),
@@ -1158,6 +1159,7 @@ class SaleOrder(models.Model):
                 'biziship_pro_number': False,
                 'biziship_booking_id': False,
                 'biziship_ref_json': False,
+                'biziship_photo_count': 0,
             })
             # Also reset selection
             for quote in order.biziship_quote_ids:

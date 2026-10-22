@@ -28,8 +28,6 @@ class BizishipPalletLine(models.TransientModel):
     photos_json = fields.Text(string='Photos (raw)')
     photo_count = fields.Integer(string='# Photos', compute='_compute_photo_count')
     photos_html = fields.Html(string='Photos', compute='_compute_photos_html', sanitize=False)
-    upload_file = fields.Binary(string='Upload Photo')
-    upload_filename = fields.Char(string='File Name')
 
     def _photos(self):
         self.ensure_one()
@@ -84,15 +82,33 @@ class BizishipPalletLine(models.TransientModel):
         self.wizard_id._populate_pallets()
         return True
 
-    def action_upload_photo(self):
+    def action_open_upload_dialog(self):
+        """Opens a small standalone popup for the actual file picker + Upload
+        button, rather than embedding them in this one2many's tree row - Binary
+        fields inside an editable tree row don't reliably commit their value
+        before a sibling button's click fires, so action_upload_photo would see
+        an empty upload_file half the time. The BOL wizard avoids this same trap
+        by keeping its Binary field + button on one standalone form; same fix
+        here, just scoped to one pallet via pallet_line_id."""
         self.ensure_one()
-        if not self.upload_file:
-            raise UserError(_("Please choose a photo to upload first."))
+        wizard = self.env['biziship.pallet.photo.upload.wizard'].create({'pallet_line_id': self.id})
+        return {
+            'type': 'ir.actions.act_window',
+            'name': 'Upload Photo',
+            'res_model': 'biziship.pallet.photo.upload.wizard',
+            'res_id': wizard.id,
+            'view_mode': 'form',
+            'target': 'new',
+        }
+
+    def _upload_photo(self, upload_file, upload_filename):
+        """Shared by the upload popup: resize, size-check, POST, refresh."""
+        self.ensure_one()
         if len(self._photos()) >= 3:
             raise UserError(_("This pallet already has the maximum of 3 images."))
 
-        raw_bytes = base64.b64decode(self.upload_file)
-        filename = self.upload_filename or 'photo.jpg'
+        raw_bytes = base64.b64decode(upload_file)
+        filename = upload_filename or 'photo.jpg'
         content_bytes, mimetype = self._prepare_image(raw_bytes, filename)
 
         if len(content_bytes) > MAX_UPLOAD_BYTES:
@@ -104,10 +120,7 @@ class BizishipPalletLine(models.TransientModel):
             'POST', f"pallets/{self.pallet_uuid}/images",
             files={"file": (filename, content_bytes, mimetype)},
         )
-        self.upload_file = False
-        self.upload_filename = False
         self.wizard_id._populate_pallets()
-        return True
 
     def _prepare_image(self, raw_bytes, filename):
         """Downscale to ~1600px long edge / JPEG q85 via Pillow. Falls back to the
@@ -150,6 +163,22 @@ class BizishipPalletLine(models.TransientModel):
     def action_download_zip(self):
         self.ensure_one()
         return self.wizard_id._zip_download_action(pallet_uuid=self.pallet_uuid)
+
+
+class BizishipPalletPhotoUploadWizard(models.TransientModel):
+    _name = 'biziship.pallet.photo.upload.wizard'
+    _description = 'Upload a Pallet Photo'
+
+    pallet_line_id = fields.Many2one('biziship.pallet.line', required=True, ondelete='cascade')
+    upload_file = fields.Binary(string='Photo', required=True)
+    upload_filename = fields.Char(string='File Name')
+
+    def action_upload(self):
+        self.ensure_one()
+        if not self.upload_file:
+            raise UserError(_("Please choose a photo to upload first."))
+        self.pallet_line_id._upload_photo(self.upload_file, self.upload_filename)
+        return self.pallet_line_id.wizard_id._reopen_action()
 
 
 class BizishipPalletPhotosWizard(models.TransientModel):

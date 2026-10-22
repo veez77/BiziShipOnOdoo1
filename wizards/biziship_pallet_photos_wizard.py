@@ -82,16 +82,24 @@ class BizishipPalletLine(models.TransientModel):
             else:
                 line.photos_html = f'<div class="biziship-pallet-photo-grid">{cells}</div>'
 
-    def action_save_rename(self):
-        self.ensure_one()
-        new_name = (self.name or '').strip()
-        if not new_name:
-            raise UserError(_("Pallet name cannot be empty."))
-        self.wizard_id._gateway_request(
-            'PATCH', f"pallets/{self.pallet_uuid}", json_body={"name": new_name}
-        )
-        self.wizard_id._populate_pallets()
-        return True
+    @api.onchange('name')
+    def _onchange_name_autosave(self):
+        """Renames on the gateway as soon as the user leaves the field (blur/Enter/
+        tab to the next cell) - standard Odoo editable-tree onchange timing - so no
+        separate Save button is needed. Deliberately doesn't call
+        wizard_id._populate_pallets() afterward: that unlinks and recreates every
+        line (see its docstring), which would delete the very line this onchange
+        is running on, out from under itself, same class of bug already hit once
+        with the upload wizard's cascade delete."""
+        for line in self:
+            if not line.pallet_uuid:
+                continue
+            new_name = (line.name or '').strip()
+            if not new_name:
+                continue
+            line.wizard_id._gateway_request(
+                'PATCH', f"pallets/{line.pallet_uuid}", json_body={"name": new_name}
+            )
 
     def action_delete_pallet(self):
         self.ensure_one()

@@ -33,7 +33,6 @@
                     <field name="pallet_line_ids" nolabel="1">
                         <tree editable="bottom" create="0" delete="0">
                             <field name="name" string="Pallet"/>
-                            <button name="action_save_rename" type="object" icon="fa-save" title="Save name"/>
                             <field name="photo_count" string="Photos" widget="integer" readonly="1"/>
                             <button name="action_open_upload_dialog" type="object" string="Upload" class="btn-sm btn-outline-primary"/>
                             <button name="action_download_zip" type="object" icon="fa-download" title="Download this pallet's photos"/>

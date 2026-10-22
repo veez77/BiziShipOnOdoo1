@@ -24,3 +24,4 @@ access_biziship_email_quotes_simple_wizard,biziship.email.quotes.simple.wizard,m
 access_biziship_email_quotes_confirm_wizard,biziship.email.quotes.confirm.wizard,model_biziship_email_quotes_confirm_wizard,base.group_user,1,1,1,1
 access_biziship_pallet_photos_wizard,biziship.pallet.photos.wizard,model_biziship_pallet_photos_wizard,base.group_user,1,1,1,1
 access_biziship_pallet_line,biziship.pallet.line,model_biziship_pallet_line,base.group_user,1,1,1,1
+access_biziship_pallet_photo_upload_wizard,biziship.pallet.photo.upload.wizard,model_biziship_pallet_photo_upload_wizard,base.group_user,1,1,1,1

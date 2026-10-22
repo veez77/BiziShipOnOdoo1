@@ -588,7 +588,10 @@
                                         Last updated: <field name="biziship_last_tracked_at" nolabel="1" readonly="1" style="display:inline;font-size:11px;color:#aaa;"/>
                                     </div>
                                 </div>
-                                <button name="action_open_tracking_wizard" string="📦 Track Shipment" type="object" class="btn btn-sm btn-outline-success fw-bold" style="font-size:13px;"/>
+                                <div class="d-flex gap-2">
+                                    <button name="action_open_pallet_photos_wizard" string="📸 Shipment Photos" type="object" class="btn btn-sm btn-outline-secondary fw-bold" style="font-size:13px;"/>
+                                    <button name="action_open_tracking_wizard" string="📦 Track Shipment" type="object" class="btn btn-sm btn-outline-success fw-bold" style="font-size:13px;"/>
+                                </div>
                             </div>
                         </div>
                     </group>

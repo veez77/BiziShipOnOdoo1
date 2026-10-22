@@ -1,0 +1,300 @@
+import base64
+import io
+import json
+import logging
+
+import requests
+
+from odoo import models, fields, api, _
+from odoo.exceptions import UserError
+
+from odoo.addons.biziship import api_utils
+from odoo.addons.biziship.api_utils import get_erp_api_key, BIZISHIP_APP_NAME, BIZISHIP_MODULE_VERSION
+
+_logger = logging.getLogger(__name__)
+
+MAX_UPLOAD_BYTES = int(4.5 * 1024 * 1024)  # ~4.5 MB, the gateway's effective per-photo cap
+DOWNSCALE_LONG_EDGE = 1600
+DOWNSCALE_JPEG_QUALITY = 85
+
+
+class BizishipPalletLine(models.TransientModel):
+    _name = 'biziship.pallet.line'
+    _description = 'BiziShip Shipment Pallet (transient display row)'
+
+    wizard_id = fields.Many2one('biziship.pallet.photos.wizard', required=True, ondelete='cascade')
+    pallet_uuid = fields.Char(string='Pallet ID')
+    name = fields.Char(string='Pallet Name')
+    photos_json = fields.Text(string='Photos (raw)')
+    photo_count = fields.Integer(string='Photos', compute='_compute_photo_count')
+    photos_html = fields.Html(string='Photos', compute='_compute_photos_html', sanitize=False)
+    upload_file = fields.Binary(string='Upload Photo')
+    upload_filename = fields.Char(string='File Name')
+
+    def _photos(self):
+        self.ensure_one()
+        if not self.photos_json:
+            return []
+        try:
+            return json.loads(self.photos_json)
+        except Exception:
+            return []
+
+    @api.depends('photos_json')
+    def _compute_photo_count(self):
+        for line in self:
+            line.photo_count = len(line._photos())
+
+    @api.depends('photos_json')
+    def _compute_photos_html(self):
+        for line in self:
+            photos = line._photos()
+            if not photos:
+                line.photos_html = '<span class="text-muted fst-italic">No photos yet</span>'
+                continue
+            cells = []
+            for photo in photos:
+                image_id = photo.get('id', '')
+                url = photo.get('url', '')
+                size_bytes = photo.get('sizeBytes') or 0
+                size_label = f"{size_bytes / 1024:.0f} KB" if size_bytes else ''
+                cells.append(f'''
+                    <div class="biziship-pallet-photo-thumb-wrap" data-image-id="{image_id}" data-line-id="{line.id}">
+                        <img class="biziship-pallet-photo-thumb" src="{url}"/>
+                        <a href="#" class="biziship-pallet-photo-delete" title="Delete photo">×</a>
+                        <div class="biziship-pallet-photo-size">{size_label}</div>
+                    </div>
+                ''')
+            line.photos_html = f'<div class="biziship-pallet-photo-grid">{"".join(cells)}</div>'
+
+    def action_save_rename(self):
+        self.ensure_one()
+        new_name = (self.name or '').strip()
+        if not new_name:
+            raise UserError(_("Pallet name cannot be empty."))
+        self.wizard_id._gateway_request(
+            'PATCH', f"pallets/{self.pallet_uuid}", json_body={"name": new_name}
+        )
+        self.wizard_id._populate_pallets()
+        return True
+
+    def action_delete_pallet(self):
+        self.ensure_one()
+        self.wizard_id._gateway_request('DELETE', f"pallets/{self.pallet_uuid}")
+        self.wizard_id._populate_pallets()
+        return True
+
+    def action_upload_photo(self):
+        self.ensure_one()
+        if not self.upload_file:
+            raise UserError(_("Please choose a photo to upload first."))
+        if len(self._photos()) >= 3:
+            raise UserError(_("This pallet already has the maximum of 3 images."))
+
+        raw_bytes = base64.b64decode(self.upload_file)
+        filename = self.upload_filename or 'photo.jpg'
+        content_bytes, mimetype = self._prepare_image(raw_bytes, filename)
+
+        if len(content_bytes) > MAX_UPLOAD_BYTES:
+            raise UserError(_(
+                "This photo is still over 4.5 MB after downscaling. Please choose a smaller photo."
+            ))
+
+        self.wizard_id._gateway_request(
+            'POST', f"pallets/{self.pallet_uuid}/images",
+            files={"file": (filename, content_bytes, mimetype)},
+        )
+        self.upload_file = False
+        self.upload_filename = False
+        self.wizard_id._populate_pallets()
+        return True
+
+    def _prepare_image(self, raw_bytes, filename):
+        """Downscale to ~1600px long edge / JPEG q85 via Pillow. Falls back to the
+        original bytes untouched if Pillow can't open the file (e.g. HEIC without a
+        HEIF plugin installed) - the gateway's own 400 'detail' will surface via
+        _gateway_request in that case, which is an explicitly accepted fallback."""
+        try:
+            from PIL import Image
+        except ImportError:
+            return raw_bytes, 'application/octet-stream'
+
+        try:
+            img = Image.open(io.BytesIO(raw_bytes))
+            img.load()
+        except Exception:
+            _logger.info("BiziShip: could not open upload with Pillow (format not supported client-side), "
+                         "sending original bytes as-is for %s", filename)
+            return raw_bytes, 'application/octet-stream'
+
+        if img.mode not in ('RGB', 'L'):
+            img = img.convert('RGB')
+
+        long_edge = max(img.size)
+        if long_edge > DOWNSCALE_LONG_EDGE:
+            scale = DOWNSCALE_LONG_EDGE / float(long_edge)
+            new_size = (max(1, int(img.size[0] * scale)), max(1, int(img.size[1] * scale)))
+            img = img.resize(new_size, Image.LANCZOS)
+
+        buf = io.BytesIO()
+        img.save(buf, format='JPEG', quality=DOWNSCALE_JPEG_QUALITY)
+        return buf.getvalue(), 'image/jpeg'
+
+    def action_delete_photo_by_id(self, image_id):
+        """Called via RPC from the click-delegated delete-x in photos_html."""
+        self.ensure_one()
+        self.wizard_id._gateway_request('DELETE', f"images/{image_id}")
+        self.wizard_id._populate_pallets()
+        return True
+
+    def action_download_zip(self):
+        self.ensure_one()
+        return self.wizard_id._zip_download_action(pallet_uuid=self.pallet_uuid)
+
+
+class BizishipPalletPhotosWizard(models.TransientModel):
+    _name = 'biziship.pallet.photos.wizard'
+    _description = 'BiziShip Shipment Photos'
+
+    sale_order_id = fields.Many2one('sale.order', string='Sale Order', required=True)
+    pallet_line_ids = fields.One2many('biziship.pallet.line', 'wizard_id', string='Pallets')
+    new_pallet_name = fields.Char(string='New Pallet Name')
+    status_message = fields.Char(string='Status', readonly=True)
+
+    # ------------------------------------------------------------------
+    # Gateway plumbing
+    # ------------------------------------------------------------------
+    def _headers(self):
+        user = self.env.user
+        email = (
+            user.biziship_email if user.biziship_token and user.biziship_email else user.email
+        ) or ""
+        headers = {
+            "X-ERP-API-Key": get_erp_api_key(self.env),
+            "X-User-Email": email,
+            "X-Client-App": BIZISHIP_APP_NAME,
+            "X-Client-Version": BIZISHIP_MODULE_VERSION,
+        }
+        if user.biziship_token:
+            headers["Authorization"] = f"Bearer {user.biziship_token}"
+        return headers
+
+    def _get_shipment_id(self):
+        self.ensure_one()
+        order = self.sale_order_id
+        if order.biziship_shipment_id:
+            return order.biziship_shipment_id
+
+        if not order.biziship_bol_number:
+            raise UserError(_("This shipment hasn't been booked yet."))
+
+        base_url = api_utils.get_biziship_api_url(self.env)
+        url = f"{base_url}/erp/shipments"
+        try:
+            response = requests.get(
+                url, headers=self._headers(),
+                params={"bolNumber": order.biziship_bol_number, "limit": 1},
+                timeout=10,
+            )
+            response.raise_for_status()
+            data = response.json()
+        except Exception as e:
+            _logger.exception("BiziShip: failed to resolve shipment ID from BOL number")
+            raise UserError(_("Could not look up this shipment on BiziShip: %s") % str(e))
+
+        items = data.get('items') or data.get('data') or data.get('results') or data
+        if isinstance(items, dict):
+            items = items.get('pallets') or []
+        if not items:
+            raise UserError(_("No BiziShip shipment found for BOL number %s.") % order.biziship_bol_number)
+
+        shipment_id = items[0].get('id')
+        if not shipment_id:
+            raise UserError(_("BiziShip's shipment lookup response was missing an id."))
+
+        order.biziship_shipment_id = shipment_id
+        return shipment_id
+
+    def _gateway_request(self, method, path, json_body=None, files=None):
+        """Thin wrapper for every /erp/shipments/:id/... call this wizard needs.
+        Surfaces the gateway's own 400/409 'detail' verbatim; everything else becomes
+        a generic message (with the real response logged for debugging)."""
+        self.ensure_one()
+        base_url = api_utils.get_biziship_api_url(self.env)
+        shipment_id = self._get_shipment_id()
+        url = f"{base_url}/erp/shipments/{shipment_id}/{path}"
+
+        headers = self._headers()
+        try:
+            response = requests.request(
+                method, url, headers=headers, json=json_body, files=files, timeout=20,
+            )
+        except Exception as e:
+            _logger.exception("BiziShip: pallet/photo gateway request failed (%s %s)", method, url)
+            raise UserError(_("Could not reach BiziShip right now. Please try again in a moment."))
+
+        if response.status_code in (200, 201, 204):
+            if response.status_code == 204 or not response.content:
+                return {}
+            return response.json()
+
+        if response.status_code in (400, 409):
+            try:
+                detail = response.json().get('detail')
+            except Exception:
+                detail = None
+            raise UserError(detail or _("BiziShip rejected this request."))
+
+        _logger.error(
+            "BiziShip: pallet/photo gateway error %s %s -> %s: %s",
+            method, url, response.status_code, response.text,
+        )
+        raise UserError(_("BiziShip is temporarily unavailable (error %s). Please try again shortly.") % response.status_code)
+
+    def _populate_pallets(self):
+        self.ensure_one()
+        data = self._gateway_request('GET', 'pallets')
+        pallets = data.get('pallets', []) if isinstance(data, dict) else []
+
+        self.pallet_line_ids.unlink()
+        self.env['biziship.pallet.line'].create([
+            {
+                'wizard_id': self.id,
+                'pallet_uuid': p.get('id'),
+                'name': p.get('name') or '',
+                'photos_json': json.dumps(p.get('images', [])),
+            }
+            for p in pallets
+        ])
+        self.status_message = '' if pallets else _("No pallets yet. Add one to start uploading photos.")
+
+    # ------------------------------------------------------------------
+    # Wizard-level actions
+    # ------------------------------------------------------------------
+    def action_refresh(self):
+        self.ensure_one()
+        self._populate_pallets()
+        return True
+
+    def action_add_pallet(self):
+        self.ensure_one()
+        body = {"name": self.new_pallet_name.strip()} if (self.new_pallet_name or '').strip() else {}
+        self._gateway_request('POST', 'pallets', json_body=body)
+        self.new_pallet_name = False
+        self._populate_pallets()
+        return True
+
+    def action_download_zip_all(self):
+        self.ensure_one()
+        return self._zip_download_action()
+
+    def _zip_download_action(self, pallet_uuid=None):
+        self.ensure_one()
+        url = f"/biziship/shipments/{self.sale_order_id.id}/pallets/zip"
+        if pallet_uuid:
+            url += f"?pallet_id={pallet_uuid}"
+        return {
+            'type': 'ir.actions.act_url',
+            'url': url,
+            'target': 'self',
+        }

@@ -811,6 +811,23 @@ class SaleOrder(models.Model):
             'target': 'new',
         }
 
+    def action_open_pallet_photos_wizard(self):
+        self.ensure_one()
+        if not self.biziship_shipment_id and not self.biziship_bol_number:
+            raise UserError(_("No shipment found. Please book the shipment first."))
+        wizard = self.env['biziship.pallet.photos.wizard'].create({
+            'sale_order_id': self.id,
+        })
+        wizard._populate_pallets()
+        return {
+            'type': 'ir.actions.act_window',
+            'name': 'Shipment Photos',
+            'res_model': 'biziship.pallet.photos.wizard',
+            'res_id': wizard.id,
+            'view_mode': 'form',
+            'target': 'new',
+        }
+
     def action_biziship_refresh_tracking_quick(self):
         """Refresh tracking status inline without opening the wizard."""
         self.ensure_one()

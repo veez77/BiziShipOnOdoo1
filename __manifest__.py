@@ -30,6 +30,7 @@
         'wizards/biziship_save_freight_wizard_views.xml',
         'wizards/biziship_load_freight_wizard_views.xml',
         'wizards/biziship_tracking_wizard_views.xml',
+        'wizards/biziship_pallet_photos_wizard_views.xml',
         'wizards/biziship_address_history_wizard_views.xml',
         'wizards/biziship_not_connected_wizard_views.xml',
         'wizards/biziship_logout_wizard_views.xml',

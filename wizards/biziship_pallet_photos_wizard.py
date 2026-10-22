@@ -180,10 +180,15 @@ class BizishipPalletPhotosWizard(models.TransientModel):
         return headers
 
     def _get_shipment_id(self):
+        """The pallets/photos gateway wants the shipment UUID. Despite its name,
+        sale.order.biziship_shipment_id actually holds a plain numeric reference
+        number (from /erp/book's 'shipment_id' key); the real UUID is written to
+        biziship_booking_id (from /erp/book's 'biziship_id' key) - confirmed by
+        inspecting a real booked order's stored values."""
         self.ensure_one()
         order = self.sale_order_id
-        if order.biziship_shipment_id:
-            return order.biziship_shipment_id
+        if order.biziship_booking_id:
+            return order.biziship_booking_id
 
         if not order.biziship_bol_number:
             raise UserError(_("This shipment hasn't been booked yet."))
@@ -203,8 +208,6 @@ class BizishipPalletPhotosWizard(models.TransientModel):
             raise UserError(_("Could not look up this shipment on BiziShip: %s") % str(e))
 
         items = data.get('items') or data.get('data') or data.get('results') or data
-        if isinstance(items, dict):
-            items = items.get('pallets') or []
         if not items:
             raise UserError(_("No BiziShip shipment found for BOL number %s.") % order.biziship_bol_number)
 
@@ -212,7 +215,7 @@ class BizishipPalletPhotosWizard(models.TransientModel):
         if not shipment_id:
             raise UserError(_("BiziShip's shipment lookup response was missing an id."))
 
-        order.biziship_shipment_id = shipment_id
+        order.biziship_booking_id = shipment_id
         return shipment_id
 
     def _gateway_request(self, method, path, json_body=None, files=None):

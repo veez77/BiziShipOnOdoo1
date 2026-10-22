@@ -2,6 +2,7 @@ import base64
 import io
 import json
 import logging
+from urllib.parse import quote
 
 import requests
 
@@ -54,13 +55,23 @@ class BizishipPalletLine(models.TransientModel):
             for photo in photos:
                 image_id = photo.get('id', '')
                 url = photo.get('url', '')
+                filename = quote(f"{image_id}.jpg")
+                download_url = f"/biziship/image_proxy?url={quote(url, safe='')}&filename={filename}"
                 size_bytes = photo.get('sizeBytes') or 0
                 size_label = f"{size_bytes / 1024:.0f} KB" if size_bytes else ''
+                # title="" on every element here is deliberate: without it, Odoo's
+                # generic list-cell wrapper sets a native title attribute to this
+                # field's raw (unescaped) HTML source, which the browser then shows
+                # verbatim as a tooltip. Setting our own empty title overrides that
+                # inherited behavior on hover.
                 cells.append(f'''
-                    <div class="biziship-pallet-photo-thumb-wrap" data-image-id="{image_id}" data-line-id="{line.id}">
-                        <img class="biziship-pallet-photo-thumb" src="{url}"/>
+                    <div class="biziship-pallet-photo-thumb-wrap" data-image-id="{image_id}" data-line-id="{line.id}" title="">
+                        <a href="{url}" target="_blank" title="" class="biziship-pallet-photo-view">
+                            <img class="biziship-pallet-photo-thumb" src="{url}" title=""/>
+                        </a>
                         <a href="#" class="biziship-pallet-photo-delete" title="Delete photo">×</a>
-                        <div class="biziship-pallet-photo-size">{size_label}</div>
+                        <a href="{download_url}" class="biziship-pallet-photo-download" title="Download this photo">⬇</a>
+                        <div class="biziship-pallet-photo-size" title="">{size_label}</div>
                     </div>
                 ''')
             line.photos_html = f'<div class="biziship-pallet-photo-grid">{"".join(cells)}</div>'

@@ -26,7 +26,7 @@ class BizishipPalletLine(models.TransientModel):
     pallet_uuid = fields.Char(string='Pallet ID')
     name = fields.Char(string='Pallet Name')
     photos_json = fields.Text(string='Photos (raw)')
-    photo_count = fields.Integer(string='Photos', compute='_compute_photo_count')
+    photo_count = fields.Integer(string='# Photos', compute='_compute_photo_count')
     photos_html = fields.Html(string='Photos', compute='_compute_photos_html', sanitize=False)
     upload_file = fields.Binary(string='Upload Photo')
     upload_filename = fields.Char(string='File Name')

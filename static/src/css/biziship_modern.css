@@ -41,6 +41,30 @@
     background: #dc2626;
 }
 
+.biziship-pallet-photo-view {
+    display: block;
+}
+
+.biziship-pallet-photo-download {
+    position: absolute;
+    top: -6px;
+    left: -6px;
+    width: 18px;
+    height: 18px;
+    line-height: 17px;
+    text-align: center;
+    background: #334155;
+    color: #ffffff !important;
+    border-radius: 50%;
+    font-size: 11px;
+    text-decoration: none !important;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+}
+
+.biziship-pallet-photo-download:hover {
+    background: #1e293b;
+}
+
 .biziship-pallet-photo-size {
     position: absolute;
     bottom: 2px;
